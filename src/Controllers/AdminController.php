@@ -214,7 +214,7 @@ class AdminController extends UserController
         });
 
         $datatables->edit('origin_traffic', static function ($data) {
-            return Tools::flowAutoShow($data['origin_traffic']);
+            return $data['origin_traffic'];
         });
 
         $body = $response->getBody();

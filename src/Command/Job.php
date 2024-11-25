@@ -129,15 +129,16 @@ class Job extends Command
 
         if (Config::getconfig('Telegram.bool.DailyJob')) {
             Telegram::Send(Config::getconfig('Telegram.string.DailyJob'));
+            echo 'Telegram.bool.DailyJob' . PHP_EOL;
         }
 
-        $shopid = [];
-        $shops = Shop::where('status', 1)->get();    //已下架的商品不支持重置使用
-        foreach ($shops as $auto_reset_shop) {
-            if ($auto_reset_shop->use_loop()) {
-                $shopid[] = $auto_reset_shop->id;
-            }
-        }
+//        $shopid = [];
+//        $shops = Shop::where('status', 1)->get();    //已下架的商品不支持重置使用
+//        foreach ($shops as $auto_reset_shop) {
+//            if ($auto_reset_shop->use_loop()) {
+//                $shopid[] = $auto_reset_shop->id;
+//            }
+//        }
 
         //auto reset
         $shopRenew = Shop::where('status', '1')->where('content', 'like', '%reset_value%')->get(['id'])->toArray();
@@ -178,26 +179,24 @@ class Job extends Command
             }
         }
 
-
         $users = User::all();
         foreach ($users as $user) {
             // 记录每日流量
             $origin_traffic = $user->u + $user->d - $user->last_day_t;
-            if ($origin_traffic !== 0) {
+            if ($origin_traffic != 0) {
                 $traffic = new TrafficLog();
                 $traffic->user_id = $user->id;
                 $traffic->u = 0;
                 $traffic->d = 0;
                 $traffic->rate = 1;
                 $traffic->node_id = 0;
-                $traffic->traffic = Tools::flowAutoShow($origin_traffic);
+                $traffic->traffic = $origin_traffic;
                 $traffic->log_time = time();
                 $traffic->save();
             }
 
             $user->last_day_t = ($user->u + $user->d);
             $user->save();
-
             if (in_array($user->id, $bought_users)) {
                 continue;
             }
