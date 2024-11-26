@@ -196,6 +196,7 @@ return function (SlimApp $app) {
 
         $this->get('/bought',                   App\Controllers\Admin\ShopController::class . ':bought');
         $this->delete('/bought',                App\Controllers\Admin\ShopController::class . ':deleteBoughtGet');
+        $this->delete('/bought/refund',         App\Controllers\Admin\ShopController::class . ':refundForSalesman');
         $this->post('/bought/ajax',             App\Controllers\Admin\ShopController::class . ':ajax_bought');
 
         $this->get('/shop/create',              App\Controllers\Admin\ShopController::class . ':create');
@@ -253,12 +254,13 @@ return function (SlimApp $app) {
         $this->get('/user',                     App\Controllers\Admin\UserController::class . ':index');
         $this->get('/user/{id}/edit',           App\Controllers\Admin\UserController::class . ':edit');
         $this->put('/user/{id}',                App\Controllers\Admin\UserController::class . ':update');
+        $this->put('/user/sales/{id}',          App\Controllers\Admin\UserController::class . ':updateForSalesman');
         $this->delete('/user',                  App\Controllers\Admin\UserController::class . ':delete');
         $this->post('/user/changetouser',       App\Controllers\Admin\UserController::class . ':changetouser');
         $this->post('/user/ajax',               App\Controllers\Admin\UserController::class . ':ajax');
         $this->post('/user/create',             App\Controllers\Admin\UserController::class . ':createNewUser');
         $this->post('/user/buy',                App\Controllers\Admin\UserController::class . ':buy');
-        $this->post('/user/link',                App\Controllers\Admin\UserController::class . ':link');
+        $this->post('/user/link',               App\Controllers\Admin\UserController::class . ':link');
 
 
         $this->get('/coupon',                   App\Controllers\AdminController::class . ':coupon');
@@ -309,8 +311,8 @@ return function (SlimApp $app) {
 
         // Config Mange
         $this->group('/config', function () {
-            $this->put('/update/{key}',       App\Controllers\Admin\GConfigController::class . ':update');
-            $this->get('/update/{key}/edit',  App\Controllers\Admin\GConfigController::class . ':edit');
+            $this->put('/update/{key}',         App\Controllers\Admin\GConfigController::class . ':update');
+            $this->get('/update/{key}/edit',    App\Controllers\Admin\GConfigController::class . ':edit');
 
             $this->get('/telegram',             App\Controllers\Admin\GConfigController::class . ':telegram');
             $this->post('/telegram/ajax',       App\Controllers\Admin\GConfigController::class . ':telegram_ajax');

@@ -201,10 +201,9 @@ class ShopController extends AdminController
     public function bought($request, $response, $args)
     {
         $table_config['total_column'] = array(
-            'op' => '操作', 'id' => 'ID',
-            'datetime' => '购买日期', 'content' => '内容',
-            'price' => '价格', 'user_id' => '用户ID',
-            'user_name' => '用户名', 'renew' => '自动续费时间',
+            'op' => '操作', 'id' => 'ID', 'datetime' => '购买日期',
+            'content' => '内容', 'price' => '价格', 'salesman_price' => '折扣价格',
+            'user_id' => '用户ID', 'user_name' => '用户名', 'renew' => '自动续费时间',
             'auto_reset_bandwidth' => '续费时是否重置流量'
         );
         $table_config['default_show_column'] = array();
@@ -228,6 +227,12 @@ class ShopController extends AdminController
         $rs['ret'] = 1;
         $rs['msg'] = '退订成功';
         return $response->getBody()->write(json_encode($rs));
+    }
+
+    public function refundForSalesman($request, $response, $args)
+    {
+        $id = $request->getParam('id');
+        $shop = Bought::find($id);
     }
 
     public function ajax_shop($request, $response, $args)
@@ -280,13 +285,22 @@ class ShopController extends AdminController
 
     public function ajax_bought($request, $response, $args)
     {
+        $isAdmin = $this->user->isAdmin();
         $datatables = new Datatables(new DatatablesHelper());
-        $datatables->query('Select bought.id as op,bought.id as id,bought.datetime,shop.id as content,bought.price,user.id as user_id,user.user_name,renew,shop.auto_reset_bandwidth from bought,user,shop where bought.shopid = shop.id and bought.userid = user.id');
+        if ($isAdmin) {
+            $datatables->query('Select bought.id as op,bought.id as id,bought.datetime,shop.id as content,bought.price,bought.salesman_price,user.id as user_id,user.user_name,renew,shop.auto_reset_bandwidth from bought,user,shop where bought.shopid = shop.id and bought.userid = user.id');
+        } else {
+            $salesmanId = $this->user->id;
+            $datatables->query('Select bought.id as op,bought.id as id,bought.datetime,shop.id as content,bought.price,bought.salesman_price,user.id as user_id,user.user_name,renew,shop.auto_reset_bandwidth from bought,user,shop where bought.shopid = shop.id and bought.userid = user.id AND user.ref_by = ' . $salesmanId);
+        }
 
+//        $datatables->edit('op', static function ($data) {
+//            return '<a class="btn btn-brand-accent" ' . ($data['renew'] == 0 ? 'disabled' : ' id="row_delete_' . $data['id'] . '" href="javascript:void(0);" onClick="delete_modal_show(\'' . $data['id'] . '\')"') . '>中止</a>';
+//        });
         $datatables->edit('op', static function ($data) {
-            return '<a class="btn btn-brand-accent" ' . ($data['renew'] == 0 ? 'disabled' : ' id="row_delete_' . $data['id'] . '" href="javascript:void(0);" onClick="delete_modal_show(\'' . $data['id'] . '\')"') . '>中止</a>';
-        });
+            return '<a class="btn btn-brand-accent" ' . (' id="row_delete_' . $data['id'] . '" href="javascript:void(0);" onClick="refund_modal_show(\'' . $data['id'] . '\')"') . '>退款</a>';
 
+        });
         $datatables->edit('content', static function ($data) {
             $shop = Shop::find($data['content']);
             return $shop->content();

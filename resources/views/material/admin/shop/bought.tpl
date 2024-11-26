@@ -46,6 +46,30 @@
                         </div>
                     </div>
                 </div>
+                <div aria-hidden="true" class="modal modal-va-middle fade" id="refund_modal" role="dialog"
+                     tabindex="-1">
+                    <div class="modal-dialog modal-xs">
+                        <div class="modal-content">
+                            <div class="modal-heading">
+                                <a class="modal-close" data-dismiss="modal">×</a>
+                                <h2 class="modal-title">确认要退款？</h2>
+                            </div>
+                            <div class="modal-inner">
+                                <p>注意：一天套餐不可退，开通不超过24小时且使用流量不超过1G可退，请您确认。</p>
+                            </div>
+                            <div class="modal-footer">
+                                <p class="text-right">
+                                    <button class="btn btn-flat btn-brand-accent waves-attach waves-effect"
+                                            data-dismiss="modal" type="button">取消
+                                    </button>
+                                    <button class="btn btn-flat btn-brand-accent waves-attach" data-dismiss="modal"
+                                            id="refund_input" type="button">确定
+                                    </button>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 {include file='dialog.tpl'}
         </div>
     </div>
@@ -57,6 +81,11 @@
     function delete_modal_show(id) {
         deleteid = id;
         $("#delete_modal").modal();
+    }
+
+    function refund_modal_show(id) {
+        refund = id;
+        $("#refund_modal").modal();
     }
     {include file='table/js_1.tpl'}
     window.addEventListener('load', () => {
@@ -85,6 +114,31 @@
                 }
             });
         }
+        function refund_id() {
+            $.ajax({
+                type: "DELETE",
+                url: "/admin/bought/refund",
+                dataType: "json",
+                data: {
+                    id: deleteid
+                },
+                success: data => {
+                    if (data.ret) {
+                        $("#result").modal();
+                        $$.getElementById('msg').innerHTML = data.msg;
+                        $$.getElementById(`row_delete_${ldelim}deleteid{rdelim}`).setAttribute('disabled', 'true')
+                    } else {
+                        $("#result").modal();
+                        $$.getElementById('msg').innerHTML = data.msg;
+                    }
+                },
+                error: jqXHR => {
+                    $("#result").modal();
+                    $$.getElementById('msg').innerHTML = `${ldelim}data.msg{rdelim} 发生错误了`;
+                }
+            });
+        }
         $$.getElementById('delete_input').addEventListener('click', delete_id);
+        $$.getElementById('refund_input').addEventListener('click', refund_id);
     })
 </script>

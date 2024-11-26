@@ -76,7 +76,7 @@ class UserController extends AdminController
         $email = $request->getParam('userEmail');
         $email = trim($email);
         $email = strtolower($email);
-        $refUserId = $request->getParam('refUserId');
+        $refUserId = $this->user->id;
 
         $money = (int)trim($request->getParam('userMoney'));
         $shop_id = (int)$request->getParam('userShop');
@@ -93,6 +93,28 @@ class UserController extends AdminController
             $res['ret'] = 0;
             $res['msg'] = '邮箱已经被注册了';
             return $response->getBody()->write(json_encode($res));
+        }
+        $isAdmin = $this->user->isAdmin();
+        // 代理账号消费
+        if (!$isAdmin) {
+            $salesmanMoney = $this->user->money;
+            $discountRate = $this->user->discount_rate;
+            // 已选择套餐
+            if ($shop_id > 0) {
+                $res['ret'] = 0;
+                $shop = Shop::find($shop_id);
+                // 套餐存在，判断额度是否够用
+                if ($shop != null) {
+                    $price = $shop->price;
+                    if ($salesmanMoney < $price * $discountRate) {
+                        $res['msg'] = '余额不足，请充值';
+                        return $response->getBody()->write(json_encode($res));
+                    }
+                } else {
+                    $res['msg'] = '套餐不存在';
+                    return $response->getBody()->write(json_encode($res));
+                }
+            }
         }
         // do reg user
         $user = new User();
@@ -155,8 +177,15 @@ class UserController extends AdminController
                     $bought->renew = 0;
                     $bought->coupon = '';
                     $bought->price = $shop->price;
+                    if (!$isAdmin) {
+                        $bought->salesman_price = $shop->price * $discountRate;
+                    }
                     $bought->save();
                     $shop->buy($user);
+                    if (!$isAdmin) {
+                        $this->user->money = $salesmanMoney - $shop->price * $discountRate;
+                        $this->user->save();
+                    }
                 } else {
                     $res['msg'] .= '<br/>但是套餐添加失败了，原因是套餐不存在';
                 }
@@ -184,12 +213,35 @@ class UserController extends AdminController
     {
         #shop 信息可以通过 App\Controllers\UserController:shop 获得
         # 需要shopId，disableothers，autorenew,userEmail
-
         $shopId = $request->getParam('shopId');
-        $shop = Shop::where('id', $shopId)->where('status', 1)->first();
         $disableothers = $request->getParam('disableothers');
         $autorenew = $request->getParam('autorenew');
         $userId = $request->getParam('userId');
+        // 代理账号消费
+        $isAdmin = $this->user->isAdmin();
+        if (!$isAdmin) {
+            $salesmanMoney = $this->user->money;
+            $discountRate = $this->user->discount_rate;
+            // 已选择套餐
+            if ($shopId > 0) {
+                $res['ret'] = 0;
+                $shop = Shop::find($shopId);
+                // 套餐存在，判断额度是否够用
+                if ($shop != null) {
+                    $price = $shop->price;
+                    if ($salesmanMoney < $price * $discountRate) {
+                        $res['msg'] = '余额不足，请充值';
+                        return $response->getBody()->write(json_encode($res));
+                    }
+                } else {
+                    $res['msg'] = '套餐不存在';
+                    return $response->getBody()->write(json_encode($res));
+                }
+            }
+        }
+
+        $shop = Shop::where('id', $shopId)->where('status', 1)->first();
+
         $user = User::where('id', '=', $userId)->first();
         if ($user == null) {
             $result['ret'] = 0;
@@ -221,6 +273,9 @@ class UserController extends AdminController
 
         $price = $shop->price;
         $bought->price = $price;
+        if (!$isAdmin) {
+            $bought->salesman_price = $shop->price * $discountRate;
+        }
         $bought->save();
 
         $shop->buy($user);
@@ -311,6 +366,24 @@ class UserController extends AdminController
         return $this->view()->assign('edit_user', $user)->display('admin/user/edit.tpl');
     }
 
+    public function updateForSalesman($request, $response, $args)
+    {
+        $id = $args['id'];
+        $user = User::find($id);
+        $user->email = $request->getParam('email');
+        $user->remark = $request->getParam('remark');
+        $user->node_speedlimit = $request->getParam('node_speedlimit');
+        $user->node_connector = $request->getParam('node_connector');
+        if (!$user->save()) {
+            $rs['ret'] = 0;
+            $rs['msg'] = '修改失败';
+            return $response->getBody()->write(json_encode($rs));
+        }
+        $rs['ret'] = 1;
+        $rs['msg'] = '修改成功';
+        return $response->getBody()->write(json_encode($rs));
+    }
+
     public function update($request, $response, $args)
     {
         $id = $args['id'];
@@ -345,6 +418,8 @@ class UserController extends AdminController
         $user->addMoneyLog($request->getParam('money') - $user->money);
 
         $user->passwd = $request->getParam('passwd');
+        $user->is_salesman = $request->getParam('is_salesman');
+        $user->discount_rate = $request->getParam('discount_rate');
         $user->protocol = $request->getParam('protocol');
         $user->protocol_param = $request->getParam('protocol_param');
         $user->obfs = $request->getParam('obfs');
@@ -463,6 +538,7 @@ class UserController extends AdminController
 
     public function ajax($request, $response, $args)
     {
+        $isAdmin = $this->user->isAdmin();
         //得到排序的方式
         $order = $request->getParam('order')[0]['dir'];
         //得到排序字段的下标
@@ -472,7 +548,6 @@ class UserController extends AdminController
         $limit_start = $request->getParam('start');
         $limit_length = $request->getParam('length');
         $search = $request->getParam('search')['value'];
-
         if ($order_field == 'used_traffic') {
             $order_field = 'u + d';
         } elseif ($order_field == 'enable_traffic') {
@@ -483,41 +558,45 @@ class UserController extends AdminController
             $order_field = 'id';
         }
 
-        $users = array();
-        $count_filtered = 0;
+        if ($isAdmin) {
+            $query = User::query();
+        } else {
+            $salesmanId = $this->user->id;
+            // 基础查询限定为 ref_by = $salesmanId
+            $query = User::where('ref_by', '=', $salesmanId);
+        }
 
-        $query = User::query();
         if ($search) {
-            $v = (int)(new DatatablesHelper())->query('select version()')[0]['version()'];
-            $like_str = ($v < 8 ? 'LIKE' : 'LIKE binary');
-            $query->where('id', 'LIKE', "%$search%")
-                ->orwhere('user_name', 'LIKE', "%$search%")
-                ->orwhere('email', 'LIKE', "%$search%")
-                ->orwhere('passwd', 'LIKE', "%$search%")
-                ->orwhere('port', 'LIKE', "%$search%")
-                ->orwhere('invite_num', 'LIKE', "%$search%")
-                ->orwhere('money', 'LIKE', "%$search%")
-                ->orwhere('ref_by', 'LIKE', "%$search%")
-                ->orwhere('method', 'LIKE', "%$search%")
-                ->orwhere('reg_ip', 'LIKE', "%$search%")
-                ->orwhere('node_speedlimit', 'LIKE', "%$search%")
-                ->orwhere('im_value', 'LIKE', "%$search%")
-                ->orwhere('class', 'LIKE', "%$search%")
-                ->orwhere('remark', 'LIKE', "%$search%")
-                ->orwhere('node_group', 'LIKE', "%$search%")
-                ->orwhere('auto_reset_day', 'LIKE', "%$search%")
-                ->orwhere('auto_reset_bandwidth', 'LIKE', "%$search%")
-                ->orwhere('protocol', 'LIKE', "%$search%")
-                ->orwhere('protocol_param', 'LIKE', "%$search%")
-                ->orwhere('obfs', 'LIKE', "%$search%")
-                ->orwhere('obfs_param', 'LIKE', "%$search%")
-                ->orwhere('reg_date', 'LIKE binary', "%$search%")
-                ->orwhere('class_expire', 'LIKE binary', "%$search%")
-                ->orwhere('expire_in', 'LIKE binary', "%$search%");
-//                ->orWhere('ref_by', '=', ($query->where('user_name', 'LIKE', "%$search%")->first()->id));
-            $matchedUser = User::query()->where('user_name', 'LIKE', "%$search%")->first();
-            if ($matchedUser) {
-                $query->orWhere('ref_by', '=', $matchedUser->id);
+            $query->where(function ($subQuery) use ($search) {
+                // 模糊搜索条件
+                $subQuery->where('id', 'LIKE', "%$search%")
+                    ->orWhere('user_name', 'LIKE', "%$search%")
+                    ->orWhere('email', 'LIKE', "%$search%")
+                    ->orWhere('port', 'LIKE', "%$search%")
+                    ->orWhere('invite_num', 'LIKE', "%$search%")
+                    ->orWhere('money', 'LIKE', "%$search%")
+                    ->orWhere('method', 'LIKE', "%$search%")
+                    ->orWhere('reg_ip', 'LIKE', "%$search%")
+                    ->orWhere('node_speedlimit', 'LIKE', "%$search%")
+                    ->orWhere('im_value', 'LIKE', "%$search%")
+                    ->orWhere('class', 'LIKE', "%$search%")
+                    ->orWhere('remark', 'LIKE', "%$search%")
+                    ->orWhere('node_group', 'LIKE', "%$search%")
+                    ->orWhere('auto_reset_day', 'LIKE', "%$search%")
+                    ->orWhere('auto_reset_bandwidth', 'LIKE', "%$search%")
+                    ->orWhere('protocol', 'LIKE', "%$search%")
+                    ->orWhere('protocol_param', 'LIKE', "%$search%")
+                    ->orWhere('obfs', 'LIKE', "%$search%")
+                    ->orWhere('obfs_param', 'LIKE', "%$search%")
+                    ->orWhere('reg_date', 'LIKE binary', "%$search%")
+                    ->orWhere('class_expire', 'LIKE binary', "%$search%")
+                    ->orWhere('expire_in', 'LIKE binary', "%$search%");
+            });
+
+            // 如果搜索匹配了某个用户，则查询 ref_by 为该用户 ID 的记录
+            $refUser = User::query()->where('user_name', 'LIKE', "%$search%")->first();
+            if ($refUser) {
+                $query->orWhere('ref_by', '=', $refUser->id);
             }
         }
         $query_count = clone $query;
@@ -530,9 +609,6 @@ class UserController extends AdminController
         foreach ($users as $user) {
             $tempdata = array();
             //model里是casts所以没法直接 $tempdata=(array)$user
-//            $tempdata['op']         = '<a class="btn btn-brand" href="/admin/user/' . $user->id . '/edit">编辑</a>
-//                    <a class="btn btn-brand-accent" id="delete" href="javascript:void(0);" onClick="delete_modal_show(\'' . $user->id . '\')">删除</a>
-//                    <a class="btn btn-brand" id="changetouser" href="javascript:void(0);" onClick="changetouser_modal_show(\'' . $user->id . '\')">切换为该用户</a>';
             $tempdata['op'] = '<a class="btn btn-brand" id="operate" href="javascript:void(0);" onClick="operate_modal_show(\'' . $user->id . '\')">操作</a>';
             $tempdata['querys'] = '<a class="btn btn-brand" href="/admin/user/' . $user->id . '/bought">套餐</a>
                     <a class="btn btn-brand" href="/admin/user/' . $user->id . '/code">充值</a>

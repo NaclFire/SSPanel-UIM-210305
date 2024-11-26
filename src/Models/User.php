@@ -57,7 +57,10 @@ class User extends Model
     {
         return $this->attributes['is_admin'];
     }
-
+    public function isSalesman()
+    {
+        return $this->attributes['is_salesman'];
+    }
     public function lastSsTime()
     {
         if ($this->attributes['t'] == 0) {

@@ -5,14 +5,15 @@ namespace App\Models;
 /**
  * Bought Model
  *
- * @property-read   int     $id         id
- * @property        int     $userid     User id
- * @property        int     $shopid     Shop id
- * @property        string  $datetime   Bought complete datetime
- * @property        int     $renew      Time to renew this bought
- * @property        string  $coupon     Coupon applied to this bought
- * @property        float   $price      Price after coupon applied
- * @property        bool    $is_notified If this bought is notified for renew
+ * @property-read   int     $id             id
+ * @property        int     $userid         User id
+ * @property        int     $shopid         Shop id
+ * @property        string  $datetime       Bought complete datetime
+ * @property        int     $renew          Time to renew this bought
+ * @property        string  $coupon         Coupon applied to this bought
+ * @property        float   $price          Price after coupon applied
+ * @property        float   $salesman_price Price after coupon applied
+ * @property        bool    $is_notified    If this bought is notified for renew
  */
 class Bought extends Model
 {

@@ -206,8 +206,14 @@ class AdminController extends UserController
 
     public function ajax_trafficLog($request, $response, $args)
     {
+        $isAdmin = $this->user->isAdmin();
         $datatables = new Datatables(new DatatablesHelper());
-        $datatables->query('Select log.id,log.user_id,user.user_name,log.traffic as origin_traffic,log.log_time from user_traffic_log as log,user WHERE log.user_id = user.id');
+        if ($isAdmin) {
+            $datatables->query('Select log.id,log.user_id,user.user_name,log.traffic as origin_traffic,log.log_time from user_traffic_log as log,user WHERE log.user_id = user.id');
+        } else {
+            $salesmanId = $this->user->id;
+            $datatables->query('Select log.id,log.user_id,user.user_name,log.traffic as origin_traffic,log.log_time from user_traffic_log as log,user WHERE log.user_id = user.id AND user.ref_by = ' . $salesmanId);
+        }
 
         $datatables->edit('log_time', static function ($data) {
             return date('Y-m-d H:i:s', $data['log_time']);

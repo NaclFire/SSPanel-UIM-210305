@@ -43,13 +43,16 @@
                                 </label>
                             </div>
                         </div>
-                        <div class="card-inner">
-                            <div class="form-group form-group-label">
-                                <label class="floating-label" for="new_user_money">
-                                    用户余额「-1为按默认设置，其他为指定值」 </label>
-                                <input class="form-control maxwidth-edit" id="new_user_money" type="text" value="-1">
+                        {if $user->isAdmin()}
+                            <div class="card-inner">
+                                <div class="form-group form-group-label">
+                                    <label class="floating-label" for="new_user_money">
+                                        用户余额「-1为按默认设置，其他为指定值」 </label>
+                                    <input class="form-control maxwidth-edit" id="new_user_money" type="text"
+                                           value="-1">
+                                </div>
                             </div>
-                        </div>
+                        {/if}
                         <div class="card-action">
                             <div class="card-action-btn pull-left">
                                 <a class="btn btn-flat waves-attach waves-light" id="quick_create_confirm"><span
@@ -77,7 +80,8 @@
                                    onClick="renew_modal_show()">续费</a>
                                 <a class="btn btn-brand" id="copylink" href="javascript:void(0);"
                                    onClick="copylink_modal_show()">复制订阅地址</a>
-                                <a class="btn btn-brand-accent btn-margin-top-bottom" id="delete" href="javascript:void(0);"
+                                <a class="btn btn-brand-accent btn-margin-top-bottom" id="delete"
+                                   href="javascript:void(0);"
                                    onClick="delete_modal_show()">删除</a>
                             </div>
                             <div class="modal-footer">
@@ -156,10 +160,7 @@
                             <div class="modal-footer">
                                 <p class="text-right">
                                     <button class="btn btn-flat btn-brand-accent waves-attach waves-effect"
-                                            data-dismiss="modal" type="button">取消
-                                    </button>
-                                    <button class="btn btn-flat btn-brand-accent waves-attach" data-dismiss="modal"
-                                            id="renew_input" type="button">确定
+                                            data-dismiss="modal" type="button">关闭
                                     </button>
                                 </p>
                             </div>
@@ -407,9 +408,8 @@
                 dataType: 'json',
                 data: {
                     userEmail: $$getValue('quick_create'),
-                    userMoney: $$getValue('new_user_money'),
-                    userShop: $$getValue('new_user_add_shop'),
-                    refUserId: {$user->id}
+                    userMoney: (document.getElementById('new_user_money')) ? $$getValue('new_user_money') : -1,
+                    userShop: $$getValue('new_user_add_shop')
                 },
                 success: data => {
                     $("#result").modal();
