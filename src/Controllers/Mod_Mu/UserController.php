@@ -169,15 +169,16 @@ class UserController extends BaseController
                 }
 
                 // log
-//                $traffic = new TrafficLog();
-//                $traffic->user_id = $user_id;
-//                $traffic->u = $u;
-//                $traffic->d = $d;
-//                $traffic->node_id = $node_id;
-//                $traffic->rate = $node->traffic_rate;
-//                $traffic->traffic = Tools::flowAutoShow(($u + $d) * $node->traffic_rate);
-//                $traffic->log_time = time();
-//                $traffic->save();
+                $traffic = new TrafficLog();
+                $traffic->user_id = $user_id;
+                $traffic->u = $u;
+                $traffic->d = $d;
+                $traffic->node_id = $node_id;
+                $traffic->rate = $node->traffic_rate;
+                $traffic->traffic = $u + $d;
+                $traffic->log_time = time();
+                $traffic->type = 0;
+                $traffic->save();
             }
         }
 
@@ -239,37 +240,37 @@ class UserController extends BaseController
 
     public function addDetectLog($request, $response, $args)
     {
-        $params = $request->getQueryParams();
-
-        $data = $request->getParam('data');
-        $node_id = $params['node_id'];
-        if ($node_id == '0') {
-            $node = Node::where('node_ip', $_SERVER['REMOTE_ADDR'])->first();
-            $node_id = $node->id;
-        }
-        $node = Node::find($node_id);
-
-        if ($node == null) {
-            $res = [
-                'ret' => 0
-            ];
-            return $this->echoJson($response, $res);
-        }
-
-        if (count($data) > 0) {
-            foreach ($data as $log) {
-                $list_id = $log['list_id'];
-                $user_id = $log['user_id'];
-
-                // log
-                $detect_log = new DetectLog();
-                $detect_log->user_id = $user_id;
-                $detect_log->list_id = $list_id;
-                $detect_log->node_id = $node_id;
-                $detect_log->datetime = time();
-                $detect_log->save();
-            }
-        }
+//        $params = $request->getQueryParams();
+//
+//        $data = $request->getParam('data');
+//        $node_id = $params['node_id'];
+//        if ($node_id == '0') {
+//            $node = Node::where('node_ip', $_SERVER['REMOTE_ADDR'])->first();
+//            $node_id = $node->id;
+//        }
+//        $node = Node::find($node_id);
+//
+//        if ($node == null) {
+//            $res = [
+//                'ret' => 0
+//            ];
+//            return $this->echoJson($response, $res);
+//        }
+//
+//        if (count($data) > 0) {
+//            foreach ($data as $log) {
+//                $list_id = $log['list_id'];
+//                $user_id = $log['user_id'];
+//
+//                // log
+//                $detect_log = new DetectLog();
+//                $detect_log->user_id = $user_id;
+//                $detect_log->list_id = $list_id;
+//                $detect_log->node_id = $node_id;
+//                $detect_log->datetime = time();
+//                $detect_log->save();
+//            }
+//        }
 
         $res = [
             'ret' => 1,

@@ -46,4 +46,15 @@ class TrafficLog extends Model
     {
         return Tools::toDateTime($this->attributes['log_time']);
     }
+
+    public function getTotalUsedRaw($startTime)
+    {
+        $totalUsed = self::where('type', '=', 0)
+            ->where('log_time', '>=', $startTime)->pluck('traffic');
+        $totalTraffic = 0;
+        foreach ($totalUsed as $traffic) {
+            $totalTraffic += $traffic; // 累加每条记录的值
+        }
+        return $totalTraffic;
+    }
 }

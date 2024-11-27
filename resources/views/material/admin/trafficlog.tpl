@@ -12,7 +12,7 @@
                 <div class="card">
                     <div class="card-main">
                         <div class="card-inner">
-                            <p>部分节点不支持流量记录.</p>
+                            <p>部分节点不支持流量记录，记录保存7天。</p>
                             <p>显示表项:
                                 {include file='table/checkbox.tpl'}
                             </p>

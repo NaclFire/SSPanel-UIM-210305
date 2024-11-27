@@ -209,10 +209,10 @@ class AdminController extends UserController
         $isAdmin = $this->user->isAdmin();
         $datatables = new Datatables(new DatatablesHelper());
         if ($isAdmin) {
-            $datatables->query('Select log.id,log.user_id,user.user_name,log.traffic as origin_traffic,log.log_time from user_traffic_log as log,user WHERE log.user_id = user.id');
+            $datatables->query('Select log.id,log.user_id,user.user_name,log.traffic as origin_traffic,log.log_time from user_traffic_log as log,user WHERE log.user_id = user.id AND log.type = 1');
         } else {
             $salesmanId = $this->user->id;
-            $datatables->query('Select log.id,log.user_id,user.user_name,log.traffic as origin_traffic,log.log_time from user_traffic_log as log,user WHERE log.user_id = user.id AND user.ref_by = ' . $salesmanId);
+            $datatables->query('Select log.id,log.user_id,user.user_name,log.traffic as origin_traffic,log.log_time from user_traffic_log as log,user WHERE log.user_id = user.id AND log.type = 1 AND user.ref_by = ' . $salesmanId);
         }
 
         $datatables->edit('log_time', static function ($data) {

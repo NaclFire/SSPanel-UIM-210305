@@ -55,7 +55,7 @@
                                 <h2 class="modal-title">确认要退款？</h2>
                             </div>
                             <div class="modal-inner">
-                                <p>注意：一天套餐不可退，开通不超过24小时且使用流量不超过1G可退，请您确认。</p>
+                                <p>注意：一天套餐不可退，开通不超过24小时且使用流量不超过200M可退，请您确认。</p>
                             </div>
                             <div class="modal-footer">
                                 <p class="text-right">
@@ -83,8 +83,10 @@
         $("#delete_modal").modal();
     }
 
-    function refund_modal_show(id) {
-        refund = id;
+    function refund_modal_show(id, userId, shopId) {
+        boughtId = id;
+        boughtUserId = userId;
+        boughtShopId = shopId;
         $("#refund_modal").modal();
     }
     {include file='table/js_1.tpl'}
@@ -114,19 +116,23 @@
                 }
             });
         }
+
         function refund_id() {
             $.ajax({
                 type: "DELETE",
                 url: "/admin/bought/refund",
                 dataType: "json",
                 data: {
-                    id: deleteid
+                    id: boughtId,
+                    userId: boughtUserId,
+                    shopId: boughtShopId
                 },
                 success: data => {
                     if (data.ret) {
                         $("#result").modal();
                         $$.getElementById('msg').innerHTML = data.msg;
-                        $$.getElementById(`row_delete_${ldelim}deleteid{rdelim}`).setAttribute('disabled', 'true')
+                        {*$$.getElementById(`row_delete_${ldelim}deleteid{rdelim}`).setAttribute('disabled', 'true')*}
+                        window.setTimeout("location.href='/admin/bought'", 3000);
                     } else {
                         $("#result").modal();
                         $$.getElementById('msg').innerHTML = data.msg;
@@ -138,6 +144,7 @@
                 }
             });
         }
+
         $$.getElementById('delete_input').addEventListener('click', delete_id);
         $$.getElementById('refund_input').addEventListener('click', refund_id);
     })

@@ -3,10 +3,8 @@
 namespace App\Controllers\Admin;
 
 use App\Controllers\AdminController;
-use App\Models\{
-    Shop,
-    Bought
-};
+use App\Utils\Tools;
+use App\Models\{Shop, Bought, TrafficLog, User};
 use App\Utils\DatatablesHelper;
 use Ozdemir\Datatables\Datatables;
 
@@ -232,7 +230,39 @@ class ShopController extends AdminController
     public function refundForSalesman($request, $response, $args)
     {
         $id = $request->getParam('id');
-        $shop = Bought::find($id);
+        $userId = $request->getParam('userId');
+        $shopId = $request->getParam('shopId');
+        $shop = Shop::find($shopId);
+        if ($shop->content['class_expire'] == 1) {
+            $rs['ret'] = 0;
+            $rs['msg'] = '一天的套餐不支持退款';
+            return $response->getBody()->write(json_encode($rs));
+        }
+        $user = User::find($userId);
+        $bought = Bought::find($id);
+        if (time() - $bought->datetime < 86400 && TrafficLog::getTotalUsedRaw($bought->datetime) < Tools::toMB(200)) {
+            $timestamp = strtotime($user->class_expire);
+            $user->class_expire = date('Y-m-d H:i:s', $timestamp - ($shop->content['class_expire'] * 86400));
+            $user->transfer_enable = $user->transfer_enable - ($shop->content['bandwidth'] * 1024 * 1024 * 1024);
+            $userSave = $user->save();
+            $this->user->money = $this->user->money + $bought->salesman_price;
+            $salesmanSave = $this->user->save();
+            if ($userSave && $salesmanSave) {
+                $bought->status = 1;
+                $bought->save();
+                $rs['ret'] = 1;
+                $rs['msg'] = '退款成功';
+                return $response->getBody()->write(json_encode($rs));
+            } else {
+                $rs['ret'] = 0;
+                $rs['msg'] = '退款失败：' . $userSave ? '余额退款失败' : '用户退款失败';
+                return $response->getBody()->write(json_encode($rs));
+            }
+        } else {
+            $rs['ret'] = 0;
+            $rs['msg'] = '退款失败：' . (time() - $bought->datetime < 86400) ? '购买超过24小时' : '使用流量超过200M';
+            return $response->getBody()->write(json_encode($rs));
+        }
     }
 
     public function ajax_shop($request, $response, $args)
@@ -288,18 +318,18 @@ class ShopController extends AdminController
         $isAdmin = $this->user->isAdmin();
         $datatables = new Datatables(new DatatablesHelper());
         if ($isAdmin) {
-            $datatables->query('Select bought.id as op,bought.id as id,bought.datetime,shop.id as content,bought.price,bought.salesman_price,user.id as user_id,user.user_name,renew,shop.auto_reset_bandwidth from bought,user,shop where bought.shopid = shop.id and bought.userid = user.id');
+            $datatables->query('Select bought.id as op,bought.id as id,bought.datetime,shop.id as content,bought.price,bought.salesman_price,bought.status,user.id as user_id,user.user_name,renew,shop.auto_reset_bandwidth from bought,user,shop where bought.shopid = shop.id and bought.userid = user.id');
         } else {
             $salesmanId = $this->user->id;
-            $datatables->query('Select bought.id as op,bought.id as id,bought.datetime,shop.id as content,bought.price,bought.salesman_price,user.id as user_id,user.user_name,renew,shop.auto_reset_bandwidth from bought,user,shop where bought.shopid = shop.id and bought.userid = user.id AND user.ref_by = ' . $salesmanId);
+            $datatables->query('Select bought.id as op,bought.id as id,bought.datetime,shop.id as content,bought.price,bought.salesman_price,bought.status,user.id as user_id,user.user_name,renew,shop.auto_reset_bandwidth from bought,user,shop where bought.shopid = shop.id and bought.userid = user.id AND user.ref_by = ' . $salesmanId);
         }
 
 //        $datatables->edit('op', static function ($data) {
 //            return '<a class="btn btn-brand-accent" ' . ($data['renew'] == 0 ? 'disabled' : ' id="row_delete_' . $data['id'] . '" href="javascript:void(0);" onClick="delete_modal_show(\'' . $data['id'] . '\')"') . '>中止</a>';
 //        });
         $datatables->edit('op', static function ($data) {
-            return '<a class="btn btn-brand-accent" ' . (' id="row_delete_' . $data['id'] . '" href="javascript:void(0);" onClick="refund_modal_show(\'' . $data['id'] . '\')"') . '>退款</a>';
-
+            $buttonText = $data['status'] == 1 ? '已退款' : '退款';
+            return '<a class="btn btn-brand-accent" ' . ($data['status'] == 1 ? 'disabled' : ' id="row_refund_' . $data['id'] . '" href="javascript:void(0);" onClick="refund_modal_show(\'' . $data['id'] . '\',\'' . $data['user_id'] . '\',\'' . $data['content'] . '\')"') . '>' . $buttonText . '</a>';
         });
         $datatables->edit('content', static function ($data) {
             $shop = Shop::find($data['content']);

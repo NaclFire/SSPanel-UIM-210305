@@ -191,16 +191,16 @@ class UserController extends AdminController
                 }
             }
             $user->addMoneyLog($user->money);
-            $subject = $_ENV['appName'] . '-新用户注册通知';
-            $to = $user->email;
-            $text = '您好，管理员已经为您生成账户，用户名: ' . $email . '，登录密码为：' . $pass . '，感谢您的支持。 ';
-            try {
-                Mail::send($to, $subject, 'newuser.tpl', [
-                    'user' => $user, 'text' => $text,
-                ], []);
-            } catch (Exception $e) {
-                $res['email_error'] = $e->getMessage();
-            }
+//            $subject = $_ENV['appName'] . '-新用户注册通知';
+//            $to = $user->email;
+//            $text = '您好，管理员已经为您生成账户，用户名: ' . $email . '，登录密码为：' . $pass . '，感谢您的支持。 ';
+//            try {
+//                Mail::send($to, $subject, 'newuser.tpl', [
+//                    'user' => $user, 'text' => $text,
+//                ], []);
+//            } catch (Exception $e) {
+//                $res['email_error'] = $e->getMessage();
+//            }
             LinkController::GenerateSSRSubCode($user->id);
             return $response->getBody()->write(json_encode($res));
         }
@@ -279,6 +279,10 @@ class UserController extends AdminController
         $bought->save();
 
         $shop->buy($user);
+        if (!$isAdmin) {
+            $this->user->money = $salesmanMoney - $shop->price * $discountRate;
+            $this->user->save();
+        }
         $result['ret'] = 1;
         $result['msg'] = '套餐添加成功';
         return $response->getBody()->write(json_encode($result));
@@ -497,7 +501,7 @@ class UserController extends AdminController
                 $subInfo = $subInfo . $link . '?sub=3';
                 break;
             case 'clash':
-                $subInfo = $subInfo . $link . '?clas=1';
+                $subInfo = $subInfo . $link . '?clash=1';
                 break;
         }
         $rs['link'] = $subInfo;

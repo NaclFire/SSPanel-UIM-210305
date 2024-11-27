@@ -3,13 +3,13 @@
 namespace App\Models;
 
 /**
- * @property-read   int     $id
- * @property        string  $name
- * @property        float   $price
- * @property        array   $content
- * @property        int     $auto_renew
- * @property        int     $auto_reset_bandwidth
- * @property        int     $status
+ * @property-read   int $id
+ * @property        string $name
+ * @property        float $price
+ * @property        array $content
+ * @property        int $auto_renew
+ * @property        int $auto_reset_bandwidth
+ * @property        int $status
  */
 class Shop extends Model
 {
@@ -188,7 +188,8 @@ class Shop extends Model
                 default:
             }
         }
-
+        $buyInfo = '{"lastBuyTime":' . time() . ',"trafficUsed":0}';
+        $user->last_buy_info = $buyInfo;
         $user->save();
     }
 

@@ -238,7 +238,7 @@
             success: data => {
                 $("#result").modal();
                 $$.getElementById('msg').innerHTML = data.msg;
-                window.setTimeout("location.href='/admin/user'", 5000);
+                window.setTimeout("location.href='/admin/user'", 3000);
             },
             error: jqXHR => {
                 $("#result").modal();
