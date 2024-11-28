@@ -516,7 +516,7 @@ class UserController extends AdminController
         $admin = User::find($adminid);
         $expire_in = time() + 60 * 60;
 
-        if (!$admin->is_admin || !$user || !Auth::getUser()->isLogin) {
+        if ((!$admin->is_admin && !$admin->is_salesman) || !$user || !Auth::getUser()->isLogin) {
             $rs['ret'] = 0;
             $rs['msg'] = '非法请求';
             return $response->getBody()->write(json_encode($rs));
@@ -543,6 +543,8 @@ class UserController extends AdminController
     public function ajax($request, $response, $args)
     {
         $isAdmin = $this->user->isAdmin();
+        $onlyAdmin = $request->getParam('onlyAdmin');
+        $onlySalesman = $request->getParam('onlySalesman');
         //得到排序的方式
         $order = $request->getParam('order')[0]['dir'];
         //得到排序字段的下标
@@ -563,7 +565,15 @@ class UserController extends AdminController
         }
 
         if ($isAdmin) {
-            $query = User::query();
+            if ($onlyAdmin && $onlySalesman) {
+                $query = User::where('is_admin', '=', 1)->orWhere('is_salesman', '=', 1);
+            } else if ($onlyAdmin) {
+                $query = User::where('is_admin', '=', 1);
+            } else if ($onlySalesman) {
+                $query = User::where('is_salesman', '=', 1);
+            } else {
+                $query = User::query();
+            }
         } else {
             $salesmanId = $this->user->id;
             // 基础查询限定为 ref_by = $salesmanId

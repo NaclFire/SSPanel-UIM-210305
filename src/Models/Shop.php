@@ -188,8 +188,6 @@ class Shop extends Model
                 default:
             }
         }
-        $buyInfo = '{"lastBuyTime":' . time() . ',"trafficUsed":0}';
-        $user->last_buy_info = $buyInfo;
         $user->save();
     }
 

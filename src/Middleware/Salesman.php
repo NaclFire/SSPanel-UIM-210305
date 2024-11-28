@@ -4,7 +4,7 @@ namespace App\Middleware;
 
 use App\Services\Auth as AuthService;
 
-class Admin
+class Salesman
 {
     /**
      * @param \Slim\Http\Request $request
@@ -19,7 +19,7 @@ class Admin
         if (!$user->isLogin) {
             return $response->withStatus(302)->withHeader('Location', '/auth/login');
         }
-        if (!$user->isAdmin()) {
+        if (!$user->isAdmin() && !$user->isSalesman()) {
             return $response->withStatus(302)->withHeader('Location', '/user');
         }
         return $next($request, $response);

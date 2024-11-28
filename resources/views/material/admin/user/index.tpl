@@ -13,6 +13,23 @@
                     <div class="card-main">
                         <div class="card-inner">
                             <p>系统中所有用户的列表。</p>
+                            {if $user->isAdmin()}
+                                <p>
+                                <div class="checkbox switch">
+                                    <label for="is_admin">
+                                        <input class="access-hide"
+                                               id="is_admin" type="checkbox"><span class="switch-toggle"></span>只看管理员
+                                    </label>
+                                </div>
+                                <br>
+                                <div class="checkbox switch">
+                                    <label for="is_salesman">
+                                        <input class="access-hide"
+                                               id="is_salesman" type="checkbox"><span class="switch-toggle"></span>只看代理
+                                    </label>
+                                </div>
+                                </p>
+                            {/if}
                             <p>
                                 付费用户：{$user->paidUserCount()}
                             </p>
@@ -271,8 +288,32 @@
             }
         });
     }
-    {include file='table/js_1.tpl'}
-    window.addEventListener('load', () => {
+
+    // 监听复选框状态变化
+    if (document.getElementById('is_admin')) {
+        document.getElementById('is_admin').addEventListener('change', initializeDataTable);
+    }
+    if (document.getElementById('is_salesman')) {
+        document.getElementById('is_salesman').addEventListener('change', initializeDataTable);
+    }
+
+    // 定义初始化 DataTable 的函数
+    function initializeDataTable() {
+        let is_admin = 0;
+        if (document.getElementById('is_admin')) {
+            is_admin = document.getElementById('is_admin')?.checked ? 1 : 0;
+        }
+        let is_salesman = 0
+        if (document.getElementById('is_salesman')) {
+            is_salesman = document.getElementById('is_salesman')?.checked ? 1 : 0;
+        }
+
+        // 销毁已有 DataTable 实例（如果存在）
+        if ($.fn.DataTable.isDataTable('#table_1')) {
+            $('#table_1').DataTable().destroy();
+        }
+
+        // 重新初始化 DataTable
         table_1 = $('#table_1').DataTable({
             order: [[1, 'asc']],
             stateSave: true,
@@ -280,6 +321,10 @@
             ajax: {
                 url: "/admin/user/ajax",
                 type: "POST",
+                data: {
+                    onlyAdmin: is_admin,
+                    onlySalesman: is_salesman
+                }
             },
             columns: [
                 {literal}
@@ -318,7 +363,7 @@
                 {"data": "top_up", "orderable": false}
                 {/literal}
             ],
-            "columnDefs": [
+            columnDefs: [
                 {
                     targets: ['_all'],
                     className: 'mdl-data-table__cell--non-numeric'
@@ -326,6 +371,10 @@
             ],
             {include file='table/lang_chinese.tpl'}
         });
+    }
+    {include file='table/js_1.tpl'}
+    window.addEventListener('load', () => {
+        initializeDataTable();
         var has_init = JSON.parse(localStorage.getItem(`${ldelim}window.location.href{rdelim}-hasinit`));
         if (has_init !== true) {
             localStorage.setItem(`${ldelim}window.location.href{rdelim}-hasinit`, true);

@@ -246,20 +246,30 @@ class ShopController extends AdminController
             $user->class_expire = date('Y-m-d H:i:s', $timestamp - ($shop->content['class_expire'] * 86400));
             $user->transfer_enable = $user->transfer_enable - ($shop->content['bandwidth'] * 1024 * 1024 * 1024);
             $userSave = $user->save();
-            $this->user->money = $this->user->money + $bought->salesman_price;
-            $salesmanSave = $this->user->save();
-            if ($userSave && $salesmanSave) {
-                $bought->status = 1;
-                $bought->save();
-                $rs['ret'] = 1;
-                $rs['msg'] = '退款成功：' . '开通时长：' . Tools::secondsToTime($currentTime - $bought->datetime) .
-                    '，使用流量：' . Tools::flowAutoShow(TrafficLog::getTotalUsedRaw($bought->datetime, $userId));
-                return $response->getBody()->write(json_encode($rs));
+            if ($userSave) {
+                $this->user->money = $this->user->money + $bought->salesman_price;
+                $salesmanSave = $this->user->save();
+                if ($salesmanSave) {
+                    $bought->status = 1;
+                    $boughtSave = $bought->save();
+                    if ($boughtSave) {
+                        $rs['ret'] = 1;
+                        $rs['msg'] = '退款成功：' . '开通时长：' . Tools::secondsToTime($currentTime - $bought->datetime) .
+                            '，使用流量：' . Tools::flowAutoShow(TrafficLog::getTotalUsedRaw($bought->datetime, $userId));
+                        return $response->getBody()->write(json_encode($rs));
+                    } else {
+                        $rs['ret'] = 0;
+                        $rs['msg'] = '退款失败：购买记录保存失败';
+                    }
+                } else {
+                    $rs['ret'] = 0;
+                    $rs['msg'] = '退款失败：退款到余额失败';
+                }
             } else {
                 $rs['ret'] = 0;
-                $rs['msg'] = '退款失败：' . $userSave ? '退款到余额失败' : '用户退款失败';
-                return $response->getBody()->write(json_encode($rs));
+                $rs['msg'] = '退款失败：用户退款失败';
             }
+            return $response->getBody()->write(json_encode($rs));
         } else {
             $rs['ret'] = 0;
             $rs['msg'] = '退款失败：' . '开通时长：' . Tools::secondsToTime($currentTime - $bought->datetime) .
