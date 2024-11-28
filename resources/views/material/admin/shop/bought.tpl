@@ -132,7 +132,7 @@
                         $("#result").modal();
                         $$.getElementById('msg').innerHTML = data.msg;
                         {*$$.getElementById(`row_delete_${ldelim}deleteid{rdelim}`).setAttribute('disabled', 'true')*}
-                        window.setTimeout("location.href='/admin/bought'", 3000);
+                        window.setTimeout("location.href='/admin/bought'", 4000);
                     } else {
                         $("#result").modal();
                         $$.getElementById('msg').innerHTML = data.msg;

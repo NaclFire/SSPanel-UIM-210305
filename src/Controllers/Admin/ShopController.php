@@ -252,7 +252,8 @@ class ShopController extends AdminController
                 $bought->status = 1;
                 $bought->save();
                 $rs['ret'] = 1;
-                $rs['msg'] = '退款成功';
+                $rs['msg'] = '退款成功：' . '开通时长：' . Tools::secondsToTime($currentTime - $bought->datetime) .
+                    '，使用流量：' . Tools::flowAutoShow(TrafficLog::getTotalUsedRaw($bought->datetime, $userId));
                 return $response->getBody()->write(json_encode($rs));
             } else {
                 $rs['ret'] = 0;
@@ -261,7 +262,8 @@ class ShopController extends AdminController
             }
         } else {
             $rs['ret'] = 0;
-            $rs['msg'] = '退款失败：' . (($currentTime - $bought->datetime >= 86400) ? '订单已经超过24小时' : '流量使用超过200M');
+            $rs['msg'] = '退款失败：' . '开通时长：' . Tools::secondsToTime($currentTime - $bought->datetime) .
+                '，使用流量：' . Tools::flowAutoShow(TrafficLog::getTotalUsedRaw($bought->datetime, $userId));
             return $response->getBody()->write(json_encode($rs));
         }
     }
