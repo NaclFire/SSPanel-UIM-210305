@@ -240,7 +240,8 @@ class ShopController extends AdminController
         }
         $user = User::find($userId);
         $bought = Bought::find($id);
-        if (time() - $bought->datetime < 86400 && TrafficLog::getTotalUsedRaw($bought->datetime) < Tools::toMB(200)) {
+        $currentTime = time();
+        if ($currentTime - $bought->datetime < 86400 && TrafficLog::getTotalUsedRaw($bought->datetime, $userId) < Tools::toMB(200)) {
             $timestamp = strtotime($user->class_expire);
             $user->class_expire = date('Y-m-d H:i:s', $timestamp - ($shop->content['class_expire'] * 86400));
             $user->transfer_enable = $user->transfer_enable - ($shop->content['bandwidth'] * 1024 * 1024 * 1024);
@@ -255,12 +256,12 @@ class ShopController extends AdminController
                 return $response->getBody()->write(json_encode($rs));
             } else {
                 $rs['ret'] = 0;
-                $rs['msg'] = '退款失败：' . $userSave ? '余额退款失败' : '用户退款失败';
+                $rs['msg'] = '退款失败：' . $userSave ? '退款到余额失败' : '用户退款失败';
                 return $response->getBody()->write(json_encode($rs));
             }
         } else {
             $rs['ret'] = 0;
-            $rs['msg'] = '退款失败：' . (time() - $bought->datetime < 86400) ? '购买超过24小时' : '使用流量超过200M';
+            $rs['msg'] = '退款失败：' . (($currentTime - $bought->datetime >= 86400) ? '订单已经超过24小时' : '流量使用超过200M');
             return $response->getBody()->write(json_encode($rs));
         }
     }
@@ -323,14 +324,16 @@ class ShopController extends AdminController
             $salesmanId = $this->user->id;
             $datatables->query('Select bought.id as op,bought.id as id,bought.datetime,shop.id as content,bought.price,bought.salesman_price,bought.status,user.id as user_id,user.user_name,renew,shop.auto_reset_bandwidth from bought,user,shop where bought.shopid = shop.id and bought.userid = user.id AND user.ref_by = ' . $salesmanId);
         }
-
-//        $datatables->edit('op', static function ($data) {
-//            return '<a class="btn btn-brand-accent" ' . ($data['renew'] == 0 ? 'disabled' : ' id="row_delete_' . $data['id'] . '" href="javascript:void(0);" onClick="delete_modal_show(\'' . $data['id'] . '\')"') . '>中止</a>';
-//        });
-        $datatables->edit('op', static function ($data) {
-            $buttonText = $data['status'] == 1 ? '已退款' : '退款';
-            return '<a class="btn btn-brand-accent" ' . ($data['status'] == 1 ? 'disabled' : ' id="row_refund_' . $data['id'] . '" href="javascript:void(0);" onClick="refund_modal_show(\'' . $data['id'] . '\',\'' . $data['user_id'] . '\',\'' . $data['content'] . '\')"') . '>' . $buttonText . '</a>';
-        });
+        if ($isAdmin) {
+            $datatables->edit('op', static function ($data) {
+                return '<a class="btn btn-brand-accent" ' . ($data['renew'] == 0 ? 'disabled' : ' id="row_delete_' . $data['id'] . '" href="javascript:void(0);" onClick="delete_modal_show(\'' . $data['id'] . '\')"') . '>中止</a>';
+            });
+        } else {
+            $datatables->edit('op', static function ($data) {
+                $buttonText = $data['status'] == 1 ? '已退款' : '退款';
+                return '<a class="btn btn-brand-accent" ' . ($data['status'] == 1 ? 'disabled' : ' id="row_refund_' . $data['id'] . '" href="javascript:void(0);" onClick="refund_modal_show(\'' . $data['id'] . '\',\'' . $data['user_id'] . '\',\'' . $data['content'] . '\')"') . '>' . $buttonText . '</a>';
+            });
+        }
         $datatables->edit('content', static function ($data) {
             $shop = Shop::find($data['content']);
             return $shop->content();

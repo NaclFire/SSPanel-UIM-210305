@@ -47,9 +47,10 @@ class TrafficLog extends Model
         return Tools::toDateTime($this->attributes['log_time']);
     }
 
-    public function getTotalUsedRaw($startTime)
+    public static function getTotalUsedRaw($startTime, $userId)
     {
         $totalUsed = self::where('type', '=', 0)
+            ->where('user_id', '=', $userId)
             ->where('log_time', '>=', $startTime)->pluck('traffic');
         $totalTraffic = 0;
         foreach ($totalUsed as $traffic) {
