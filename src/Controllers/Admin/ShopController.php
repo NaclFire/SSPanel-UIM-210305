@@ -342,8 +342,9 @@ class ShopController extends AdminController
             });
         } else {
             $datatables->edit('op', static function ($data) {
+                $isOverTime = time() - $data["datetime"] > 86400;
                 $buttonText = $data['status'] == 1 ? '已退款' : '退款';
-                return '<a class="btn btn-brand-accent" ' . ($data['status'] == 1 ? 'disabled' : ' id="row_refund_' . $data['id'] . '" href="javascript:void(0);" onClick="refund_modal_show(\'' . $data['id'] . '\',\'' . $data['user_id'] . '\',\'' . $data['content'] . '\')"') . '>' . $buttonText . '</a>';
+                return '<a class="btn btn-brand-accent" ' . (($data['status'] == 1 || $isOverTime) ? 'disabled' : ' id="row_refund_' . $data['id'] . '" href="javascript:void(0);" onClick="refund_modal_show(\'' . $data['id'] . '\',\'' . $data['user_id'] . '\',\'' . $data['content'] . '\')"') . '>' . $buttonText . '</a>';
             });
         }
         $datatables->edit('content', static function ($data) {
