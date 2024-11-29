@@ -365,6 +365,7 @@
                     enable,
                     remark: $$getValue('remark'),
                     node_speedlimit: $$getValue('node_speedlimit'),
+                    ban_time: $$getValue('ban_time'),
                     node_connector: $$getValue('node_connector')
                 },
                 success: data => {
@@ -387,20 +388,23 @@
         }
 
         function submitForAdmin() {
+            let is_admin
             if (document.getElementById('is_admin') && document.getElementById('is_admin').checked) {
-                var is_admin = 1;
+                is_admin = 1;
             } else {
-                var is_admin = 0;
+                is_admin = 0;
             }
+            let is_salesman
             if (document.getElementById('is_salesman') && document.getElementById('is_salesman').checked) {
-                var is_salesman = 1;
+                is_salesman = 1;
             } else {
-                var is_salesman = 0;
+                is_salesman = 0;
             }
+            let enable
             if (document.getElementById('enable').checked) {
-                var enable = 1;
+                enable = 1;
             } else {
-                var enable = 0;
+                enable = 0;
             }
             var ga_enable = {$user->ga_enable};
             $.ajax({

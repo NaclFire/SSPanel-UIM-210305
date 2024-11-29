@@ -248,8 +248,7 @@ return function (SlimApp $app) {
         $this->post('/donate', App\Controllers\Admin\CodeController::class . ':donate_add');
         $this->post('/code/ajax', App\Controllers\Admin\CodeController::class . ':ajax_code');
 
-
-
+        $this->put('/user/{id}', App\Controllers\Admin\UserController::class . ':update');
 
         $this->get('/coupon', App\Controllers\AdminController::class . ':coupon');
         $this->post('/coupon', App\Controllers\AdminController::class . ':addCoupon');
@@ -390,7 +389,6 @@ return function (SlimApp $app) {
         $this->get('/bought', App\Controllers\Admin\ShopController::class . ':bought');
         // User Mange
         $this->get('/user/{id}/edit', App\Controllers\Admin\UserController::class . ':edit');
-        $this->put('/user/{id}', App\Controllers\Admin\UserController::class . ':update');
         $this->put('/user/sales/{id}', App\Controllers\Admin\UserController::class . ':updateForSalesman');
         $this->delete('/user', App\Controllers\Admin\UserController::class . ':delete');
         $this->post('/user/changetouser', App\Controllers\Admin\UserController::class . ':changetouser');
