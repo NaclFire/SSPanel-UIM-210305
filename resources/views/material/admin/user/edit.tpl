@@ -425,7 +425,7 @@
                     node_speedlimit: $$getValue('node_speedlimit'),
                     method: $$getValue('method'),
                     remark: $$getValue('remark'),
-                    money: (document.getElementById('new_user_money')) ? $$getValue('money') : {$edit_user->money},
+                    money: (document.getElementById('money')) ? $$getValue('money') : {$edit_user->money},
                     discount_rate: (document.getElementById('discount_rate')) ? $$getValue('discount_rate') : 1,
                     enable,
                     is_salesman,

@@ -511,16 +511,16 @@ class UserController extends AdminController
     {
         $subUrl = $_ENV['subUrl'];
         $link = Link::where('userid', $request->getParam('id'))->value('token');
-        $subInfo = $subUrl;
+        $subInfo = $subUrl . $link;
         $rs['ret'] = 1;
-        switch (trim($request->getParam('type'))) {
-            case 'v2ray':
-                $subInfo = $subInfo . $link . '?sub=3';
-                break;
-            case 'clash':
-                $subInfo = $subInfo . $link . '?clash=1';
-                break;
-        }
+//        switch (trim($request->getParam('type'))) {
+//            case 'v2ray':
+//                $subInfo = $subInfo . '?sub=3';
+//                break;
+//            case 'clash':
+//                $subInfo = $subInfo . '?clash=1';
+//                break;
+//        }
         $rs['link'] = $subInfo;
         return $response->getBody()->write(json_encode($rs));
     }

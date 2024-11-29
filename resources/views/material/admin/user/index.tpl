@@ -193,9 +193,9 @@
                                 <h2 class="modal-title">请选择订阅地址类型</h2>
                             </div>
                             <div class="modal-inner">
-                                <a class="btn btn-brand copy-text" onclick="getUserLink('v2ray')"
+                                <a class="btn btn-brand copy-text" id="v2ray_link"
                                    href="javascript:void(0);">V2Ray</a>
-                                <a class="btn btn-brand copy-text" onclick="getUserLink('clash')"
+                                <a class="btn btn-brand copy-text" id="clash_link"
                                    href="javascript:void(0);">Clash</a>
                             </div>
                             <div class="modal-footer">
@@ -228,6 +228,7 @@
 
     function operate_modal_show(id) {
         operaUserId = id;
+        getUserLink()
         var editUser = "/admin/user/" + operaUserId + "/edit";
         $("#edit").attr("href", editUser);
         $("#operate_modal").modal();
@@ -264,31 +265,61 @@
         })
     }
 
-    function getUserLink(type) {
+    function getUserLink() {
         $.ajax({
             type: 'post',
             url: '/admin/user/link',
             dataType: 'json',
             data: {
                 id: operaUserId,
-                type: type
             },
             success: data => {
                 if (data.ret) {
-                    navigator.clipboard.writeText(data.link).then(function () {
-                        // 复制成功
-                        $("#result").modal();
-                        $$.getElementById('msg').innerHTML = '已复制，请您继续接下来的操作';
-                    }).catch(function (error) {
-                        // 复制失败
-                        $("#result").modal();
-                        $$.getElementById('msg').innerHTML = '复制失败';
-                    });
+                    $("#v2ray_link").attr("data-clipboard-text", data.link + "?sub=3")
+                    $("#clash_link").attr("data-clipboard-text", data.link + "?clash=1")
                 }
             }
         });
     }
 
+    $("#v2ray_link").click(function () {
+        var link = $(this).attr('data-clipboard-text')
+        if (link) {
+            navigator.clipboard.writeText(link).then(function () {
+                // 复制成功
+                $("#result").modal();
+                $$.getElementById('msg').innerHTML = '已复制，请您继续接下来的操作';
+            }).catch(function (error) {
+                // 复制失败
+                $("#result").modal();
+                $$.getElementById('msg').innerHTML = '复制失败：' + error;
+            });
+        } else {
+            // 复制失败
+            $("#result").modal();
+            $$.getElementById('msg').innerHTML = '复制失败：请再复制一次';
+        }
+
+
+    })
+    $("#clash_link").click(function () {
+        var link = $(this).attr('data-clipboard-text')
+        if (link) {
+            navigator.clipboard.writeText(link).then(function () {
+                // 复制成功
+                $("#result").modal();
+                $$.getElementById('msg').innerHTML = '已复制，请您继续接下来的操作';
+            }).catch(function (error) {
+                // 复制失败
+                $("#result").modal();
+                $$.getElementById('msg').innerHTML = '复制失败：' + error;
+            });
+        } else {
+            // 复制失败
+            $("#result").modal();
+            $$.getElementById('msg').innerHTML = '复制失败：请再复制一次';
+        }
+    })
     // 监听复选框状态变化
     if (document.getElementById('is_admin')) {
         document.getElementById('is_admin').addEventListener('change', initializeDataTable);
