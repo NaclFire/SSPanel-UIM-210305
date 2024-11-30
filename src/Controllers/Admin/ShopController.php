@@ -262,10 +262,16 @@ class ShopController extends AdminController
                         $rs['msg'] = '退款失败：购买记录保存失败';
                     }
                 } else {
+                    $bought->status = 0;
+                    $bought->save();
                     $rs['ret'] = 0;
                     $rs['msg'] = '退款失败：退款到余额失败';
                 }
             } else {
+                $bought->status = 0;
+                $bought->save();
+                $this->user->money = $this->user->money - $bought->salesman_price;
+                $this->user->save();
                 $rs['ret'] = 0;
                 $rs['msg'] = '退款失败：用户退款失败';
             }
