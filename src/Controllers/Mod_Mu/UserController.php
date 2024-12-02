@@ -139,7 +139,8 @@ class UserController extends BaseController
 
         if ($node == null) {
             $res = [
-                'ret' => 0
+                'ret' => 1,
+                'data' => 'ok',
             ];
             return $this->echoJson($response, $res);
         }
@@ -161,11 +162,7 @@ class UserController extends BaseController
                 $user->d += $d * $node->traffic_rate;
                 $this_time_total_bandwidth += $u + $d;
                 if (!$user->save()) {
-                    $res = [
-                        'ret' => 0,
-                        'data' => 'update failed',
-                    ];
-                    return $this->echoJson($response, $res);
+                    continue;
                 }
 
                 // log

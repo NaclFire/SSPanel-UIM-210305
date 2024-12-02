@@ -116,8 +116,7 @@ class Job extends Command
         Token::where('expire_time', '<', time())->delete();
         NodeInfoLog::where('log_time', '<', time() - 86400 * 3)->delete();
         NodeOnlineLog::where('log_time', '<', time() - 86400 * 3)->delete();
-        TrafficLog::where('log_time', '<', time() - 86400 * 7)->where('type', '=', 1)->delete();
-        TrafficLog::where('log_time', '<', time() - 86400 * 2)->where('type', '=', 0)->delete();
+        TrafficLog::where('log_time', '<', time() - 86400 * 6)->where('type', '=', 1)->delete();
 //        DetectLog::where('datetime', '<', time() - 86400 * 3)->delete();
         Speedtest::where('datetime', '<', time() - 86400 * 3)->delete();
         EmailVerify::where('expire_in', '<', time() - 86400 * 3)->delete();
@@ -248,6 +247,7 @@ class Job extends Command
      */
     public function CheckJob()
     {
+        TrafficLog::where('log_time', '<', time() - 86400 * 2)->where('type', '=', 0)->delete();
         //在线人数检测
         $users = User::where('node_connector', '>', 0)->get();
         $full_alive_ips = Ip::where('datetime', '>=', time() - 60)->orderBy('ip')->get();
@@ -591,15 +591,15 @@ class Job extends Command
                 $user->u = 0;
                 $user->d = 0;
                 $user->last_day_t = 0;
-                $user->sendMail(
-                    $_ENV['appName'] . '-您的用户账户已经过期了',
-                    'news/warn.tpl',
-                    [
-                        'text' => '您好，系统发现您的账号已经过期了。'
-                    ],
-                    [],
-                    $_ENV['email_queue']
-                );
+//                $user->sendMail(
+//                    $_ENV['appName'] . '-您的用户账户已经过期了',
+//                    'news/warn.tpl',
+//                    [
+//                        'text' => '您好，系统发现您的账号已经过期了。'
+//                    ],
+//                    [],
+//                    $_ENV['email_queue']
+//                );
                 $user->expire_notified = true;
                 $user->save();
             } elseif (strtotime($user->expire_in) > time() && $user->expire_notified == true) {
@@ -630,19 +630,19 @@ class Job extends Command
                 }
 
                 if ($under_limit == true && $user->traffic_notified == false) {
-                    $result = $user->sendMail(
-                        $_ENV['appName'] . '-您的剩余流量过低',
-                        'news/warn.tpl',
-                        [
-                            'text' => '您好，系统发现您剩余流量已经低于 ' . $_ENV['notify_limit_value'] . $unit_text . ' 。'
-                        ],
-                        [],
-                        $_ENV['email_queue']
-                    );
-                    if ($result) {
+//                    $result = $user->sendMail(
+//                        $_ENV['appName'] . '-您的剩余流量过低',
+//                        'news/warn.tpl',
+//                        [
+//                            'text' => '您好，系统发现您剩余流量已经低于 ' . $_ENV['notify_limit_value'] . $unit_text . ' 。'
+//                        ],
+//                        [],
+//                        $_ENV['email_queue']
+//                    );
+//                    if ($result) {
                         $user->traffic_notified = true;
                         $user->save();
-                    }
+//                    }
                 } elseif ($under_limit == false && $user->traffic_notified == true) {
                     $user->traffic_notified = false;
                     $user->save();
@@ -654,15 +654,15 @@ class Job extends Command
                 strtotime($user->expire_in) + $_ENV['account_expire_delete_days'] * 86400 < time() &&
                 $user->money <= $_ENV['auto_clean_min_money']
             ) {
-                $user->sendMail(
-                    $_ENV['appName'] . '-您的用户账户已经被删除了',
-                    'news/warn.tpl',
-                    [
-                        'text' => '您好，系统发现您的账户已经过期 ' . $_ENV['account_expire_delete_days'] . ' 天了，帐号已经被删除。'
-                    ],
-                    [],
-                    $_ENV['email_queue']
-                );
+//                $user->sendMail(
+//                    $_ENV['appName'] . '-您的用户账户已经被删除了',
+//                    'news/warn.tpl',
+//                    [
+//                        'text' => '您好，系统发现您的账户已经过期 ' . $_ENV['account_expire_delete_days'] . ' 天了，帐号已经被删除。'
+//                    ],
+//                    [],
+//                    $_ENV['email_queue']
+//                );
                 $user->kill_user();
                 continue;
             }
@@ -676,15 +676,15 @@ class Job extends Command
                 $user->class == 0 &&
                 $user->money <= $_ENV['auto_clean_min_money']
             ) {
-                $user->sendMail(
-                    $_ENV['appName'] . '-您的用户账户已经被删除了',
-                    'news/warn.tpl',
-                    [
-                        'text' => '您好，系统发现您的账号已经 ' . $_ENV['auto_clean_uncheck_days'] . ' 天没签到了，帐号已经被删除。'
-                    ],
-                    [],
-                    $_ENV['email_queue']
-                );
+//                $user->sendMail(
+//                    $_ENV['appName'] . '-您的用户账户已经被删除了',
+//                    'news/warn.tpl',
+//                    [
+//                        'text' => '您好，系统发现您的账号已经 ' . $_ENV['auto_clean_uncheck_days'] . ' 天没签到了，帐号已经被删除。'
+//                    ],
+//                    [],
+//                    $_ENV['email_queue']
+//                );
                 $user->kill_user();
                 continue;
             }
@@ -695,15 +695,15 @@ class Job extends Command
                 $user->class == 0 &&
                 $user->money <= $_ENV['auto_clean_min_money']
             ) {
-                $user->sendMail(
-                    $_ENV['appName'] . '-您的用户账户已经被删除了',
-                    'news/warn.tpl',
-                    [
-                        'text' => '您好，系统发现您的账号已经 ' . $_ENV['auto_clean_unused_days'] . ' 天没使用了，帐号已经被删除。'
-                    ],
-                    [],
-                    $_ENV['email_queue']
-                );
+//                $user->sendMail(
+//                    $_ENV['appName'] . '-您的用户账户已经被删除了',
+//                    'news/warn.tpl',
+//                    [
+//                        'text' => '您好，系统发现您的账号已经 ' . $_ENV['auto_clean_unused_days'] . ' 天没使用了，帐号已经被删除。'
+//                    ],
+//                    [],
+//                    $_ENV['email_queue']
+//                );
                 $user->kill_user();
                 continue;
             }
@@ -722,15 +722,15 @@ class Job extends Command
                     $user->last_day_t = 0;
                     $text .= '流量已经被重置为' . $reset_traffic . 'GB';
                 }
-                $user->sendMail(
-                    $_ENV['appName'] . '-您的账户等级已经过期了',
-                    'news/warn.tpl',
-                    [
-                        'text' => $text
-                    ],
-                    [],
-                    $_ENV['email_queue']
-                );
+//                $user->sendMail(
+//                    $_ENV['appName'] . '-您的账户等级已经过期了',
+//                    'news/warn.tpl',
+//                    [
+//                        'text' => $text
+//                    ],
+//                    [],
+//                    $_ENV['email_queue']
+//                );
                 $user->class = 0;
             }
 
