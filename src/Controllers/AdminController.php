@@ -204,6 +204,67 @@ class AdminController extends UserController
         return $this->view()->assign('table_config', $table_config)->display('admin/trafficlog.tpl');
     }
 
+    public function trafficMinuteLog($request, $response, $args)
+    {
+        $table_config['total_column'] = array(
+            'id' => 'ID', 'user_id' => '用户ID',
+            'user_name' => '用户名', 'node_name' => '使用节点',
+            'origin_traffic' => '实际使用流量',
+            'log_time' => '记录时间'
+        );
+        $table_config['default_show_column'] = array(
+            'id', 'user_id', 'user_name', 'node_name',
+            'origin_traffic', 'log_time'
+        );
+        $table_config['ajax_url'] = 'trafficminutelog/ajax';
+        return $this->view()->assign('table_config', $table_config)->display('admin/trafficminutelog.tpl');
+    }
+
+    public function ajax_trafficMinuteLog($request, $response, $args)
+    {
+        $isAdmin = $this->user->isAdmin();
+        $searchUser = $request->getParam("user");
+        $searchNode = $request->getParam("node");
+        $searchStartTime = $request->getParam("startTime");
+        $searchEndTime = $request->getParam("endTime");
+        // 基础查询
+        $query = 'Select log.id, log.user_id, user.user_name, node.name as node_name, log.traffic as origin_traffic, log.log_time from user_traffic_log as log, user, ss_node as node WHERE log.user_id = user.id AND log.node_id = node.id AND log.type = 0';
+
+        if (!$isAdmin) {
+            $salesmanId = $this->user->id;
+            $query .= ' AND user.ref_by = ' . $salesmanId;
+        }
+
+        // 动态添加查询条件
+        if (!empty($searchUser)) {
+            $query .= ' AND log.user_id = ' . $searchUser;
+        }
+
+        if (!empty($searchNode)) {
+            $query .= " AND node.name LIKE '%" . $searchNode . "%'";
+        }
+
+        if (!empty($searchStartTime)) {
+            $query .= ' AND log.log_time >= ' . strtotime($searchStartTime);
+        }
+
+        if (!empty($searchEndTime)) {
+            $query .= ' AND log.log_time <= ' . strtotime($searchEndTime);
+        }
+        error_log('SQL: ' . $query);
+        // 使用更新后的查询构建数据表
+        $datatables = new Datatables(new DatatablesHelper());
+        $datatables->query($query);
+        $datatables->edit('log_time', static function ($data) {
+            return date('Y-m-d H:i:s', $data['log_time']);
+        });
+        $datatables->edit('origin_traffic', static function ($data) {
+            return $data['origin_traffic'];
+        });
+        $body = $response->getBody();
+        $body->write($datatables->generate());
+    }
+
     public function ajax_trafficLog($request, $response, $args)
     {
         $isAdmin = $this->user->isAdmin();

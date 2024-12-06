@@ -385,7 +385,9 @@ return function (SlimApp $app) {
     $app->group('/admin', function () {
         $this->get('/user', App\Controllers\Admin\UserController::class . ':index');
         $this->get('/trafficlog', App\Controllers\AdminController::class . ':trafficLog');
+        $this->get('/trafficminutelog', App\Controllers\AdminController::class . ':trafficMinuteLog');
         $this->post('/trafficlog/ajax', App\Controllers\AdminController::class . ':ajax_trafficLog');
+        $this->post('/trafficminutelog/ajax', App\Controllers\AdminController::class . ':ajax_trafficMinuteLog');
         $this->get('/bought', App\Controllers\Admin\ShopController::class . ':bought');
         // User Mange
         $this->get('/user/{id}/edit', App\Controllers\Admin\UserController::class . ':edit');

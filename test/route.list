@@ -24,6 +24,7 @@
 /admin/auto
 /admin/node
 /admin/trafficlog
+/admin/trafficdaylog
 /admin/block
 /admin/unblock
 /admin/user

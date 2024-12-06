@@ -102,7 +102,8 @@
                         {if $user->isAdmin()}
                             <li><a href="/admin/node"><i class="icon icon-lg">router</i>&nbsp;节点列表</a></li>
                         {/if}
-                        <li><a href="/admin/trafficlog"><i class="icon icon-lg">traffic</i>&nbsp;流量记录</a></li>
+                        <li><a href="/admin/trafficlog"><i class="icon icon-lg">traffic</i>&nbsp;总流量记录</a></li>
+                        <li><a href="/admin/trafficminutelog"><i class="icon icon-lg">traffic</i>&nbsp;分流量记录</a></li>
                         {if $user->isAdmin()}
                             <li><a href="/admin/block"><i class="icon icon-lg">dialer_sip</i>&nbsp;已封禁IP</a></li>
                             <li><a href="/admin/unblock"><i class="icon icon-lg">dialer_sip</i>&nbsp;已解封IP</a></li>
