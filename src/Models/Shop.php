@@ -168,10 +168,10 @@ class Shop extends Model
                     break;
                 case 'class':
                     if ($_ENV['enable_bought_extend'] == true) {
-                        if ($user->class == $value) {
-                            $user->class_expire = date('Y-m-d H:i:s', strtotime($user->class_expire) + $this->content['class_expire'] * 86400);
-                        } else {
+                        if ($user->class == 0) {
                             $user->class_expire = date('Y-m-d H:i:s', time() + $this->content['class_expire'] * 86400);
+                        } else {
+                            $user->class_expire = date('Y-m-d H:i:s', strtotime($user->class_expire) + $this->content['class_expire'] * 86400);
                         }
                         $user->class = $value;
                     } else {

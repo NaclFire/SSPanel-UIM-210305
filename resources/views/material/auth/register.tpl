@@ -161,12 +161,6 @@
                 </div>
             </div>
         </section>
-        <div class="card auth-tg">
-            <div class="card-main">
-
-            </div>
-        </div>
-        {include file='./telegram_modal.tpl'}
     </div>
 </div>
 
