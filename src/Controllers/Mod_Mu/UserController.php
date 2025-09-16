@@ -144,19 +144,23 @@ class UserController extends BaseController
             ];
             return $this->echoJson($response, $res);
         }
-
+        $online_log = new NodeOnlineLog();
+        $online_log->node_id = $node_id;
+        $online_log->online_user = count($data);
+        $online_log->log_time = time();
+        $online_log->save();
         if (count($data) > 0) {
             foreach ($data as $log) {
-                $u = $log['u'];
-                $d = $log['d'];
                 $user_id = $log['user_id'];
-
                 $user = User::find($user_id);
-
                 if ($user == null) {
                     continue;
                 }
-
+                if ($user->class == 0) {
+                    continue;
+                }
+                $u = $log['u'];
+                $d = $log['d'];
                 $user->t = time();
                 $user->u += $u * $node->traffic_rate;
                 $user->d += $d * $node->traffic_rate;
@@ -182,12 +186,6 @@ class UserController extends BaseController
         $node->node_bandwidth += $this_time_total_bandwidth;
         $node->save();
 
-        $online_log = new NodeOnlineLog();
-        $online_log->node_id = $node_id;
-        $online_log->online_user = count($data);
-        $online_log->log_time = time();
-        $online_log->save();
-
         $res = [
             'ret' => 1,
             'data' => 'ok',
@@ -197,36 +195,36 @@ class UserController extends BaseController
 
     public function addAliveIp($request, $response, $args)
     {
-        $params = $request->getQueryParams();
-
-        $data = $request->getParam('data');
-        $node_id = $params['node_id'];
-        if ($node_id == '0') {
-            $node = Node::where('node_ip', $_SERVER['REMOTE_ADDR'])->first();
-            $node_id = $node->id;
-        }
-        $node = Node::find($node_id);
-
-        if ($node == null) {
-            $res = [
-                'ret' => 0
-            ];
-            return $this->echoJson($response, $res);
-        }
-        if (count($data) > 0) {
-            foreach ($data as $log) {
-                $ip = $log['ip'];
-                $userid = $log['user_id'];
-
-                // log
-                $ip_log = new Ip();
-                $ip_log->userid = $userid;
-                $ip_log->nodeid = $node_id;
-                $ip_log->ip = $ip;
-                $ip_log->datetime = time();
-                $ip_log->save();
-            }
-        }
+//        $params = $request->getQueryParams();
+//
+//        $data = $request->getParam('data');
+//        $node_id = $params['node_id'];
+//        if ($node_id == '0') {
+//            $node = Node::where('node_ip', $_SERVER['REMOTE_ADDR'])->first();
+//            $node_id = $node->id;
+//        }
+//        $node = Node::find($node_id);
+//
+//        if ($node == null) {
+//            $res = [
+//                'ret' => 0
+//            ];
+//            return $this->echoJson($response, $res);
+//        }
+//        if (count($data) > 0) {
+//            foreach ($data as $log) {
+//                $ip = $log['ip'];
+//                $userid = $log['user_id'];
+//
+//                // log
+//                $ip_log = new Ip();
+//                $ip_log->userid = $userid;
+//                $ip_log->nodeid = $node_id;
+//                $ip_log->ip = $ip;
+//                $ip_log->datetime = time();
+//                $ip_log->save();
+//            }
+//        }
 
         $res = [
             'ret' => 1,

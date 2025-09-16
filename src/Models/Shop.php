@@ -183,7 +183,7 @@ class Shop extends Model
                     $user->node_speedlimit = $value;
                     break;
                 case 'connector':
-                    $user->node_connector = $value;
+                    $user->node_connector = $user->node_connector != $value ? $user->node_connector : $value;
                     break;
                 default:
             }
