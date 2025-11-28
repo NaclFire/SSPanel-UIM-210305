@@ -243,6 +243,8 @@
     }
 
     function userRenew(shopId) {
+        $("#result").modal();
+        $$.getElementById('msg').innerHTML = `正在处理，请稍等`;
         $.ajax({
             type: 'post',
             url: '/admin/user/buy',
