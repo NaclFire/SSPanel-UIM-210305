@@ -45,10 +45,7 @@ class NodeController extends AdminController
             'node_bandwidth'          => '已走流量/GB',
             'node_bandwidth_limit'    => '流量限制/GB',
             'bandwidthlimit_resetday' => '流量重置日',
-            'node_heartbeat'          => '上一次活跃时间',
-            'custom_method'           => '自定义加密',
-            'custom_rss'              => '自定义协议以及混淆',
-            'mu_only'                 => '只启用单端口多用户'
+            'node_heartbeat'          => '上一次活跃时间'
         );
         $table_config['default_show_column'] = array('op', 'id', 'name', 'sort');
         $table_config['ajax_url'] = 'node/ajax';
@@ -94,6 +91,7 @@ class NodeController extends AdminController
         $node->node_speedlimit  = $request->getParam('node_speedlimit');
         $node->status           = $request->getParam('status');
         $node->sort             = $request->getParam('sort');
+        $node->create_at        = date('Y-m-d H:i:s');
 
         $req_node_ip = trim($request->getParam('node_ip'));
         if ($req_node_ip == '') {
@@ -338,10 +336,7 @@ class NodeController extends AdminController
                 ->orwhere('node_bandwidth', 'LIKE', "%$search%")
                 ->orwhere('node_bandwidth_limit', 'LIKE', "%$search%")
                 ->orwhere('bandwidthlimit_resetday', 'LIKE', "%$search%")
-                ->orwhere('node_heartbeat', $like_str, "%$search%")
-                ->orwhere('custom_method', 'LIKE', "%$search%")
-                ->orwhere('custom_rss', 'LIKE', "%$search%")
-                ->orwhere('mu_only', 'LIKE', "%$search%");
+                ->orwhere('node_heartbeat', $like_str, "%$search%");
         }
         $query_count = clone $query;
         $nodes = $query->orderByRaw($order_field . ' ' . $order)
@@ -361,32 +356,8 @@ class NodeController extends AdminController
                 case 0:
                     $sort = 'Shadowsocks';
                     break;
-                case 1:
-                    $sort = 'VPN/Radius基础';
-                    break;
-                case 2:
-                    $sort = 'SSH';
-                    break;
-                case 5:
-                    $sort = 'Anyconnect';
-                    break;
-                case 9:
-                    $sort = 'Shadowsocks - 单端口多用户';
-                    break;
-                case 10:
-                    $sort = 'Shadowsocks - 中转';
-                    break;
                 case 11:
                     $sort = 'V2Ray 节点';
-                    break;
-                case 12:
-                    $sort = 'V2Ray - 中转';
-                    break;
-                case 13:
-                    $sort = 'Shadowsocks - V2Ray-Plugin&Obfs';
-                    break;
-                case 14:
-                    $sort = 'Trojan';
                     break;
                 default:
                     $sort = '系统保留';
@@ -405,9 +376,6 @@ class NodeController extends AdminController
             $tempdata['node_bandwidth_limit']       = Tools::flowToGB($node->node_bandwidth_limit);
             $tempdata['bandwidthlimit_resetday']    = $node->bandwidthlimit_resetday;
             $tempdata['node_heartbeat']             = date('Y-m-d H:i:s', $node->node_heartbeat);
-            $tempdata['custom_method']              = ((bool) $node->custom_method ? '启用' : '关闭');
-            $tempdata['custom_rss']                 = ((bool) $node->custom_rss ? '启用' : '关闭');
-            $tempdata['mu_only']                    = ($node->mu_only == 1 ? '启用' : '关闭');
 
             $data[] = $tempdata;
         }

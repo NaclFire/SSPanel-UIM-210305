@@ -34,13 +34,6 @@ class CheckinCommand extends Command
         $ChatID = $Message->getChat()->getId();
 
         if ($ChatID < 0) {
-            // 群组
-            if ($_ENV['enable_delete_user_cmd'] === true) {
-                TelegramTools::DeleteMessage([
-                    'chatid'      => $ChatID,
-                    'messageid'   => $Message->getMessageId(),
-                ]);
-            }
             if ($_ENV['telegram_group_quiet'] === true) {
                 // 群组中不回应
                 return;

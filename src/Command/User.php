@@ -14,14 +14,14 @@ use Ramsey\Uuid\Uuid;
 class User extends Command
 {
     public $description = ''
-        . '├─=: php xcat User [选项]' . PHP_EOL
-        . '│ ├─ getCookie               - 获取指定用户的 Cookie' . PHP_EOL
-        . '│ ├─ resetPort               - 重置单个用户端口' . PHP_EOL
-        . '│ ├─ createAdmin             - 创建管理员帐号' . PHP_EOL
-        . '│ ├─ resetAllPort            - 重置所有用户端口' . PHP_EOL
-        . '│ ├─ resetTraffic            - 重置所有用户流量' . PHP_EOL
-        . '│ ├─ generateUUID            - 为所有用户生成新的UUID' . PHP_EOL
-        . '│ ├─ cleanRelayRule          - 清除所有中转规则' . PHP_EOL;
+    . '├─=: php xcat User [选项]' . PHP_EOL
+    . '│ ├─ getCookie               - 获取指定用户的 Cookie' . PHP_EOL
+    . '│ ├─ resetPort               - 重置单个用户端口' . PHP_EOL
+    . '│ ├─ createAdmin             - 创建管理员帐号' . PHP_EOL
+    . '│ ├─ resetAllPort            - 重置所有用户端口' . PHP_EOL
+    . '│ ├─ resetTraffic            - 重置所有用户流量' . PHP_EOL
+    . '│ ├─ generateUUID            - 为所有用户生成新的 UUID' . PHP_EOL
+    . '│ ├─ cleanRelayRule          - 清除所有中转规则' . PHP_EOL;
 
     public function boot()
     {
@@ -45,10 +45,10 @@ class User extends Command
     public function resetPort()
     {
         fwrite(STDOUT, '请输入用户id: ');
-        $user        = ModelsUser::Where('id', '=', trim(fgets(STDIN)))->first();
+        $user = ModelsUser::Where('id', '=', trim(fgets(STDIN)))->first();
         if ($user !== null) {
             $origin_port = $user->port;
-            $user->port  = Tools::getAvPort();
+            $user->port = Tools::getAvPort();
             $relay_rules = Relay::where('user_id', $user->id)->where('port', $origin_port)->get();
             foreach ($relay_rules as $rule) {
                 $rule->port = $user->port;
@@ -72,7 +72,7 @@ class User extends Command
         $users = ModelsUser::all();
         foreach ($users as $user) {
             $origin_port = $user->port;
-            $user->port  = Tools::getAvPort();
+            $user->port = Tools::getAvPort();
             echo '$origin_port=' . $origin_port . '&$user->port=' . $user->port . PHP_EOL;
             $user->save();
         }
@@ -87,8 +87,8 @@ class User extends Command
     {
         try {
             ModelsUser::where('enable', 1)->update([
-                'd'          => 0,
-                'u'          => 0,
+                'd' => 0,
+                'u' => 0,
                 'last_day_t' => 0,
             ]);
         } catch (Exception $e) {
@@ -126,16 +126,16 @@ class User extends Command
     {
         $rules = Relay::all();
         foreach ($rules as $rule) {
-            echo ($rule->id . "\n");
+            echo($rule->id . "\n");
             if ($rule->source_node_id == 0) {
-                echo ($rule->id . "被删除！\n");
+                echo($rule->id . "被删除！\n");
                 $rule->delete();
                 continue;
             }
             $ruleset = Relay::where('user_id', $rule->user_id)->orwhere('user_id', 0)->get();
             $maybe_rule_id = Tools::has_conflict_rule($rule, $ruleset, $rule->id);
             if ($maybe_rule_id != 0) {
-                echo ($rule->id . "被删除！\n");
+                echo($rule->id . "被删除！\n");
                 $rule->delete();
             }
         }
@@ -161,43 +161,43 @@ class User extends Command
             fwrite(STDOUT, "Press [y] to create admin..... 按下[Y]确认来确认创建管理员账户..... \n");
             $y = trim(fgets(STDIN));
         } elseif (count($this->argv) === 5) {
-            [,,, $email, $passwd] = $this->argv;
+            [, , , $email, $passwd] = $this->argv;
             $y = 'y';
         }
 
         if (strtolower($y) == 'y') {
             echo 'start create admin account';
-            $current_timestamp          = time();
+            $current_timestamp = time();
             // create admin user
             // do reg user
-            $user                   = new ModelsUser();
-            $user->user_name        = 'admin';
-            $user->email            = $email;
-            $user->pass             = Hash::passwordHash($passwd);
-            $user->passwd           = Tools::genRandomChar(6);
-            $user->uuid             = Uuid::uuid3(Uuid::NAMESPACE_DNS, $email . '|' . $current_timestamp);
-            $user->port             = Tools::getLastPort() + 1;
-            $user->t                = 0;
-            $user->u                = 0;
-            $user->d                = 0;
-            $user->transfer_enable  = Tools::toGB((int) Config::getconfig('Register.string.defaultTraffic'));
-            $user->invite_num       = (int) Config::getconfig('Register.string.defaultInviteNum');
-            $user->ref_by           = 0;
-            $user->is_admin         = 1;
-            $user->expire_in        = date('Y-m-d H:i:s', time() + (int) Config::getconfig('Register.string.defaultExpire_in') * 86400);
-            $user->reg_date         = date('Y-m-d H:i:s');
-            $user->money            = 0;
-            $user->im_type          = 1;
-            $user->im_value         = '';
-            $user->class            = 0;
-            $user->plan             = 'A';
-            $user->node_speedlimit  = 0;
-            $user->theme            = $_ENV['theme'];
+            $user = new ModelsUser();
+            $user->user_name = 'admin';
+            $user->email = $email;
+            $user->pass = Hash::passwordHash($passwd);
+            $user->passwd = Tools::genRandomChar(6);
+            $user->uuid = Uuid::uuid3(Uuid::NAMESPACE_DNS, $email . '|' . $current_timestamp);
+            $user->port = Tools::getLastPort() + 1;
+            $user->t = 0;
+            $user->u = 0;
+            $user->d = 0;
+            $user->transfer_enable = Tools::toGB((int)Config::getconfig('Register.string.defaultTraffic'));
+            $user->invite_num = (int)Config::getconfig('Register.string.defaultInviteNum');
+            $user->ref_by = 0;
+            $user->is_admin = 1;
+            $user->expire_in = date('Y-m-d H:i:s', time() + (int)Config::getconfig('Register.string.defaultExpire_in') * 86400);
+            $user->reg_date = date('Y-m-d H:i:s');
+            $user->money = 0;
+            $user->im_type = 1;
+            $user->im_value = '';
+            $user->class = 0;
+            $user->plan = 'A';
+            $user->node_speedlimit = 0;
+            $user->theme = $_ENV['theme'];
 
-            $ga                     = new GA();
-            $secret                 = $ga->createSecret();
-            $user->ga_token         = $secret;
-            $user->ga_enable        = 0;
+            $ga = new GA();
+            $secret = $ga->createSecret();
+            $user->ga_token = $secret;
+            $user->ga_enable = 0;
 
             if ($user->save()) {
                 echo 'Successful/添加成功!' . PHP_EOL;

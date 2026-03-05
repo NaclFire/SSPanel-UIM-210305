@@ -38,13 +38,6 @@ class InfoCommand extends Command
         $MessageID = $Message->getMessageId();
 
         if ($ChatID < 0) {
-            // 群组
-            if ($_ENV['enable_delete_user_cmd'] === true) {
-                TelegramTools::DeleteMessage([
-                    'chatid'      => $ChatID,
-                    'messageid'   => $MessageID,
-                ]);
-            }
             // 发送 '输入中' 会话状态
             $this->replyWithChatAction(['action' => Actions::TYPING]);
             // 触发用户

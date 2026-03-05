@@ -455,7 +455,7 @@
                                                 <p>
                                                     应用下载：
                                                     <a class="btn-dl"
-                                                       href="{if $config["subscribe_client"]===true}{if $config["subscribe_client_url"]==''}/user/getPcClient{else}{$config["subscribe_client_url"]}/getClient/{$getClient}{/if}?type=ss-win{else}/ssr-download/ss-win.zip{/if}"><i
+                                                       href="{if $config["subscribe_client"]===true}{if $config["subscribe_client_url"]==''}/user/getPcClient{else}{$config["subscribe_client_url"]}/getClient/{$getClient}{/if}?type=ss-win{else}/clients/ss-win.zip{/if}"><i
                                                                 class="material-icons icon-sm">cloud_download</i>
                                                         本站下载【高速】</a>
                                                     .
@@ -481,7 +481,7 @@
                                                 <p>
                                                     应用下载：
                                                     <a class="btn-dl"
-                                                       href="{if $config["subscribe_client"]===true}{if $config["subscribe_client_url"]==''}/user/getPcClient{else}{$config["subscribe_client_url"]}/getClient/{$getClient}{/if}?type=ssr-win{else}/ssr-download/ssr-win.7z{/if}"><i
+                                                       href="{if $config["subscribe_client"]===true}{if $config["subscribe_client_url"]==''}/user/getPcClient{else}{$config["subscribe_client_url"]}/getClient/{$getClient}{/if}?type=ssr-win{else}/clients/ssr-win.7z{/if}"><i
                                                                 class="material-icons icon-sm">cloud_download</i>
                                                         本站下载【高速】</a>
                                                     .
@@ -509,7 +509,7 @@
                                                     SS/SSR ]：</p>
                                                 <p>
                                                     应用下载：
-                                                    <a class="btn-dl" href="/ssr-download/SSTap.7z"><i
+                                                    <a class="btn-dl" href="/clients/SSTap.7z"><i
                                                                 class="material-icons icon-sm">cloud_download</i>
                                                         本站下载【高速】</a>
                                                 </p>
@@ -530,7 +530,7 @@
                                                 <p>
                                                     应用下载：
                                                     <a class="btn-dl"
-                                                       href="{if $config["subscribe_client"]===true}{if $config["subscribe_client_url"]==''}/user/getPcClient{else}{$config["subscribe_client_url"]}/getClient/{$getClient}{/if}?type=v2rayn-win{else}/ssr-download/v2rayn.zip{/if}"><i
+                                                       href="{if $config["subscribe_client"]===true}{if $config["subscribe_client_url"]==''}/user/getPcClient{else}{$config["subscribe_client_url"]}/getClient/{$getClient}{/if}?type=v2rayn-win{else}/clients/v2rayn.zip{/if}"><i
                                                                 class="material-icons icon-sm">cloud_download</i>
                                                         本站下载【高速】</a>
                                                     .
@@ -558,7 +558,7 @@
                                                     Windows - [ SS/VMess/Trojan ]：</p>
                                                 <p>
                                                     应用下载：
-                                                    <a class="btn-dl" href="/ssr-download/Clash-Windows.7z"><i
+                                                    <a class="btn-dl" href="/clients/Clash-Windows.7z"><i
                                                                 class="material-icons icon-sm">cloud_download</i>
                                                         本站下载【高速】</a>
                                                     .
@@ -648,7 +648,7 @@
                                                     SS/VMess ]：</p>
                                                 <p>
                                                     应用下载：
-                                                    <a class="btn-dl" href="/ssr-download/ClashX.dmg"><i
+                                                    <a class="btn-dl" href="/clients/ClashX.dmg"><i
                                                                 class="material-icons icon-sm">cloud_download</i>
                                                         本站下载【高速】</a>
                                                     .
@@ -699,7 +699,7 @@
                                                     SS/VMess ]：</p>
                                                 <p>
                                                     应用下载：
-                                                    <a class="btn-dl" href="/ssr-download/V2rayU.dmg"><i
+                                                    <a class="btn-dl" href="/clients/V2rayU.dmg"><i
                                                                 class="material-icons icon-sm">cloud_download</i>
                                                         本站下载【高速】</a>
                                                 </p>
@@ -720,7 +720,7 @@
                                                     - [ SS ]：</p>
                                                 <p>
                                                     应用下载：
-                                                    <a class="btn-dl" href="/ssr-download/ss-mac.zip"><i
+                                                    <a class="btn-dl" href="/clients/ss-mac.zip"><i
                                                                 class="material-icons icon-sm">cloud_download</i>
                                                         本站下载【高速】</a>
                                                 </p>
@@ -741,7 +741,7 @@
                                                     ShadowsocksX-NG-R8 - [ SSR ]：</p>
                                                 <p>
                                                     应用下载：
-                                                    <a class="btn-dl" href="/ssr-download/ssr-mac.dmg"><i
+                                                    <a class="btn-dl" href="/clients/ssr-mac.dmg"><i
                                                                 class="material-icons icon-sm">cloud_download</i>
                                                         本站下载【高速】</a>
                                                 </p>
@@ -979,7 +979,7 @@
                                                     以上版本支持订阅，如您未找到订阅配置之处，请尝试升级客户端.</p>
                                                 <p>
                                                     应用下载：
-                                                    <a class="btn-dl" href="/ssr-download/ss-android.apk"><i
+                                                    <a class="btn-dl" href="/clients/ss-android.apk"><i
                                                                 class="material-icons icon-sm">cloud_download</i>
                                                         本站下载【高速】</a>
                                                     .
@@ -989,7 +989,7 @@
                                                 </p>
                                                 <p>
                                                     插件下载：
-                                                    <a class="btn-dl" href="/ssr-download/ss-android-obfs.apk"><i
+                                                    <a class="btn-dl" href="/clients/ss-android-obfs.apk"><i
                                                                 class="material-icons icon-sm">cloud_download</i>
                                                         「必须」obfs 插件本站下载【高速】</a>
                                                 </p>
@@ -1009,11 +1009,11 @@
                                                     ]：</p>
                                                 <p>
                                                     应用下载：
-                                                    <a class="btn-dl" href="/ssr-download/ssr-android.apk"><i
+                                                    <a class="btn-dl" href="/clients/ssr-android.apk"><i
                                                                 class="material-icons icon-sm">cloud_download</i> SSR
                                                         本站下载【高速】</a>
                                                     .
-                                                    <a class="btn-dl" href="/ssr-download/ssrr-android.apk"><i
+                                                    <a class="btn-dl" href="/clients/ssrr-android.apk"><i
                                                                 class="material-icons icon-sm">cloud_download</i> SSRR
                                                         本站下载【高速】</a>
                                                 </p>
@@ -1033,7 +1033,7 @@
                                                     SS/VMess ]：</p>
                                                 <p>
                                                     应用下载：
-                                                    <a class="btn-dl" href="/ssr-download/v2rayng.apk"><i
+                                                    <a class="btn-dl" href="/clients/v2rayng.apk"><i
                                                                 class="material-icons icon-sm">cloud_download</i>
                                                         本站下载【高速】</a>
                                                     .
@@ -1138,7 +1138,7 @@
                                                     [ SSR ]：</p>
                                                 <p>
                                                     应用下载：
-                                                    <a class="btn-dl" href="/ssr-download/ssr-linux.AppImage"><i
+                                                    <a class="btn-dl" href="/clients/ssr-linux.AppImage"><i
                                                                 class="material-icons icon-sm">cloud_download</i>
                                                         本站下载【高速】</a>
                                                 </p>

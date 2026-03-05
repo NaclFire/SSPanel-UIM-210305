@@ -139,7 +139,10 @@ class Tools
         }
         return $char;
     }
-
+    public static function getServerKey($timestamp, $length)
+    {
+        return base64_encode(substr(md5($timestamp), 0, $length));
+    }
     public static function genToken()
     {
         return self::genRandomChar(64);

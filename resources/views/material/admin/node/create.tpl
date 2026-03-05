@@ -33,11 +33,6 @@
                                     <p class="form-control-guide"><i class="material-icons">info</i>如果“节点地址”填写为域名，则此处的值会被忽视
                                     </p>
                                 </div>
-                                <div class="form-group form-group-label" hidden="hidden">
-                                    <label class="floating-label" for="method">加密方式</label>
-                                    <input class="form-control maxwidth-edit" id="method" type="text" name="method"
-                                           value="aes-256-cfb">
-                                </div>
                                 <div class="form-group form-group-label">
                                     <label class="floating-label" for="rate">流量比例</label>
                                     <input class="form-control maxwidth-edit" id="rate" type="text" name="rate"
@@ -60,7 +55,7 @@
                                         </label>
                                     </div>
                                 </div>
-                                <div class="form-group form-group-label">
+                                <div class="form-group form-group-label" hidden="hidden">
                                     <label for="mu_only">
                                         <label class="floating-label" for="sort">单端口多用户启用</label>
                                         <select id="mu_only" class="form-control maxwidth-edit" name="is_multi_user">
@@ -94,15 +89,20 @@
                                         <label class="floating-label" for="sort">节点类型</label>
                                         <select id="sort" class="form-control maxwidth-edit" name="sort">
                                             <option value="0">Shadowsocks</option>
-                                            <option value="1">VPN/Radius基础</option>
-                                            <option value="2">SSH</option>
-                                            <option value="5">Anyconnect</option>
-                                            <option value="9">Shadowsocks 单端口多用户</option>
-                                            <option value="10">Shadowsocks 中转</option>
                                             <option value="11">V2Ray</option>
-                                            <option value="12">V2Ray 中转</option>
-                                            <option value="13">Shadowsocks V2Ray-Plugin&Obfs</option>
-                                            <option value="14">Trojan</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group form-group-label" id="method_group" style="display:none;">
+                                    <div class="form-group form-group-label">
+                                        <label class="floating-label" for="sort">加密方式</label>
+                                        <select id="method" name="method" class="form-control maxwidth-edit">
+                                            <option value="0">aes-128-gcm</option>
+                                            <option value="1">aes-192-gcm</option>
+                                            <option value="2">aes-256-gcm</option>
+                                            <option value="3">chacha20-ietf-poly1305</option>
+                                            <option value="4">2022-blake3-aes-128-gcm</option>
+                                            <option value="5">2022-blake3-aes-256-gcm</option>
                                         </select>
                                     </div>
                                 </div>
@@ -168,6 +168,25 @@
 
 <script>
     {literal}
+    document.addEventListener("DOMContentLoaded", function () {
+
+        const sortSelect = document.getElementById("sort");
+        const methodGroup = document.getElementById("method_group");
+
+        function toggleMethod() {
+            if (sortSelect.value === "0") {
+                methodGroup.style.display = "block";  // 显示
+            } else {
+                methodGroup.style.display = "none";   // 隐藏
+            }
+        }
+
+        // 页面加载时执行一次
+        toggleMethod();
+
+        // 监听变化
+        sortSelect.addEventListener("change", toggleMethod);
+    });
     $('#main_form').validate({
         rules: {
             name: {required: true},

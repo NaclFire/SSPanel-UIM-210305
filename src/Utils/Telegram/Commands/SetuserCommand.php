@@ -44,13 +44,6 @@ class SetuserCommand extends Command
             'username' => $Message->getFrom()->getUsername(),
         ];
 
-        if ($_ENV['enable_delete_user_cmd'] === true) {
-            TelegramTools::DeleteMessage([
-                'chatid'      => $ChatID,
-                'messageid'   => $Message->getMessageId(),
-            ]);
-        }
-
         if (!in_array($SendUser['id'], $_ENV['telegram_admins'])) {
             $AdminUser = User::where('is_admin', 1)->where('telegram_id', $SendUser['id'])->first();
             if ($AdminUser == null) {

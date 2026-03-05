@@ -285,7 +285,7 @@ class AuthController extends BaseController
             }
 
             $ipcount = EmailVerify::where('ip', '=', $_SERVER['REMOTE_ADDR'])->where('expire_in', '>', time())->count();
-            if ($ipcount >= (int) Config::getconfig('Register.string.Email_verify_iplimit')) {
+            if ($ipcount >= (int)Config::getconfig('Register.string.Email_verify_iplimit')) {
                 $res['ret'] = 0;
                 $res['msg'] = '此IP请求次数过多';
                 return $response->getBody()->write(json_encode($res));
@@ -302,7 +302,7 @@ class AuthController extends BaseController
             $code = Tools::genRandomNum(6);
 
             $ev = new EmailVerify();
-            $ev->expire_in = time() + (int) Config::getconfig('Register.string.Email_verify_ttl');
+            $ev->expire_in = time() + (int)Config::getconfig('Register.string.Email_verify_ttl');
             $ev->ip = $_SERVER['REMOTE_ADDR'];
             $ev->email = $email;
             $ev->code = $code;
@@ -312,7 +312,7 @@ class AuthController extends BaseController
 
             try {
                 Mail::send($email, $subject, 'auth/verify.tpl', [
-                    'code' => $code, 'expire' => date('Y-m-d H:i:s', time() + (int) Config::getconfig('Register.string.Email_verify_ttl'))
+                    'code' => $code, 'expire' => date('Y-m-d H:i:s', time() + (int)Config::getconfig('Register.string.Email_verify_ttl'))
                 ], [
                     //BASE_PATH.'/public/assets/email/styles.css'
                 ]);
@@ -339,7 +339,7 @@ class AuthController extends BaseController
         }
 
         //dumplin：1、邀请人等级为0则邀请码不可用；2、邀请人invite_num为可邀请次数，填负数则为无限
-        if ($code != null){
+        if ($code != null) {
             $c = InviteCode::where('code', $code)->first();
         }
         if ($c == null) {
@@ -370,40 +370,40 @@ class AuthController extends BaseController
         }
 
         // do reg user
-        $user                       = new User();
-        $antiXss                    = new AntiXSS();
-        $current_timestamp          = time();
+        $user = new User();
+        $antiXss = new AntiXSS();
+        $current_timestamp = time();
 
-        $user->user_name            = $antiXss->xss_clean($name);
-        $user->email                = $email;
-        $user->pass                 = Hash::passwordHash($passwd);
-        $user->passwd               = Tools::genRandomChar(6);
-        $user->uuid                 = Uuid::uuid3(Uuid::NAMESPACE_DNS, $email . '|' . $current_timestamp);
-        $user->port                 = Tools::getAvPort();
-        $user->t                    = 0;
-        $user->u                    = 0;
-        $user->d                    = 0;
-        $user->method               = Config::getconfig('Register.string.defaultMethod');
-        $user->protocol             = Config::getconfig('Register.string.defaultProtocol');
-        $user->protocol_param       = Config::getconfig('Register.string.defaultProtocol_param');
-        $user->obfs                 = Config::getconfig('Register.string.defaultObfs');
-        $user->obfs_param           = Config::getconfig('Register.string.defaultObfs_param');
-        $user->forbidden_ip         = $_ENV['reg_forbidden_ip'];
-        $user->forbidden_port       = $_ENV['reg_forbidden_port'];
-        $user->im_type              = $imtype;
-        $user->im_value             = $antiXss->xss_clean($imvalue);
-        $user->transfer_enable      = Tools::toGB((int) Config::getconfig('Register.string.defaultTraffic'));
-        $user->invite_num           = (int) Config::getconfig('Register.string.defaultInviteNum');
-        $user->auto_reset_day       = $_ENV['reg_auto_reset_day'];
+        $user->user_name = $antiXss->xss_clean($name);
+        $user->email = $email;
+        $user->pass = Hash::passwordHash($passwd);
+        $user->passwd = Tools::genRandomChar(6);
+        $user->uuid = Uuid::uuid3(Uuid::NAMESPACE_DNS, $email . '|' . $current_timestamp);
+        $user->port = Tools::getAvPort();
+        $user->t = 0;
+        $user->u = 0;
+        $user->d = 0;
+        $user->method = Config::getconfig('Register.string.defaultMethod');
+        $user->protocol = Config::getconfig('Register.string.defaultProtocol');
+        $user->protocol_param = Config::getconfig('Register.string.defaultProtocol_param');
+        $user->obfs = Config::getconfig('Register.string.defaultObfs');
+        $user->obfs_param = Config::getconfig('Register.string.defaultObfs_param');
+        $user->forbidden_ip = $_ENV['reg_forbidden_ip'];
+        $user->forbidden_port = $_ENV['reg_forbidden_port'];
+        $user->im_type = $imtype;
+        $user->im_value = $antiXss->xss_clean($imvalue);
+        $user->transfer_enable = Tools::toGB(Config::getconfig('Register.string.defaultTraffic'));
+        $user->invite_num = (int)Config::getconfig('Register.string.defaultInviteNum');
+        $user->auto_reset_day = $_ENV['reg_auto_reset_day'];
         $user->auto_reset_bandwidth = $_ENV['reg_auto_reset_bandwidth'];
-        $user->money                = 0;
-        $user->sendDailyMail        = Config::getconfig('Register.bool.send_dailyEmail');
+        $user->money = 0;
+        $user->sendDailyMail = Config::getconfig('Register.bool.send_dailyEmail');
 
         //dumplin：填写邀请人，写入邀请奖励
         $user->ref_by = 0;
         if ($c != null && $c->user_id != 0) {
             $user->ref_by = $c->user_id;
-            $user->money = (int) Config::getconfig('Register.string.defaultInvite_get_money');
+            $user->money = (int)Config::getconfig('Register.string.defaultInvite_get_money');
             $gift_user->transfer_enable += $_ENV['invite_gift'] * 1024 * 1024 * 1024;
             --$gift_user->invite_num;
             $gift_user->save();
@@ -412,19 +412,19 @@ class AuthController extends BaseController
             $user->telegram_id = $telegram_id;
         }
 
-        $user->class_expire     = date('Y-m-d H:i:s', time() + (int) Config::getconfig('Register.string.defaultClass_expire') * 3600);
-        $user->class            = (int) Config::getconfig('Register.string.defaultClass');
-        $user->node_connector   = (int) Config::getconfig('Register.string.defaultConn');
-        $user->node_speedlimit  = (int) Config::getconfig('Register.string.defaultSpeedlimit');
-        $user->expire_in        = date('Y-m-d H:i:s', time() + (int) Config::getconfig('Register.string.defaultExpire_in') * 86400);
-        $user->reg_date         = date('Y-m-d H:i:s');
-        $user->reg_ip           = $_SERVER['REMOTE_ADDR'];
-        $user->plan             = 'A';
-        $user->theme            = $_ENV['theme'];
+        $user->class_expire = date('Y-m-d H:i:s', time() + (int)Config::getconfig('Register.string.defaultClass_expire') * 3600);
+        $user->class = (int)Config::getconfig('Register.string.defaultClass');
+        $user->node_connector = (int)Config::getconfig('Register.string.defaultConn');
+        $user->node_speedlimit = (int)Config::getconfig('Register.string.defaultSpeedlimit');
+        $user->expire_in = date('Y-m-d H:i:s', time() + (int)Config::getconfig('Register.string.defaultExpire_in') * 86400);
+        $user->reg_date = date('Y-m-d H:i:s');
+        $user->reg_ip = $_SERVER['REMOTE_ADDR'];
+        $user->plan = 'A';
+        $user->theme = $_ENV['theme'];
 
-        $groups                 = explode(',', $_ENV['random_group']);
+        $groups = explode(',', $_ENV['random_group']);
 
-        $user->node_group       = $groups[array_rand($groups)];
+        $user->node_group = $groups[array_rand($groups)];
 
         $ga = new GA();
         $secret = $ga->createSecret();

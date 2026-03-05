@@ -4,6 +4,7 @@
 namespace App\Controllers\Mod_Mu;
 
 use App\Controllers\BaseController;
+use App\Utils\Tools;
 use App\Models\{
     Node,
     NodeInfoLog
@@ -55,12 +56,14 @@ class NodeController extends BaseController
             ];
             return $this->echoJson($response, $res);
         }
-        if (in_array($node->sort, [0, 10])) {
-            $node_explode = explode(';', $node->server);
-            $node_server = $node_explode[0];
-        } else {
-            $node_server = $node->server;
-        }
+        $node_server = $node->server;
+        $methodKeyLengthMap = [
+            '2022-blake3-aes-128-gcm' => 16,
+            '2022-blake3-aes-256-gcm' => 32,
+        ];
+
+        $keyLength = $methodKeyLengthMap[$node->method] ?? null;
+
         $res = [
             'ret' => 1,
             'data' => [
@@ -71,6 +74,8 @@ class NodeController extends BaseController
                 'mu_only' => $node->mu_only,
                 'sort' => $node->sort,
                 'server' => $node_server,
+                'method' => $node->method,
+                'server_key' => $keyLength ? Tools::getServerKey($node->create_at, $keyLength) : null,
                 'type' => 'ss-panel-v3-mod_Uim'
             ],
         ];
@@ -108,7 +113,7 @@ class NodeController extends BaseController
                 break;
             case ('webapi'):
                 $webapiConfig = [];
-                #todo
+            #todo
         }
         return $this->echoJson($response, $res);
     }

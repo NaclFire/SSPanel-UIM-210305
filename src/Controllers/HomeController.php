@@ -23,66 +23,29 @@ use Psr\Http\Message\ResponseInterface;
 class HomeController extends BaseController
 {
     /**
-     * @param Request   $request
-     * @param Response  $response
-     * @param array     $args
+     * @param Request $request
+     * @param Response $response
+     * @param array $args
      */
     public function index($request, $response, $args): ResponseInterface
     {
-        if ($_ENV['newIndex'] === false && $_ENV['theme'] == 'material') {
-            return $response->write($this->view()->fetch('indexold.tpl'));
-        }
-
-        $GtSdk = null;
-        $recaptcha_sitekey = null;
-        if ($_ENV['captcha_provider'] != '') {
-            switch ($_ENV['captcha_provider']) {
-                case 'recaptcha':
-                    $recaptcha_sitekey = $_ENV['recaptcha_sitekey'];
-                    break;
-                case 'geetest':
-                    $uid = time() . random_int(1, 10000);
-                    $GtSdk = Geetest::get($uid);
-                    break;
-            }
-        }
-
-        if ($_ENV['enable_telegram'] == true) {
-            $login_text = TelegramSessionManager::add_login_session();
-            $login = explode('|', $login_text);
-            $login_token = $login[0];
-            $login_number = $login[1];
-        } else {
-            $login_token = '';
-            $login_number = '';
-        }
-
-        return $response->write($this->view()
-            ->assign('geetest_html', $GtSdk)
-            ->assign('login_token', $login_token)
-            ->assign('login_number', $login_number)
-            ->assign('telegram_bot', $_ENV['telegram_bot'])
-            ->assign('enable_logincaptcha', $_ENV['enable_login_captcha'])
-            ->assign('enable_regcaptcha', $_ENV['enable_reg_captcha'])
-            ->assign('base_url', $_ENV['baseUrl'])
-            ->assign('recaptcha_sitekey', $recaptcha_sitekey)
-            ->fetch('index.tpl'));
+        return $response->write($this->view()->fetch('index.tpl'));
     }
 
     /**
-     * @param Request   $request
-     * @param Response  $response
-     * @param array     $args
+     * @param Request $request
+     * @param Response $response
+     * @param array $args
      */
     public function indexold($request, $response, $args): ResponseInterface
     {
-        return $response->write($this->view()->fetch('indexold.tpl'));
+        return $response->write($this->view()->fetch('index.tpl'));
     }
 
     /**
-     * @param Request   $request
-     * @param Response  $response
-     * @param array     $args
+     * @param Request $request
+     * @param Response $response
+     * @param array $args
      */
     public function code($request, $response, $args): ResponseInterface
     {
@@ -91,9 +54,9 @@ class HomeController extends BaseController
     }
 
     /**
-     * @param Request   $request
-     * @param Response  $response
-     * @param array     $args
+     * @param Request $request
+     * @param Response $response
+     * @param array $args
      */
     public function tos($request, $response, $args): ResponseInterface
     {
@@ -101,9 +64,9 @@ class HomeController extends BaseController
     }
 
     /**
-     * @param Request   $request
-     * @param Response  $response
-     * @param array     $args
+     * @param Request $request
+     * @param Response $response
+     * @param array $args
      */
     public function staff($request, $response, $args): ResponseInterface
     {
@@ -111,9 +74,9 @@ class HomeController extends BaseController
     }
 
     /**
-     * @param Request   $request
-     * @param Response  $response
-     * @param array     $args
+     * @param Request $request
+     * @param Response $response
+     * @param array $args
      */
     public function telegram($request, $response, $args): ResponseInterface
     {
@@ -132,9 +95,9 @@ class HomeController extends BaseController
     }
 
     /**
-     * @param Request   $request
-     * @param Response  $response
-     * @param array     $args
+     * @param Request $request
+     * @param Response $response
+     * @param array $args
      */
     public function page404($request, $response, $args): ResponseInterface
     {
@@ -142,9 +105,9 @@ class HomeController extends BaseController
     }
 
     /**
-     * @param Request   $request
-     * @param Response  $response
-     * @param array     $args
+     * @param Request $request
+     * @param Response $response
+     * @param array $args
      */
     public function page405($request, $response, $args): ResponseInterface
     {
@@ -152,9 +115,9 @@ class HomeController extends BaseController
     }
 
     /**
-     * @param Request   $request
-     * @param Response  $response
-     * @param array     $args
+     * @param Request $request
+     * @param Response $response
+     * @param array $args
      */
     public function page500($request, $response, $args): ResponseInterface
     {
@@ -162,9 +125,9 @@ class HomeController extends BaseController
     }
 
     /**
-     * @param Request   $request
-     * @param Response  $response
-     * @param array     $args
+     * @param Request $request
+     * @param Response $response
+     * @param array $args
      */
     public function getOrderList($request, $response, $args): ResponseInterface
     {
@@ -178,9 +141,9 @@ class HomeController extends BaseController
     }
 
     /**
-     * @param Request   $request
-     * @param Response  $response
-     * @param array     $args
+     * @param Request $request
+     * @param Response $response
+     * @param array $args
      */
     public function setOrder($request, $response, $args): ResponseInterface
     {
@@ -196,9 +159,9 @@ class HomeController extends BaseController
     }
 
     /**
-     * @param Request   $request
-     * @param Response  $response
-     * @param array     $args
+     * @param Request $request
+     * @param Response $response
+     * @param array $args
      */
     public function getDocCenter($request, $response, $args): ResponseInterface
     {
@@ -211,9 +174,9 @@ class HomeController extends BaseController
     }
 
     /**
-     * @param Request   $request
-     * @param Response  $response
-     * @param array     $args
+     * @param Request $request
+     * @param Response $response
+     * @param array $args
      */
     public function getSubLink($request, $response, $args): string
     {

@@ -5,12 +5,11 @@ namespace App\Command;
 class Tool extends Command
 {
     public $description = ''
-        . '├─=: php xcat Tool [选项]' . PHP_EOL
-        . '│ ├─ initQQWry               - 下载 IP 解析库' . PHP_EOL
-        . '│ ├─ setTelegram             - 设置 Telegram 机器人' . PHP_EOL
-        . '│ ├─ initdownload            - 下载 SSR 程序至服务器' . PHP_EOL
-        . '│ ├─ detectConfigs           - 检查数据库内新增的配置' . PHP_EOL
-        . '│ ├─ initdocuments           - 下载用户使用文档至服务器' . PHP_EOL;
+    . '├─=: php xcat Tool [选项]' . PHP_EOL
+    . '│ ├─ initQQWry               - 下载 IP 解析库' . PHP_EOL
+    . '│ ├─ setTelegram             - 设置 Telegram 机器人' . PHP_EOL
+    . '│ ├─ detectConfigs           - 检查数据库内新增的配置' . PHP_EOL
+    . '│ ├─ initdocuments           - 下载用户使用文档至服务器' . PHP_EOL;
 
     public function boot()
     {
@@ -38,7 +37,7 @@ class Tool extends Command
             $telegram = new \Telegram\Bot\Api($_ENV['telegram_token']);
             $telegram->removeWebhook();
             if ($telegram->setWebhook(['url' => $WebhookUrl])) {
-                echo ('New Bot @' . $telegram->getMe()->getUsername() . ' 设置成功！');
+                echo('New Bot @' . $telegram->getMe()->getUsername() . ' 设置成功！' . PHP_EOL);
             }
         } else {
             $bot = new \TelegramBot\Api\BotApi($_ENV['telegram_token']);
@@ -49,20 +48,9 @@ class Tool extends Command
             $deleteWebhookReturn = json_decode(curl_exec($ch));
             curl_close($ch);
             if ($deleteWebhookReturn->ok && $deleteWebhookReturn->result && $bot->setWebhook($_ENV['baseUrl'] . '/telegram_callback?token=' . $_ENV['telegram_request_token']) == 1) {
-                echo ('Old Bot 设置成功！' . PHP_EOL);
+                echo('Old Bot 设置成功！' . PHP_EOL);
             }
         }
-    }
-
-    /**
-     * 下载客户端
-     *
-     * @return void
-     */
-    public function initdownload()
-    {
-        system('git clone --depth=3 https://github.com/xcxnig/ssr-download.git ' . BASE_PATH . '/public/ssr-download/ && git gc', $ret);
-        echo $ret;
     }
 
     /**
@@ -83,19 +71,19 @@ class Tool extends Command
      */
     public function initQQWry()
     {
-        echo ('开始下载纯真 IP 数据库....');
+        echo('开始下载纯真 IP 数据库....');
         $qqwry = file_get_contents('https://qqwry.mirror.noc.one/QQWry.Dat?from=sspanel_uim');
         if ($qqwry != '') {
             $fp = fopen(BASE_PATH . '/storage/qqwry.dat', 'wb');
             if ($fp) {
                 fwrite($fp, $qqwry);
                 fclose($fp);
-                echo ('纯真 IP 数据库下载成功！');
+                echo('纯真 IP 数据库下载成功！');
             } else {
-                echo ('纯真 IP 数据库保存失败！');
+                echo('纯真 IP 数据库保存失败！');
             }
         } else {
-            echo ('下载失败！请重试，或在 https://github.com/SukkaW/qqwry-mirror/issues/new 反馈！');
+            echo('下载失败！请重试，或在 https://github.com/SukkaW/qqwry-mirror/issues/new 反馈！');
         }
     }
 

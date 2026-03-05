@@ -355,33 +355,7 @@ return function (SlimApp $app) {
         $this->post('/status', App\Services\Payment::class . ':getStatus');
     });
 
-    // Vue
-    $app->get('/logout', App\Controllers\VueController::class . ':vuelogout');
-    $app->get('/globalconfig', App\Controllers\VueController::class . ':getGlobalConfig');
-    $app->get('/getuserinfo', App\Controllers\VueController::class . ':getUserInfo');
-    $app->post('/getuserinviteinfo', App\Controllers\VueController::class . ':getUserInviteInfo');
-    $app->get('/getusershops', App\Controllers\VueController::class . ':getUserShops');
-    $app->get('/getallresourse', App\Controllers\VueController::class . ':getAllResourse');
-    $app->get('/getnewsubtoken', App\Controllers\VueController::class . ':getNewSubToken');
-    $app->get('/getnewinvotecode', App\Controllers\VueController::class . ':getNewInviteCode');
-    $app->get('/gettransfer', App\Controllers\VueController::class . ':getTransfer');
-    $app->get('/getCaptcha', App\Controllers\VueController::class . ':getCaptcha');
-    $app->post('/getChargeLog', App\Controllers\VueController::class . ':getChargeLog');
-    $app->get('/getnodelist', App\Controllers\VueController::class . ':getNodeList');
-    $app->get('/nodeinfo/{id}', App\Controllers\VueController::class . ':getNodeInfo');
-    $app->get('/resettelegram', App\Controllers\VueController::class . ':telegramReset');
-    $app->get('/getconnectsettings', App\Controllers\VueController::class . ':getConnectSettings');
 
-    /**
-     * chenPay
-     */
-    $app->group('/user', function () {
-        $this->get('/chenPay', App\Services\Payment::class . ':purchase');
-        $this->get('/orderDelete', App\Controllers\UserController::class . ':orderDelete');
-    })->add(new Auth());
-    $app->group('/chenPay', function () {
-        $this->get('/status', App\Services\Payment::class . ':getStatus');
-    });
     $app->group('/admin', function () {
         $this->get('/user', App\Controllers\Admin\UserController::class . ':index');
         $this->get('/trafficlog', App\Controllers\AdminController::class . ':trafficLog');
@@ -401,7 +375,13 @@ return function (SlimApp $app) {
         $this->delete('/bought/refund', App\Controllers\Admin\ShopController::class . ':refundForSalesman');
         $this->post('/bought/ajax', App\Controllers\Admin\ShopController::class . ':ajax_bought');
     })->add(new Salesman());
-    // chenPay end
+    $app->group('/user', function () {
+        $this->get('/chenPay', App\Services\Payment::class . ':purchase');
+        $this->get('/orderDelete', App\Controllers\UserController::class . ':orderDelete');
+    })->add(new Auth());
+    $app->group('/chenPay', function () {
+        $this->get('/status', App\Services\Payment::class . ':getStatus');
+    });
     $app->group('/epay', function () {
         $this->post('/notify', 'App\Services\Payment:notify');
         $this->get('/notify', 'App\Services\Payment:notify');
