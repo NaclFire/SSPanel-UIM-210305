@@ -88,15 +88,14 @@ class UserController extends BaseController
                     continue;
                 }
             }
-            $user_raw = Tools::keyFilter($user_raw, $key_list);
             if ($node->method === '2022-blake3-aes-128-gcm') {
                 $user_raw->passwd = Tools::getServerKey($user_raw->reg_date, 16);
             } else if ($node->method === '2022-blake3-aes-256-gcm') {
                 $user_raw->passwd = Tools::getServerKey($user_raw->reg_date, 32);
             }
+            $user_raw = Tools::keyFilter($user_raw, $key_list);
             $users[] = $user_raw;
         }
-
         $res = [
             'ret' => 1,
             'data' => $users
