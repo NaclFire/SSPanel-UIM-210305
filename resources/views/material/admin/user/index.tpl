@@ -31,7 +31,7 @@
                                 </p>
                             {/if}
                             <p>
-                                付费用户：{$user->paidUserCount()}
+                                未到期用户：{$user->paidUserCount()}
                             </p>
                             <p>显示表项:
                                 {include file='table/checkbox.tpl'}

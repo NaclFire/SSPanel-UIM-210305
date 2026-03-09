@@ -14,6 +14,7 @@ use App\Models\NodeOnlineLog;
 use App\Models\RadiusBan;
 use App\Models\Shop;
 use App\Models\Speedtest;
+use App\Models\TelegramSession;
 use App\Models\Token;
 use App\Models\TrafficLog;
 use App\Models\UnblockIp;

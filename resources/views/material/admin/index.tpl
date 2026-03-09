@@ -15,7 +15,7 @@
                             <div class="card-inner">
                                 <p>下面是系统运行情况简报。</p>
                                 <p>
-                                    付费用户：{$user->paidUserCount()}<br/>
+                                    未到期用户：{$user->paidUserCount()}<br/>
                                     总共用户：{$user->count()}<br/>
                                     总转换率：{round($user->paidUserCount()/$user->count()*100,2)}%
                                 </p>
