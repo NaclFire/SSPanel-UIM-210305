@@ -17,11 +17,11 @@
                                     <div class="card-heading">节点连接密码修改</div>
                                     <button class="btn btn-flat" id="ss-pwd-update"><span class="icon">check</span>&nbsp;</button>
                                 </div>
-                                <p>当前连接密码：<code id="ajax-user-passwd">{$user->passwd}</code>
-                                    <button class="kaobei copy-text btn btn-subscription" type="button" data-clipboard-text="{$user->passwd}">
-                                        点击拷贝
-                                    </button>
-                                </p>
+{*                                <p>当前连接密码：<code id="ajax-user-passwd">{$user->passwd}</code>*}
+{*                                    <button class="kaobei copy-text btn btn-subscription" type="button" data-clipboard-text="{$user->passwd}">*}
+{*                                        点击拷贝*}
+{*                                    </button>*}
+{*                                </p>*}
                                 <p>点击重置按钮将会自动生成由随机字母和数字组成的连接密码。</p>
                                 <p>修改连接密码同时也会自动为您重新生成 V2Ray 和 Trojan 节点的 UUID。</p>
                                 <p>修改连接密码后，您需要更新订阅或修改客户端配置方可继续使用。</p>
@@ -29,8 +29,9 @@
                         </div>
                     </div>
                 </div>
-                <div class="card margin-bottom-no">
-                    <div class="card-main">
+{*                <div class="card margin-bottom-no" hidden="hidden">*}
+                <div class="card-main">
+                    <div class="card-main" hidden="hidden">
                         <div class="card-inner">
                             <div class="card-inner">
                                 <div class="card-heading">选择客户端</div>
@@ -133,173 +134,6 @@
 						</div>
 					</div>
                 </div>
-            </div>
-            <div class="col-xx-12 col-sm-6">
-                {if $config['enable_change_email'] == true}
-                    <div class="card margin-bottom-no">
-                        <div class="card-main">
-                            <div class="card-inner">
-                                <div class="card-inner">
-                                    <div class="cardbtn-edit">
-                                        <div class="card-heading">账户邮箱修改</div>
-                                        <button class="btn btn-flat" id="email-update"><span class="icon">check</span>&nbsp;
-                                        </button>
-                                    </div>
-                                    <div class="form-group form-group-label">
-                                        <label class="floating-label" for="newemail">新邮箱</label>
-                                        <input class="form-control maxwidth-edit" id="newemail" type="text">
-                                    </div>
-                                    {if $config['enable_email_verify'] == true}
-                                        <div class="form-group form-group-label">
-                                            <label class="floating-label" for="email_code">邮箱验证码</label>
-                                            <input class="form-control maxwidth-auth" id="email_code" type="text"
-                                                onKeypress="javascript:if(event.keyCode == 32)event.returnValue = false;" autocomplete="one-time-code">
-                                        </div>
-                                        <div class="form-group form-group-label">
-                                            <button id="email_verify"
-                                                class="btn-reg btn btn-block btn-brand-accent waves-attach waves-light">
-                                                获取验证码
-                                            </button>
-                                        </div>
-                                    {/if}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                {/if}
-                <div class="card margin-bottom-no">
-                    <div class="card-main">
-                        <div class="card-inner">
-                            <div class="card-inner">
-                                <div class="cardbtn-edit">
-                                    <div class="card-heading">用戶名修改</div>
-                                    <button class="btn btn-flat" id="username-update"><span class="icon">check</span>&nbsp;
-                                    </button>
-                                </div>
-                                <div class="form-group form-group-label">
-                                    <label class="floating-label" for="newusername">新用戶名</label>
-                                    <input class="form-control maxwidth-edit" id="newusername" type="text">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="card margin-bottom-no">
-                    <div class="card-main">
-                        <div class="card-inner">
-                            <div class="card-inner">
-                                <div class="cardbtn-edit">
-                                    <div class="card-heading">账号登录密码修改</div>
-                                    <button class="btn btn-flat" id="pwd-update"><span class="icon">check</span>&nbsp;
-                                    </button>
-                                </div>
-                                <div class="form-group form-group-label">
-                                    <label class="floating-label" for="oldpwd">当前密码</label>
-                                    <input class="form-control maxwidth-edit" id="oldpwd" type="password">
-                                </div>
-                                <div class="form-group form-group-label">
-                                    <label class="floating-label" for="pwd">新密码</label>
-                                    <input class="form-control maxwidth-edit" id="pwd" type="password">
-                                </div>
-                                <div class="form-group form-group-label">
-                                    <label class="floating-label" for="repwd">确认新密码</label>
-                                    <input class="form-control maxwidth-edit" id="repwd" type="password">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="card margin-bottom-no">
-                    <div class="card-main">
-                        <div class="card-inner">
-                            <div class="card-inner">
-                                <div class="cardbtn-edit">
-                                    <div class="card-heading">IP 解封</div>
-                                    <button class="btn btn-flat" id="unblock"><span class="icon">not_interested</span>&nbsp;
-                                    </button>
-                                </div>
-                                <p>当前状态：<code id="ajax-block">{$Block}</code></p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="card margin-bottom-no">
-                    <div class="card-main">
-                        <div class="card-inner">
-                            <div class="card-inner">
-                                <div class="cardbtn-edit">
-                                    <div class="card-heading">每日使用报告设置</div>
-                                    <button class="btn btn-flat" id="mail-update"><span class="icon">check</span>&nbsp;
-                                    </button>
-                                </div>
-                                <p class="card-heading"></p>
-                                <p>当前设置：<code id="ajax-mail" data-default="mail">{if $user->sendDailyMail == 2}TelegramBot接收{elseif $user->sendDailyMail == 1}邮件接收{else}不发送{/if}</code></p>
-                                <div class="form-group form-group-label control-highlight-custom dropdown">
-                                    <label class="floating-label" for="mail">接收设置</label>
-                                    <button type="button" id="mail" class="form-control maxwidth-edit"
-                                            data-toggle="dropdown" value="{$user->sendDailyMail}"></button>
-                                    <ul class="dropdown-menu" aria-labelledby="mail">
-                                        <li>
-                                            <a href="#" class="dropdown-option" onclick="return false;" val="0" data="mail">不发送</a>
-                                        </li>
-                                        <li>
-                                            <a href="#" class="dropdown-option" onclick="return false;" val="1" data="mail">邮件接收</a>
-                                        </li>
-                                        <li>
-                                            <a href="#" class="dropdown-option" onclick="return false;" val="2" data="mail">TelegramBot接收</a>
-                                        </li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="card margin-bottom-no">
-                    <div class="card-main">
-                        <div class="card-inner">
-                            <div class="card-inner">
-                                <div class="cardbtn-edit">
-                                    <div class="card-heading">联络方式修改</div>
-                                    <button class="btn btn-flat" id="wechat-update"><span class="icon">check</span>&nbsp;
-                                    </button>
-                                </div>
-                                <p>当前联络方式：
-                                    <code id="ajax-im" data-default="imtype">
-                                        {if $user->im_type==1}微信{/if}
-                                        {if $user->im_type==2}QQ{/if}
-                                        {if $user->im_type==3}Google+{/if}
-                                        {if $user->im_type==4}Telegram{/if}
-                                        {if $user->im_type==5}Discord{/if}
-                                    </code>
-                                </p>
-                                <p>当前联络方式账号：
-                                    <code>{$user->im_value}</code>
-                                </p>
-                                <div class="form-group form-group-label control-highlight-custom dropdown">
-                                    <label class="floating-label" for="imtype">选择您的联络方式</label>
-                                    <button class="form-control maxwidth-edit" id="imtype" data-toggle="dropdown"
-                                            value="{$user->im_type}"></button>
-                                    <ul class="dropdown-menu" aria-labelledby="imtype">
-                                        <li><a href="#" class="dropdown-option" onclick="return false;" val="1"
-                                               data="imtype">微信</a></li>
-                                        <li><a href="#" class="dropdown-option" onclick="return false;" val="2"
-                                               data="imtype">QQ</a></li>
-                                        <li><a href="#" class="dropdown-option" onclick="return false;" val="3"
-                                               data="imtype">Facebook</a></li>
-                                        <li><a href="#" class="dropdown-option" onclick="return false;" val="4"
-                                               data="imtype">Telegram</a></li>
-                                        <li><a href="#" class="dropdown-option" onclick="return false;" val="5"
-                                               data="imtype">Discord</a></li>
-                                    </ul>
-                                </div>
-                                <div class="form-group form-group-label">
-                                    <label class="floating-label" for="wechat">在这输入联络方式账号</label>
-                                    <input class="form-control maxwidth-edit" id="wechat" type="text">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
                 <div class="card margin-bottom-no">
                     <div class="card-main">
                         <div class="card-inner">
@@ -353,6 +187,173 @@
                         </div>
                     </div>
                 </div>
+            </div>
+            <div class="col-xx-12 col-sm-6">
+                {if $config['enable_change_email'] == true}
+                    <div class="card margin-bottom-no">
+                        <div class="card-main">
+                            <div class="card-inner">
+                                <div class="card-inner">
+                                    <div class="cardbtn-edit">
+                                        <div class="card-heading">账户邮箱修改</div>
+                                        <button class="btn btn-flat" id="email-update"><span class="icon">check</span>&nbsp;
+                                        </button>
+                                    </div>
+                                    <div class="form-group form-group-label">
+                                        <label class="floating-label" for="newemail">新邮箱</label>
+                                        <input class="form-control maxwidth-edit" id="newemail" type="text">
+                                    </div>
+                                    {if $config['enable_email_verify'] == true}
+                                        <div class="form-group form-group-label">
+                                            <label class="floating-label" for="email_code">邮箱验证码</label>
+                                            <input class="form-control maxwidth-auth" id="email_code" type="text"
+                                                onKeypress="javascript:if(event.keyCode == 32)event.returnValue = false;" autocomplete="one-time-code">
+                                        </div>
+                                        <div class="form-group form-group-label">
+                                            <button id="email_verify"
+                                                class="btn-reg btn btn-block btn-brand-accent waves-attach waves-light">
+                                                获取验证码
+                                            </button>
+                                        </div>
+                                    {/if}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {/if}
+                <div class="card margin-bottom-no">
+                    <div class="card-main">
+                        <div class="card-inner">
+                            <div class="card-inner">
+                                <div class="cardbtn-edit">
+                                    <div class="card-heading">用户名修改</div>
+                                    <button class="btn btn-flat" id="username-update"><span class="icon">check</span>&nbsp;
+                                    </button>
+                                </div>
+                                <div class="form-group form-group-label">
+                                    <label class="floating-label" for="newusername">新用户名</label>
+                                    <input class="form-control maxwidth-edit" id="newusername" type="text">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card margin-bottom-no">
+                    <div class="card-main">
+                        <div class="card-inner">
+                            <div class="card-inner">
+                                <div class="cardbtn-edit">
+                                    <div class="card-heading">账号登录密码修改</div>
+                                    <button class="btn btn-flat" id="pwd-update"><span class="icon">check</span>&nbsp;
+                                    </button>
+                                </div>
+                                <div class="form-group form-group-label">
+                                    <label class="floating-label" for="oldpwd">当前密码</label>
+                                    <input class="form-control maxwidth-edit" id="oldpwd" type="password">
+                                </div>
+                                <div class="form-group form-group-label">
+                                    <label class="floating-label" for="pwd">新密码</label>
+                                    <input class="form-control maxwidth-edit" id="pwd" type="password">
+                                </div>
+                                <div class="form-group form-group-label">
+                                    <label class="floating-label" for="repwd">确认新密码</label>
+                                    <input class="form-control maxwidth-edit" id="repwd" type="password">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+{*                <div class="card margin-bottom-no">*}
+{*                    <div class="card-main">*}
+{*                        <div class="card-inner">*}
+{*                            <div class="card-inner">*}
+{*                                <div class="cardbtn-edit">*}
+{*                                    <div class="card-heading">IP 解封</div>*}
+{*                                    <button class="btn btn-flat" id="unblock"><span class="icon">not_interested</span>&nbsp;*}
+{*                                    </button>*}
+{*                                </div>*}
+{*                                <p>当前状态：<code id="ajax-block">{$Block}</code></p>*}
+{*                            </div>*}
+{*                        </div>*}
+{*                    </div>*}
+{*                </div>*}
+{*                <div class="card margin-bottom-no">*}
+{*                    <div class="card-main">*}
+{*                        <div class="card-inner">*}
+{*                            <div class="card-inner">*}
+{*                                <div class="cardbtn-edit">*}
+{*                                    <div class="card-heading">每日使用报告设置</div>*}
+{*                                    <button class="btn btn-flat" id="mail-update"><span class="icon">check</span>&nbsp;*}
+{*                                    </button>*}
+{*                                </div>*}
+{*                                <p class="card-heading"></p>*}
+{*                                <p>当前设置：<code id="ajax-mail" data-default="mail">{if $user->sendDailyMail == 2}TelegramBot接收{elseif $user->sendDailyMail == 1}邮件接收{else}不发送{/if}</code></p>*}
+{*                                <div class="form-group form-group-label control-highlight-custom dropdown">*}
+{*                                    <label class="floating-label" for="mail">接收设置</label>*}
+{*                                    <button type="button" id="mail" class="form-control maxwidth-edit"*}
+{*                                            data-toggle="dropdown" value="{$user->sendDailyMail}"></button>*}
+{*                                    <ul class="dropdown-menu" aria-labelledby="mail">*}
+{*                                        <li>*}
+{*                                            <a href="#" class="dropdown-option" onclick="return false;" val="0" data="mail">不发送</a>*}
+{*                                        </li>*}
+{*                                        <li>*}
+{*                                            <a href="#" class="dropdown-option" onclick="return false;" val="1" data="mail">邮件接收</a>*}
+{*                                        </li>*}
+{*                                        <li>*}
+{*                                            <a href="#" class="dropdown-option" onclick="return false;" val="2" data="mail">TelegramBot接收</a>*}
+{*                                        </li>*}
+{*                                    </ul>*}
+{*                                </div>*}
+{*                            </div>*}
+{*                        </div>*}
+{*                    </div>*}
+{*                </div>*}
+{*                <div class="card margin-bottom-no">*}
+{*                    <div class="card-main">*}
+{*                        <div class="card-inner">*}
+{*                            <div class="card-inner">*}
+{*                                <div class="cardbtn-edit">*}
+{*                                    <div class="card-heading">联络方式修改</div>*}
+{*                                    <button class="btn btn-flat" id="wechat-update"><span class="icon">check</span>&nbsp;*}
+{*                                    </button>*}
+{*                                </div>*}
+{*                                <p>当前联络方式：*}
+{*                                    <code id="ajax-im" data-default="imtype">*}
+{*                                        {if $user->im_type==1}微信{/if}*}
+{*                                        {if $user->im_type==2}QQ{/if}*}
+{*                                        {if $user->im_type==3}Google+{/if}*}
+{*                                        {if $user->im_type==4}Telegram{/if}*}
+{*                                        {if $user->im_type==5}Discord{/if}*}
+{*                                    </code>*}
+{*                                </p>*}
+{*                                <p>当前联络方式账号：*}
+{*                                    <code>{$user->im_value}</code>*}
+{*                                </p>*}
+{*                                <div class="form-group form-group-label control-highlight-custom dropdown">*}
+{*                                    <label class="floating-label" for="imtype">选择您的联络方式</label>*}
+{*                                    <button class="form-control maxwidth-edit" id="imtype" data-toggle="dropdown"*}
+{*                                            value="{$user->im_type}"></button>*}
+{*                                    <ul class="dropdown-menu" aria-labelledby="imtype">*}
+{*                                        <li><a href="#" class="dropdown-option" onclick="return false;" val="1"*}
+{*                                               data="imtype">微信</a></li>*}
+{*                                        <li><a href="#" class="dropdown-option" onclick="return false;" val="2"*}
+{*                                               data="imtype">QQ</a></li>*}
+{*                                        <li><a href="#" class="dropdown-option" onclick="return false;" val="3"*}
+{*                                               data="imtype">Facebook</a></li>*}
+{*                                        <li><a href="#" class="dropdown-option" onclick="return false;" val="4"*}
+{*                                               data="imtype">Telegram</a></li>*}
+{*                                        <li><a href="#" class="dropdown-option" onclick="return false;" val="5"*}
+{*                                               data="imtype">Discord</a></li>*}
+{*                                    </ul>*}
+{*                                </div>*}
+{*                                <div class="form-group form-group-label">*}
+{*                                    <label class="floating-label" for="wechat">在这输入联络方式账号</label>*}
+{*                                    <input class="form-control maxwidth-edit" id="wechat" type="text">*}
+{*                                </div>*}
+{*                            </div>*}
+{*                        </div>*}
+{*                    </div>*}
+{*                </div>*}
                 {if $config['port_price']>=0 || $config['port_price_specify']>=0}
                     <div class="card margin-bottom-no">
                         <div class="card-main">

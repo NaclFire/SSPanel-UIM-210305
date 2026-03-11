@@ -139,10 +139,12 @@ class Tools
         }
         return $char;
     }
+
     public static function getServerKey($timestamp, $length)
     {
         return base64_encode(substr(md5($timestamp), 0, $length));
     }
+
     public static function genToken()
     {
         return self::genRandomChar(64);
@@ -326,7 +328,8 @@ class Tools
         $edit_rule_id = 0,
         $origin_node_id = 0,
         $user_id = 0
-    ) {
+    )
+    {
         foreach ($ruleset as $rule) {
             if (($rule->source_node_id == $input_rule->dist_node_id) && (($rule->port == $input_rule->port || $input_rule->port == 0) || $rule->port == 0)) {
                 if ($rule->dist_node_id == $origin_node_id && $rule->id != $edit_rule_id) {
@@ -379,8 +382,7 @@ class Tools
                 if ($single_rule->dist_node_id == $path->begin_node->id) {
                     $path->begin_node = $single_rule->Source_Node();
                     if ($path->begin_node->isNodeAccessable() == false) {
-                        $path->path = '<span style="color: #FF0000; ">' . $single_rule->Source_Node(
-                            )->name . '</span>' . ' → ' . $path->path;
+                        $path->path = '<span style="color: #FF0000; ">' . $single_rule->Source_Node()->name . '</span>' . ' → ' . $path->path;
                         $path->status = '阻断';
                     } else {
                         $path->path = $single_rule->Source_Node()->name . ' → ' . $path->path;
@@ -392,8 +394,7 @@ class Tools
                 if ($path->end_node->id == $single_rule->source_node_id) {
                     $path->end_node = $single_rule->Dist_Node();
                     if ($path->end_node->isNodeAccessable() == false) {
-                        $path->path .= ' → ' . '<span style="color: #FF0000; ">' . $single_rule->Dist_Node(
-                            )->name . '</span>';
+                        $path->path .= ' → ' . '<span style="color: #FF0000; ">' . $single_rule->Dist_Node()->name . '</span>';
                         $path->status = '阻断';
                     } else {
                         $path->path .= ' → ' . $single_rule->Dist_Node()->name;
@@ -484,6 +485,12 @@ class Tools
             $rule->dist_ip = self::getRelayNodeIp($source_node, $dist_node);
             $rule->save();
         }
+    }
+
+    public static function parseJSON($method, $key)
+    {
+        $methodData = json_decode($method, true);
+        return $methodData[$key] ?? null;
     }
 
     public static function checkNoneProtocol($user)
@@ -937,12 +944,12 @@ class Tools
      */
     public static function paginate_render($data): string
     {
-        $totalPage   = $data->lastPage();
+        $totalPage = $data->lastPage();
         $currentPage = $data->currentPage();
         $html = '<ul class="pagination">';
         for ($i = 1; $i <= $totalPage; $i++) {
             $active = '<li class="active"><span>' . $i . '</span></li>';
-            $page   = '<li><a href="' . $data->url($i) . '">' . $i . '</a></li>';
+            $page = '<li><a href="' . $data->url($i) . '">' . $i . '</a></li>';
             if ($i == 1) {
                 // 当前为第一页
                 if ($currentPage == $i) {

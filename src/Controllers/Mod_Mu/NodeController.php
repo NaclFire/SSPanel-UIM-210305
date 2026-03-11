@@ -57,12 +57,22 @@ class NodeController extends BaseController
             return $this->echoJson($response, $res);
         }
         $node_server = $node->server;
-        $methodKeyLengthMap = [
-            '2022-blake3-aes-128-gcm' => 16,
-            '2022-blake3-aes-256-gcm' => 32,
-        ];
-
-        $keyLength = $methodKeyLengthMap[$node->method] ?? null;
+        $method = $node->method;
+        $customConfig = $node->method;
+        // 判断是否为 JSON
+        $decoded = json_decode($method, true);
+        $serverKey = null;
+        if (json_last_error() === JSON_ERROR_NONE) {
+            $customConfig = $decoded;
+            $method = "";
+        } else {
+            $methodKeyLengthMap = [
+                '2022-blake3-aes-128-gcm' => 16,
+                '2022-blake3-aes-256-gcm' => 32,
+            ];
+            $keyLength = $methodKeyLengthMap[$method] ?? null;
+            $serverKey = $keyLength ? Tools::getServerKey($node->create_at, $keyLength) : null;
+        }
 
         $res = [
             'ret' => 1,
@@ -74,8 +84,9 @@ class NodeController extends BaseController
                 'mu_only' => $node->mu_only,
                 'sort' => $node->sort,
                 'server' => $node_server,
-                'method' => $node->method,
-                'server_key' => $keyLength ? Tools::getServerKey($node->create_at, $keyLength) : null,
+                'method' => $method,
+                'custom_config' => $customConfig,
+                'server_key' => $serverKey,
                 'type' => 'ss-panel-v3-mod_Uim'
             ],
         ];

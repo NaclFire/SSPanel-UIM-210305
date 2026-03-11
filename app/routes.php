@@ -171,6 +171,7 @@ return function (SlimApp $app) {
         $this->get('/node/{id}/edit', App\Controllers\Admin\NodeController::class . ':edit');
         $this->put('/node/{id}', App\Controllers\Admin\NodeController::class . ':update');
         $this->delete('/node', App\Controllers\Admin\NodeController::class . ':delete');
+        $this->get('/generate_reality_key', App\Controllers\Admin\NodeController::class . ':generateRealityKey');
         $this->post('/node/ajax', App\Controllers\Admin\NodeController::class . ':ajax');
 
 

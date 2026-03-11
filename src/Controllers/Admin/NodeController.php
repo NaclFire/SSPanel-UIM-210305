@@ -4,13 +4,8 @@ namespace App\Controllers\Admin;
 
 use App\Controllers\AdminController;
 use App\Models\Node;
-use App\Utils\{
-    Tools,
-    Radius,
-    Telegram,
-    CloudflareDriver,
-    DatatablesHelper
-};
+use Exception;
+use App\Utils\{Tools, Radius, Telegram, CloudflareDriver, DatatablesHelper, URL};
 use App\Services\Config;
 use Slim\Http\{
     Request,
@@ -21,31 +16,31 @@ use Psr\Http\Message\ResponseInterface;
 class NodeController extends AdminController
 {
     /**
-     * @param Request   $request
-     * @param Response  $response
-     * @param array     $args
+     * @param Request $request
+     * @param Response $response
+     * @param array $args
      */
     public function index($request, $response, $args): ResponseInterface
     {
         $table_config['total_column'] = array(
-            'op'                      => '操作',
-            'id'                      => 'ID',
-            'name'                    => '节点名称',
-            'type'                    => '显示与隐藏',
-            'sort'                    => '类型',
-            'server'                  => '节点地址',
-            'outaddress'              => '出口地址',
-            'node_ip'                 => '节点IP',
-            'info'                    => '节点信息',
-            'status'                  => '状态',
-            'traffic_rate'            => '流量比率',
-            'node_group'              => '节点群组',
-            'node_class'              => '节点等级',
-            'node_speedlimit'         => '节点限速/Mbps',
-            'node_bandwidth'          => '已走流量/GB',
-            'node_bandwidth_limit'    => '流量限制/GB',
+            'op' => '操作',
+            'id' => 'ID',
+            'name' => '节点名称',
+            'type' => '显示与隐藏',
+            'sort' => '类型',
+            'server' => '节点地址',
+            'outaddress' => '出口地址',
+            'node_ip' => '节点IP',
+            'info' => '节点信息',
+            'status' => '状态',
+            'traffic_rate' => '流量比率',
+            'node_group' => '节点群组',
+            'node_class' => '节点等级',
+            'node_speedlimit' => '节点限速/Mbps',
+            'node_bandwidth' => '已走流量/GB',
+            'node_bandwidth_limit' => '流量限制/GB',
             'bandwidthlimit_resetday' => '流量重置日',
-            'node_heartbeat'          => '上一次活跃时间'
+            'node_heartbeat' => '上一次活跃时间'
         );
         $table_config['default_show_column'] = array('op', 'id', 'name', 'sort');
         $table_config['ajax_url'] = 'node/ajax';
@@ -58,9 +53,9 @@ class NodeController extends AdminController
     }
 
     /**
-     * @param Request   $request
-     * @param Response  $response
-     * @param array     $args
+     * @param Request $request
+     * @param Response $response
+     * @param array $args
      */
     public function create($request, $response, $args): ResponseInterface
     {
@@ -71,27 +66,27 @@ class NodeController extends AdminController
     }
 
     /**
-     * @param Request   $request
-     * @param Response  $response
-     * @param array     $args
+     * @param Request $request
+     * @param Response $response
+     * @param array $args
      */
     public function add($request, $response, $args): ResponseInterface
     {
-        $node                   = new Node();
-        $node->name             = $request->getParam('name');
-        $node->server           = trim($request->getParam('server'));
-        $node->method           = $request->getParam('method');
-        $node->custom_method    = $request->getParam('custom_method');
-        $node->custom_rss       = $request->getParam('custom_rss');
-        $node->mu_only          = $request->getParam('mu_only');
-        $node->traffic_rate     = $request->getParam('rate');
-        $node->info             = $request->getParam('info');
-        $node->type             = $request->getParam('type');
-        $node->node_group       = $request->getParam('group');
-        $node->node_speedlimit  = $request->getParam('node_speedlimit');
-        $node->status           = $request->getParam('status');
-        $node->sort             = $request->getParam('sort');
-        $node->create_at        = date('Y-m-d H:i:s');
+        $node = new Node();
+        $node->name = $request->getParam('name');
+        $node->server = trim($request->getParam('server'));
+        $node->method = $request->getParam('method');
+        $node->custom_method = $request->getParam('custom_method');
+        $node->custom_rss = $request->getParam('custom_rss');
+        $node->mu_only = $request->getParam('mu_only');
+        $node->traffic_rate = $request->getParam('rate');
+        $node->info = $request->getParam('info');
+        $node->type = $request->getParam('type');
+        $node->node_group = $request->getParam('group');
+        $node->node_speedlimit = $request->getParam('node_speedlimit');
+        $node->status = $request->getParam('status');
+        $node->sort = $request->getParam('sort');
+        $node->create_at = date('Y-m-d H:i:s');
 
         $req_node_ip = trim($request->getParam('node_ip'));
         if ($req_node_ip == '') {
@@ -121,9 +116,9 @@ class NodeController extends AdminController
         if ($node->sort == 1) {
             Radius::AddNas($node->node_ip, $request->getParam('server'));
         }
-        $node->node_class                 = $request->getParam('class');
-        $node->node_bandwidth_limit       = $request->getParam('node_bandwidth_limit') * 1024 * 1024 * 1024;
-        $node->bandwidthlimit_resetday    = $request->getParam('bandwidthlimit_resetday');
+        $node->node_class = $request->getParam('class');
+        $node->node_bandwidth_limit = $request->getParam('node_bandwidth_limit') * 1024 * 1024 * 1024;
+        $node->bandwidthlimit_resetday = $request->getParam('bandwidthlimit_resetday');
 
         $node->save();
 
@@ -151,9 +146,9 @@ class NodeController extends AdminController
     }
 
     /**
-     * @param Request   $request
-     * @param Response  $response
-     * @param array     $args
+     * @param Request $request
+     * @param Response $response
+     * @param array $args
      */
     public function edit($request, $response, $args): ResponseInterface
     {
@@ -162,31 +157,32 @@ class NodeController extends AdminController
         return $response->write(
             $this->view()
                 ->assign('node', $node)
+                ->registerClass('Tool', Tools::class)
                 ->display('admin/node/edit.tpl')
         );
     }
 
     /**
-     * @param Request   $request
-     * @param Response  $response
-     * @param array     $args
+     * @param Request $request
+     * @param Response $response
+     * @param array $args
      */
     public function update($request, $response, $args): ResponseInterface
     {
-        $id                     = $args['id'];
-        $node                   = Node::find($id);
-        $node->name             = $request->getParam('name');
-        $node->node_group       = $request->getParam('group');
-        $node->server           = trim($request->getParam('server'));
-        $node->method           = $request->getParam('method');
-        $node->custom_method    = $request->getParam('custom_method');
-        $node->custom_rss       = $request->getParam('custom_rss');
-        $node->mu_only          = $request->getParam('mu_only');
-        $node->traffic_rate     = $request->getParam('rate');
-        $node->info             = $request->getParam('info');
-        $node->node_speedlimit  = $request->getParam('node_speedlimit');
-        $node->type             = $request->getParam('type');
-        $node->sort             = $request->getParam('sort');
+        $id = $args['id'];
+        $node = Node::find($id);
+        $node->name = $request->getParam('name');
+        $node->node_group = $request->getParam('group');
+        $node->server = trim($request->getParam('server'));
+        $node->method = $request->getParam('method');
+        $node->custom_method = $request->getParam('custom_method');
+        $node->custom_rss = $request->getParam('custom_rss');
+        $node->mu_only = $request->getParam('mu_only');
+        $node->traffic_rate = $request->getParam('rate');
+        $node->info = $request->getParam('info');
+        $node->node_speedlimit = $request->getParam('node_speedlimit');
+        $node->type = $request->getParam('type');
+        $node->sort = $request->getParam('sort');
 
         $req_node_ip = trim($request->getParam('node_ip'));
         if ($req_node_ip == '') {
@@ -230,10 +226,10 @@ class NodeController extends AdminController
             }
         }
 
-        $node->status                     = $request->getParam('status');
-        $node->node_class                 = $request->getParam('class');
-        $node->node_bandwidth_limit       = $request->getParam('node_bandwidth_limit') * 1024 * 1024 * 1024;
-        $node->bandwidthlimit_resetday    = $request->getParam('bandwidthlimit_resetday');
+        $node->status = $request->getParam('status');
+        $node->node_class = $request->getParam('class');
+        $node->node_bandwidth_limit = $request->getParam('node_bandwidth_limit') * 1024 * 1024 * 1024;
+        $node->bandwidthlimit_resetday = $request->getParam('bandwidthlimit_resetday');
 
         $node->save();
 
@@ -256,9 +252,9 @@ class NodeController extends AdminController
     }
 
     /**
-     * @param Request   $request
-     * @param Response  $response
-     * @param array     $args
+     * @param Request $request
+     * @param Response $response
+     * @param array $args
      */
     public function delete($request, $response, $args): ResponseInterface
     {
@@ -296,31 +292,70 @@ class NodeController extends AdminController
     }
 
     /**
-     * @param Request   $request
-     * @param Response  $response
-     * @param array     $args
+     * 生成 Xray REALITY 密钥
+     *
+     * @param Request $request
+     * @param Response $response
+     * @param array $args
+     */
+    public function generateRealityKey($request, $response, $args): ResponseInterface
+    {
+        try {
+            // Base64URL 编码
+            $base64url = function ($data) {
+                return rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
+            };
+            // 生成 32 字节私钥
+            $privateKey = random_bytes(32);
+            // Curve25519 clamp（Xray 相同算法）
+            $privateKey[0] = chr(ord($privateKey[0]) & 248);
+            $privateKey[31] = chr(ord($privateKey[31]) & 127);
+            $privateKey[31] = chr(ord($privateKey[31]) | 64);
+            // 计算公钥
+            $publicKey = sodium_crypto_scalarmult_base($privateKey);
+            return $response->withJson(
+                [
+                    'ret' => 1,
+                    'privateKey' => $base64url($privateKey),
+                    'publicKey' => $base64url($publicKey)
+                ]
+            );
+        } catch (Exception $e) {
+            return $response->withJson(
+                [
+                    'ret' => 0,
+                    'msg' => $e->getMessage()
+                ]
+            );
+        }
+    }
+
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @param array $args
      */
     public function ajax($request, $response, $args): ResponseInterface
     {
         //得到排序的方式
-        $order        = $request->getParam('order')[0]['dir'];
+        $order = $request->getParam('order')[0]['dir'];
         //得到排序字段的下标
         $order_column = $request->getParam('order')[0]['column'];
         //根据排序字段的下标得到排序字段
-        $order_field  = $request->getParam('columns')[$order_column]['data'];
-        $limit_start  = $request->getParam('start');
+        $order_field = $request->getParam('columns')[$order_column]['data'];
+        $limit_start = $request->getParam('start');
         $limit_length = $request->getParam('length');
-        $search       = $request->getParam('search')['value'];
+        $search = $request->getParam('search')['value'];
 
         if ($order_field == 'outaddress' || $order_field == 'op') {
             $order_field = 'server';
         }
 
-        $nodes          = [];
+        $nodes = [];
         $query = Node::query();
         if ($search) {
-            $v          = (int) (new DatatablesHelper())->query('select version()')[0]['version()'];
-            $like_str   = ($v < 8 ? 'LIKE' : 'LIKE binary');
+            $v = (int)(new DatatablesHelper())->query('select version()')[0]['version()'];
+            $like_str = ($v < 8 ? 'LIKE' : 'LIKE binary');
             $query->where('id', 'LIKE', "%$search%")
                 ->orwhere('name', 'LIKE', "%$search%")
                 ->orwhere('type', 'LIKE', "%$search%")
@@ -347,11 +382,11 @@ class NodeController extends AdminController
         $data = [];
         foreach ($nodes as $node) {
             $tempdata = [];
-            $tempdata['op']   = '<a class="btn btn-brand" ' . ($node->sort == 999 ? 'disabled' : 'href="/admin/node/' . $node->id . '/edit"') . '>编辑</a>
+            $tempdata['op'] = '<a class="btn btn-brand" ' . ($node->sort == 999 ? 'disabled' : 'href="/admin/node/' . $node->id . '/edit"') . '>编辑</a>
                 <a class="btn btn-brand-accent" ' . ($node->sort == 999 ? 'disabled' : 'id="delete" value="' . $node->id . '" href="javascript:void(0);" onClick="delete_modal_show(\'' . $node->id . '\')"') . '>删除</a>';
-            $tempdata['id']   = $node->id;
+            $tempdata['id'] = $node->id;
             $tempdata['name'] = $node->name;
-            $tempdata['type'] = ((bool) $node->type ? '显示' : '隐藏');
+            $tempdata['type'] = ((bool)$node->type ? '显示' : '隐藏');
             switch ($node->sort) {
                 case 0:
                     $sort = 'Shadowsocks';
@@ -362,28 +397,28 @@ class NodeController extends AdminController
                 default:
                     $sort = '系统保留';
             }
-            $tempdata['sort']                       = $sort;
-            $tempdata['server']                     = $node->server;
-            $tempdata['outaddress']                 = $node->getOutServer();
-            $tempdata['node_ip']                    = $node->node_ip;
-            $tempdata['info']                       = $node->info;
-            $tempdata['status']                     = $node->status;
-            $tempdata['traffic_rate']               = $node->traffic_rate;
-            $tempdata['node_group']                 = $node->node_group;
-            $tempdata['node_class']                 = $node->node_class;
-            $tempdata['node_speedlimit']            = $node->node_speedlimit;
-            $tempdata['node_bandwidth']             = Tools::flowToGB($node->node_bandwidth);
-            $tempdata['node_bandwidth_limit']       = Tools::flowToGB($node->node_bandwidth_limit);
-            $tempdata['bandwidthlimit_resetday']    = $node->bandwidthlimit_resetday;
-            $tempdata['node_heartbeat']             = date('Y-m-d H:i:s', $node->node_heartbeat);
+            $tempdata['sort'] = $sort;
+            $tempdata['server'] = $node->server;
+            $tempdata['outaddress'] = $node->getOutServer();
+            $tempdata['node_ip'] = $node->node_ip;
+            $tempdata['info'] = $node->info;
+            $tempdata['status'] = $node->status;
+            $tempdata['traffic_rate'] = $node->traffic_rate;
+            $tempdata['node_group'] = $node->node_group;
+            $tempdata['node_class'] = $node->node_class;
+            $tempdata['node_speedlimit'] = $node->node_speedlimit;
+            $tempdata['node_bandwidth'] = Tools::flowToGB($node->node_bandwidth);
+            $tempdata['node_bandwidth_limit'] = Tools::flowToGB($node->node_bandwidth_limit);
+            $tempdata['bandwidthlimit_resetday'] = $node->bandwidthlimit_resetday;
+            $tempdata['node_heartbeat'] = date('Y-m-d H:i:s', $node->node_heartbeat);
 
             $data[] = $tempdata;
         }
         $info = [
-            'draw'            => $request->getParam('draw'), // ajax请求次数，作为标识符
-            'recordsTotal'    => Node::count(),
+            'draw' => $request->getParam('draw'), // ajax请求次数，作为标识符
+            'recordsTotal' => Node::count(),
             'recordsFiltered' => $count_filtered,
-            'data'            => $data,
+            'data' => $data,
         ];
 
         return $response->withJson($info);
