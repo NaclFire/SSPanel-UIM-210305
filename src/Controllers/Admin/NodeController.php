@@ -392,6 +392,7 @@ class NodeController extends AdminController
                     $sort = 'Shadowsocks';
                     break;
                 case 11:
+                case 12:
                     $sort = 'V2Ray 节点';
                     break;
                 default:
