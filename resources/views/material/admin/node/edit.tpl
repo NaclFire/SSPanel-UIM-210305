@@ -405,9 +405,9 @@
                 method = buildJson();
             }
             let sort;
-            if($$getValue('enable_vless').checked){
+            if ($$.getElementById('enable_vless').checked) {
                 sort = 12;
-            }else {
+            } else {
                 sort = $$getValue('sort');
             }
             let type;
