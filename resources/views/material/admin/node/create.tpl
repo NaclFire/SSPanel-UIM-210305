@@ -20,18 +20,73 @@
                                 <div class="form-group form-group-label">
                                     <label class="floating-label" for="server">节点地址</label>
                                     <input class="form-control maxwidth-edit" id="server" type="text" name="server">
-                                    <p class="form-control-guide"><i class="material-icons">info</i>如果填写为域名，“节点IP”会自动设置为解析的IP</p>
-                                    <p class="form-control-guide"><i class="material-icons">info</i>附加说明，适用于 SS 节点以及 SS 中转，即 sort 为 0 或 10</p>
-                                    <p class="form-control-guide"><i class="material-icons">info</i>单个端口偏移格式：8.8.8.8;port=80#10080</p>
-                                    <p class="form-control-guide"><i class="material-icons">info</i>多个端口偏移格式：8.8.8.8;port=80#10080+443#10443</p>
-                                    <p class="form-control-guide"><i class="material-icons">info</i>重写节点入口地址：8.8.8.8;server=in.nodeserver.com</p>
-                                    <p class="form-control-guide"><i class="material-icons">info</i>以上两项同时使用：8.8.8.8;server=in.nodeserver.com|port=80#10080+443#10443</p>
+                                    <p class="form-control-guide"><i class="material-icons">info</i>SS节点格式：ip;端口;server=中转域名|host=节点域名|outside_port=中转端口
+                                    </p>
+                                    <p class="form-control-guide"><i class="material-icons">info</i>v2ray节点格式：ip;端口;0;(tcp或ws);(tls或reality);server=中转域名|host=节点域名|outside_port=中转端口
+                                    </p>
+                                    <p class="form-control-guide"><i class="material-icons">info</i>v2ray节点启用VLESS：在协议配置后增加：|enable_vless=true
+                                    </p>
+                                    <p class="form-control-guide"><i class="material-icons">info</i>v2ray节点流控flow：在协议配置后增加：|flow=flow-vlaue
+                                    </p>
                                 </div>
                                 <div class="form-group form-group-label">
                                     <label class="floating-label" for="server">节点IP</label>
                                     <input class="form-control maxwidth-edit" id="node_ip" name="node_ip" type="text">
                                     <p class="form-control-guide"><i class="material-icons">info</i>如果“节点地址”填写为域名，则此处的值会被忽视
                                     </p>
+                                </div>
+                                <div class="form-group form-group-label">
+                                    <div class="form-group form-group-label">
+                                        <label class="floating-label" for="sort">节点类型</label>
+                                        <select id="sort" class="form-control maxwidth-edit" name="sort">
+                                            <option value="0">Shadowsocks</option>
+                                            <option value="11">V2Ray</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group form-group-label" id="vless_switch_group" style="display:none;">
+                                    <div class="checkbox switch">
+                                        <label for="enable_vless">
+                                            <input class="access-hide" id="enable_vless" type="checkbox">
+                                            <span class="switch-toggle"></span>
+                                            启用 VLESS
+                                        </label>
+                                    </div>
+
+                                    <div class="form-group form-group-label" id="vless_group" style="display:none;">
+                                        <div class="form-group form-group-label" id="security_group">
+                                            <label class="floating-label" for="security_select">安全性</label>
+                                            <select id="security_select" class="form-control maxwidth-edit">
+                                                <option value="">无</option>
+                                                <option value="TLS">TLS</option>
+                                                <option value="Reality">Reality</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group form-group-label" id="reality_option_group" style="display:none;">
+                                            <div class="form-group form-group-label">
+                                                <label class="floating-label" for="server">伪装站点:端口</label>
+                                                <input class="form-control maxwidth-edit" id="dest" name="dest" type="text">
+                                            </div>
+                                            <a class="btn btn-brand" id="generate_key">生成密钥</a>
+                                            <div class="form-group form-group-label">
+                                                <label class="floating-label" for="server">私钥</label>
+                                                <input class="form-control maxwidth-edit" id="private_key" name="private_key" type="text">
+                                            </div>
+                                            <div class="form-group form-group-label">
+                                                <label class="floating-label" for="server">公钥</label>
+                                                <input class="form-control maxwidth-edit" id="public_key" name="public_key" type="text">
+                                            </div>
+                                        </div>
+                                        <div class="form-group form-group-label" id="flow_group">
+                                            <label class="floating-label" for="flow_select">流控</label>
+                                            <select id="flow_select" class="form-control maxwidth-edit">
+                                                <option value="">不使用</option>
+                                                <option value="xtls-rprx-vision">xtls-rprx-vision</option>
+                                                <option value="xtls-rprx-direct">xtls-rprx-direct</option>
+                                                <option value="xtls-rprx-splice">xtls-rprx-splice</option>
+                                            </select>
+                                        </div>
+                                    </div>
                                 </div>
                                 <div class="form-group form-group-label">
                                     <label class="floating-label" for="rate">流量比例</label>
@@ -84,15 +139,7 @@
                                     <input class="form-control maxwidth-edit" id="status" type="text" name="status"
                                            value="可用">
                                 </div>
-                                <div class="form-group form-group-label">
-                                    <div class="form-group form-group-label">
-                                        <label class="floating-label" for="sort">节点类型</label>
-                                        <select id="sort" class="form-control maxwidth-edit" name="sort">
-                                            <option value="0">Shadowsocks</option>
-                                            <option value="11">V2Ray</option>
-                                        </select>
-                                    </div>
-                                </div>
+
                                 <div class="form-group form-group-label" id="method_group" style="display:none;">
                                     <div class="form-group form-group-label">
                                         <label class="floating-label" for="sort">加密方式</label>
@@ -168,11 +215,34 @@
 
 <script>
     {literal}
+    const sortSelect = document.getElementById("sort");
+    const serverInput = document.getElementById("server");
+    const vlessSwitchGroup = document.getElementById("vless_switch_group");
+    const vlessSwitch = document.getElementById("enable_vless");
+    const methodGroup = document.getElementById("method_group");
+    const vlessGroup = document.getElementById("vless_group");
+    const flowSelect = document.getElementById("flow_select");
+    const securitySelect = document.getElementById("security_select");
+    const securityOptionGroup = document.getElementById("reality_option_group");
     document.addEventListener("DOMContentLoaded", function () {
 
-        const sortSelect = document.getElementById("sort");
-        const methodGroup = document.getElementById("method_group");
+        function toggleVlessSwitch() {
+            if (sortSelect.value === "11") {
+                vlessSwitchGroup.style.display = "block";
+                checkServerVless();
+            } else {
+                vlessSwitchGroup.style.display = "none";
+            }
+        }
 
+        function checkServerVless() {
+            const server = serverInput.value;
+            if (server.includes("enable_vless=true")) {
+                vlessSwitch.checked = true;
+            } else {
+                vlessSwitch.checked = false;
+            }
+        }
         function toggleMethod() {
             if (sortSelect.value === "0") {
                 methodGroup.style.display = "block";  // 显示
@@ -180,12 +250,107 @@
                 methodGroup.style.display = "none";   // 隐藏
             }
         }
+        function toggleFlow() {
+            if (vlessSwitch.checked) {
+                vlessGroup.style.display = "block";
+                readFlowFromServer();
+                readSecurityFromServer();
+            } else {
+                vlessGroup.style.display = "none";
+            }
+        }
+
+        function toggleRealityOption() {
+            if (securitySelect.value === "Reality") {
+                securityOptionGroup.style.display = "block";
+            } else {
+                securityOptionGroup.style.display = "none";
+            }
+        }
+
+        function readFlowFromServer() {
+            const server = serverInput.value;
+            const match = server.match(/flow=([^|]+)/);
+            if (match) {
+                flowSelect.value = match[1];
+            } else {
+                flowSelect.value = "";
+            }
+        }
+
+        function readSecurityFromServer() {
+            const server = serverInput.value;
+            if (server.includes(";tls;")) {
+                securitySelect.value = "TLS";
+            } else if (server.includes(";reality;")) {
+                securitySelect.value = "Reality";
+            } else {
+                securitySelect.value = "无";
+            }
+        }
 
         // 页面加载时执行一次
+        toggleVlessSwitch();
         toggleMethod();
-
+        toggleFlow();
+        toggleRealityOption()
+        readFlowFromServer();
+        readSecurityFromServer();
         // 监听变化
         sortSelect.addEventListener("change", toggleMethod);
+        sortSelect.addEventListener("change", toggleVlessSwitch);
+        securitySelect.addEventListener("change", toggleRealityOption);
+        serverInput.addEventListener("input", checkServerVless);
+        vlessSwitch.addEventListener("change", toggleFlow);
+        vlessSwitch.addEventListener("change", function () {
+            let server = serverInput.value;
+            if (vlessSwitch.checked) {
+                // 如果存在 enable_vless=false → 改成 true
+                if (server.includes("enable_vless=false")) {
+                    server = server.replace("enable_vless=false", "enable_vless=true");
+                }
+                // 如果没有 enable_vless 参数 → 追加
+                else if (!server.includes("enable_vless=true")) {
+                    server += "|enable_vless=true";
+                }
+            } else {
+                server = server.replace("|enable_vless=true", "");
+                server = server.replace(/\|?flow=[^|]+/g, "");
+            }
+            serverInput.value = server;
+            $("#server").trigger("change")
+        });
+        flowSelect.addEventListener("change", function () {
+            let server = serverInput.value;
+            const flow = flowSelect.value;
+            // 删除已有 flow
+            server = server.replace(/\|?flow=[^|]+/g, "");
+            if (flow !== "") {
+                server += "|flow=" + flow;
+            }
+            serverInput.value = server;
+            $("#server").trigger("change")
+        });
+        securitySelect.addEventListener("change", function () {
+            let server = serverInput.value;
+            const security = securitySelect.value;
+            serverInput.value = server.replace(/^((?:[^;]*;){4})[^;]*/, "$1" + security.toLowerCase());
+        });
+        $("#generate_key").click(function (e) {
+            e.preventDefault();
+            $.ajax({
+                type: "GET",
+                url: "/admin/generate_reality_key",
+                dataType: "json",
+                success: function (data) {
+                    $("#private_key").val(data.privateKey).trigger("change");
+                    $("#public_key").val(data.publicKey).trigger("change");
+                },
+                error: function () {
+                    alert("生成密钥失败");
+                }
+            });
+        });
     });
     $('#main_form').validate({
         rules: {
