@@ -42,7 +42,7 @@
                                         <label class="floating-label" for="sort">节点类型</label>
                                         <select id="sort" class="form-control maxwidth-edit" name="sort">
                                             <option value="0" {if $node->sort==0}selected{/if}>Shadowsocks</option>
-                                            <option value="11" {if $node->sort==11}selected{/if}>V2Ray</option>
+                                            <option value="11" {if $node->sort==11||$node->sort==12}selected{/if}>V2Ray</option>
                                         </select>
                                     </div>
                                 </div>
@@ -73,7 +73,7 @@
                                             <a class="btn btn-brand" id="generate_key">生成密钥</a>
                                             <div class="form-group form-group-label">
                                                 <label class="floating-label" for="server">私钥</label>
-                                                <input class="form-control maxwidth-edit" id="private_key" name="private_key" type="text" value={Tool::parseJSON($node->method,'private_key')} >
+                                                <input class="form-control maxwidth-edit" id="private_key" name="private_key" type="text" value={Tool::parseJSON($node->method,'private_key')}>
                                             </div>
                                             <div class="form-group form-group-label">
                                                 <label class="floating-label" for="server">公钥</label>
@@ -367,7 +367,8 @@
             });
         });
     });
-    function buildJson(){
+
+    function buildJson() {
         const data = {
             dest: document.getElementById("dest").value,
             private_key: document.getElementById("private_key").value,
@@ -378,6 +379,7 @@
         console.log(json);
         return json;
     }
+
     $('#main_form').validate({
         rules: {
             name: {required: true},
@@ -401,6 +403,12 @@
             } else {
                 custom_method = 1;
                 method = buildJson();
+            }
+            let sort;
+            if($$getValue('enable_vless').checked){
+                sort = 12;
+            }else {
+                sort = $$getValue('sort');
             }
             let type;
             if ($$.getElementById('type').checked) {
@@ -431,7 +439,7 @@
                     type,
                     group: $$getValue('group'),
                     status: $$getValue('status'),
-                    sort: $$getValue('sort'),
+                    sort,
                     node_speedlimit: $$getValue('node_speedlimit'),
                     class: $$getValue('class'),
                     node_bandwidth_limit: $$getValue('node_bandwidth_limit'),
