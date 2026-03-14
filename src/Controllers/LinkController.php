@@ -24,7 +24,7 @@ class LinkController extends BaseController
 {
     public static $clientFlags = [
         'clash' => ['meta', 'verge', 'flclash', 'nekobox', 'clashmetaforandroid', 'stash'],
-        'v2ray' => ['general', 'v2rayn', 'v2rayng', 'passwall', 'ssrplus', 'sagernet','shadowrocket'],
+        'v2rayn' => ['general', 'v2rayn', 'v2rayng', 'passwall', 'ssrplus', 'sagernet','shadowrocket'],
         'quantumult' => ['quantumult%20x', 'quantumult-x'],
         'loon' => ['loon'],
         'shadowsocks' => ['shadowsocks'],
@@ -186,6 +186,7 @@ class LinkController extends BaseController
                     }
                 }
             }
+//            echo '$client = '.$client.PHP_EOL;
             $SubscribeExtend = self::getSubscribeExtend($client);
             $filename = $SubscribeExtend['filename'] . '_' . time() . '.' . $SubscribeExtend['suffix'];
             $subscribe_type = $SubscribeExtend['filename'];
