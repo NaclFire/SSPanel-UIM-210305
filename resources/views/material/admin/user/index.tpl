@@ -96,7 +96,8 @@
                                 <a class="btn btn-brand" id="renew" href="javascript:void(0);"
                                    onClick="renew_modal_show()">续费</a>
                                 <a class="btn btn-brand" id="copylink" href="javascript:void(0);"
-                                   onClick="copylink_modal_show()">复制订阅地址</a>
+                                        {*                                   onClick="copylink_modal_show()"*}
+                                >复制订阅地址</a>
                                 <a class="btn btn-brand-accent btn-margin-top-bottom" id="delete"
                                    href="javascript:void(0);"
                                    onClick="delete_modal_show()">删除</a>
@@ -279,11 +280,32 @@
                 if (data.ret) {
                     $("#v2ray_link").attr("data-clipboard-text", data.link + "?sub=3")
                     $("#clash_link").attr("data-clipboard-text", data.link + "?clash=1")
+                    $("#copylink").attr("data-clipboard-text", data.link)
                 }
             }
         });
     }
 
+    $("#copylink").click(function () {
+        var link = $(this).attr('data-clipboard-text')
+        if (link) {
+            navigator.clipboard.writeText(link).then(function () {
+                // 复制成功
+                $("#result").modal();
+                $$.getElementById('msg').innerHTML = '已复制，请您继续接下来的操作';
+            }).catch(function (error) {
+                // 复制失败
+                $("#result").modal();
+                $$.getElementById('msg').innerHTML = '复制失败：' + error;
+            });
+        } else {
+            // 复制失败
+            $("#result").modal();
+            $$.getElementById('msg').innerHTML = '复制失败：请再复制一次';
+        }
+
+
+    })
     $("#v2ray_link").click(function () {
         var link = $(this).attr('data-clipboard-text')
         if (link) {

@@ -5,19 +5,19 @@ namespace App\Models;
 /**
  * Node Model
  *
- * @property-read   int     $id         id
- * @property        string  $name       Display name
- * @property        int     $type       If node display @todo Correct column name and type
- * @property        string  $server     Domain
- * @property        string  $method     Crypt method @deprecated
- * @property        string  $info       Infomation
- * @property        string  $status     Status description
- * @property        int     $sort       Node type @todo Correct column name to `type`
- * @property        int     $custom_method  Customs node crypt @deprecated
- * @property        float   $traffic_rate   Node traffic rate
+ * @property-read   int $id         id
+ * @property        string $name       Display name
+ * @property        int $type       If node display @todo Correct column name and type
+ * @property        string $server     Domain
+ * @property        string $method     Crypt method @deprecated
+ * @property        string $info       Infomation
+ * @property        string $status     Status description
+ * @property        int $sort       Node type @todo Correct column name to `type`
+ * @property        int $custom_method  Customs node crypt @deprecated
+ * @property        float $traffic_rate   Node traffic rate
  * @todo More property
- * @property        bool    $online     If node is online
- * @property        bool    $gfw_block  If node is blocked by GFW
+ * @property        bool $online     If node is online
+ * @property        bool $gfw_block  If node is blocked by GFW
  */
 
 use App\Services\Config;
@@ -31,9 +31,9 @@ class Node extends Model
 
     protected $casts = [
         'node_speedlimit' => 'float',
-        'traffic_rate'    => 'float',
-        'mu_only'         => 'int',
-        'sort'            => 'int',
+        'traffic_rate' => 'float',
+        'mu_only' => 'int',
+        'sort' => 'int',
     ];
 
     public function getLastNodeInfoLog()
@@ -52,7 +52,7 @@ class Node extends Model
         if ($log == null) {
             return '暂无数据';
         }
-        return Tools::secondsToTime((int) $log->uptime);
+        return Tools::secondsToTime((int)$log->uptime);
     }
 
     public function getNodeUpRate()
@@ -215,12 +215,12 @@ class Node extends Model
      * 获取 SS/SSR 节点
      *
      * @param User $user
-     * @param int  $mu_port
-     * @param int  $relay_rule_id
-     * @param int  $is_ss
+     * @param int $mu_port
+     * @param int $relay_rule_id
+     * @param int $is_ss
      * @param bool $emoji
      */
-    public function getItem(User $user, int $mu_port = 0, int $relay_rule_id = 0, int $is_ss = 0, bool $emoji = false):? array
+    public function getItem(User $user, int $mu_port = 0, int $relay_rule_id = 0, int $is_ss = 0, bool $emoji = false): ?array
     {
         $relay_rule = Relay::where('id', $relay_rule_id)
             ->where(
@@ -242,11 +242,11 @@ class Node extends Model
                 return null;
             }
             // 如果混淆和协议均为SS原生且为单端口的，即判断为AEAD单端口类型，密码配置为用户自身密码
-            if ($mu_user->obfs == "plain" && $mu_user->protocol == "origin"){
+            if ($mu_user->obfs == "plain" && $mu_user->protocol == "origin") {
                 $mu_user->passwd = $user->passwd;
-                $mu_user->obfs_param     = "";
+                $mu_user->obfs_param = "";
                 $mu_user->protocol_param = "";
-            }else{
+            } else {
                 $mu_user->obfs_param = $user->getMuMd5();
                 $mu_user->protocol_param = $user->id . ':' . $user->passwd;
             }
@@ -266,24 +266,43 @@ class Node extends Model
             $user = URL::getSSRConnectInfo($user);
             $return_array['type'] = 'ssr';
         }
-        $return_array['address']        = $this->getServer();
-        $return_array['port']           = $user->port;
-        $return_array['protocol']       = $user->protocol;
+        $return_array['address'] = $this->getServer();
+        $return_array['port'] = $user->port;
+        $return_array['protocol'] = $user->protocol;
         $return_array['protocol_param'] = $user->protocol_param;
-        $return_array['obfs']           = $user->obfs;
-        $return_array['obfs_param']     = $user->obfs_param;
+        $return_array['obfs'] = $user->obfs;
+        $return_array['obfs_param'] = $user->obfs_param;
         if ($mu_port != 0 && strpos($this->server, ';') !== false) {
-            $node_tmp             = Tools::OutPort($this->server, $this->name, $mu_port);
+            $node_tmp = Tools::OutPort($this->server, $this->name, $mu_port);
             $return_array['port'] = $node_tmp['port'];
-            $node_name            = $node_tmp['name'];
+            $node_name = $node_tmp['name'];
         }
         $return_array['passwd'] = $user->passwd;
         $return_array['method'] = $user->method;
         $return_array['remark'] = ($emoji ? Tools::addEmoji($node_name) : $node_name);
-        $return_array['class']  = $this->node_class;
-        $return_array['group']  = $_ENV['appName'];
-        $return_array['ratio']  = ($relay_rule != null ? $this->traffic_rate + $relay_rule->dist_node()->traffic_rate : $this->traffic_rate);
+        $return_array['class'] = $this->node_class;
+        $return_array['group'] = $_ENV['appName'];
+        $return_array['ratio'] = ($relay_rule != null ? $this->traffic_rate + $relay_rule->dist_node()->traffic_rate : $this->traffic_rate);
 
+        return $return_array;
+    }
+
+    public function getSSItem(User $user, int $mu_port = 0, int $relay_rule_id = 0, int $is_ss = 0, bool $emoji = false): array
+    {
+        $node_server = self::getServerAndPort()['server'];
+        $methodKeyLengthMap = [
+            '2022-blake3-aes-128-gcm' => 16,
+            '2022-blake3-aes-256-gcm' => 32,
+        ];
+        $keyLength = $methodKeyLengthMap[$this->method] ?? null;
+        $userPasswd = self::getServerKey($user->reg_date, $keyLength);
+
+        $return_array['type'] = 'ss';
+        $return_array['address'] = $node_server;
+        $return_array['port'] = self::getServerAndPort()['port'];
+        $return_array['method'] = $this->method;
+        $return_array['remark'] = ($emoji ? Tools::addEmoji($this->name) : $this->name);
+        $return_array['passwd'] = $keyLength ? self::getServerKey($this->create_at, $keyLength) . ':' . $userPasswd : null;
         return $return_array;
     }
 
@@ -291,18 +310,27 @@ class Node extends Model
      * 获取 V2Ray 节点
      *
      * @param User $user
-     * @param int  $mu_port
-     * @param int  $relay_rule_id
-     * @param int  $is_ss
+     * @param int $mu_port
+     * @param int $relay_rule_id
+     * @param int $is_ss
      * @param bool $emoji
      */
     public function getV2RayItem(User $user, int $mu_port = 0, int $relay_rule_id = 0, int $is_ss = 0, bool $emoji = false): array
     {
-        $item           = Tools::v2Array($this->server);
-        $item['type']   = 'vmess';
+        $item = Tools::v2Array($this->server);
+        $item['type'] = 'vmess';
         $item['remark'] = ($emoji ? Tools::addEmoji($this->name) : $this->name);
-        $item['id']     = $user->getUuid();
-        $item['class']  = $this->node_class;
+        $item['id'] = $user->getUuid();
+        $item['class'] = $this->node_class;
+        return $item;
+    }
+
+    public function getVlessItem(User $user, int $mu_port = 0, int $relay_rule_id = 0, int $is_ss = 0, bool $emoji = false): array
+    {
+        $item = Tools::vl2Array($this->server, $this->method);
+        $item['remark'] = ($emoji ? Tools::addEmoji($this->name) : $this->name);
+        $item['id'] = $user->getUuid();
+        $item['type'] = 'vless';
         return $item;
     }
 
@@ -310,9 +338,9 @@ class Node extends Model
      * 获取 V2RayPlugin | obfs 节点
      *
      * @param User $user 用户
-     * @param int  $mu_port
-     * @param int  $relay_rule_id
-     * @param int  $is_ss
+     * @param int $mu_port
+     * @param int $relay_rule_id
+     * @param int $is_ss
      * @param bool $emoji
      *
      * @return array|null
@@ -324,11 +352,11 @@ class Node extends Model
         if ($return_array['net'] != 'obfs' && !in_array($user->method, Config::getSupportParam('ss_aead_method'))) {
             return null;
         }
-        $return_array['remark']         = ($emoji ? Tools::addEmoji($this->name) : $this->name);
-        $return_array['address']        = $return_array['add'];
-        $return_array['method']         = $user->method;
-        $return_array['passwd']         = $user->passwd;
-        $return_array['protocol']       = 'origin';
+        $return_array['remark'] = ($emoji ? Tools::addEmoji($this->name) : $this->name);
+        $return_array['address'] = $return_array['add'];
+        $return_array['method'] = $user->method;
+        $return_array['passwd'] = $user->passwd;
+        $return_array['protocol'] = 'origin';
         $return_array['protocol_param'] = '';
         if ($return_array['net'] == 'obfs') {
             $return_array['obfs_param'] = $user->getMuMd5();
@@ -355,27 +383,44 @@ class Node extends Model
      * Trojan 节点
      *
      * @param User $user 用户
-     * @param int  $mu_port
-     * @param int  $relay_rule_id
-     * @param int  $is_ss
+     * @param int $mu_port
+     * @param int $relay_rule_id
+     * @param int $is_ss
      * @param bool $emoji
      */
     public function getTrojanItem(User $user, int $mu_port = 0, int $relay_rule_id = 0, int $is_ss = 0, bool $emoji = false): array
     {
         $server = explode(';', $this->server);
-        $opt    = [];
+        $opt = [];
         if (isset($server[1])) {
             $opt = URL::parse_args($server[1]);
         }
-        $item['remark']   = ($emoji ? Tools::addEmoji($this->name) : $this->name);
-        $item['type']     = 'trojan';
-        $item['address']  = $server[0];
-        $item['port']     = (isset($opt['port']) ? (int) $opt['port'] : 443);
-        $item['passwd']   = $user->getUuid();
-        $item['host']     = $item['address'];
+        $item['remark'] = ($emoji ? Tools::addEmoji($this->name) : $this->name);
+        $item['type'] = 'trojan';
+        $item['address'] = $server[0];
+        $item['port'] = (isset($opt['port']) ? (int)$opt['port'] : 443);
+        $item['passwd'] = $user->getUuid();
+        $item['host'] = $item['address'];
         if (isset($opt['host'])) {
             $item['host'] = $opt['host'];
         }
         return $item;
+    }
+
+    public function getServerAndPort(): array
+    {
+        $server = '';
+        $explode = explode(';', $this->server);
+        if (in_array($this->sort, [0, 10]) && isset($explode[1]) && stripos($explode[1], 'server=') !== false) {
+            $server = Tools::parse_args($explode[1])['server'];
+        }
+        $serverInfo['server'] = $server != '' ? $server : ($explode[0] ?? '');
+        $serverInfo['port'] = $explode[1] ?? '';
+        return $serverInfo;
+    }
+
+    public function getServerKey($timestamp, $length)
+    {
+        return base64_encode(substr(md5($timestamp), 0, $length));
     }
 }

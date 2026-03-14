@@ -9,12 +9,7 @@ use App\Models\{
     User,
     UserSubscribeLog
 };
-use App\Utils\{
-    URL,
-    Tools,
-    AppURI,
-    ConfRender
-};
+use App\Utils\{Subcribe, URL, Tools, AppURI, ConfRender};
 use voku\helper\AntiXSS;
 use Psr\Http\Message\ResponseInterface;
 use Slim\Http\{
@@ -27,6 +22,18 @@ use Slim\Http\{
  */
 class LinkController extends BaseController
 {
+    public static $clientFlags = [
+        'clash' => ['meta', 'verge', 'flclash', 'nekobox', 'clashmetaforandroid', 'stash'],
+        'v2ray' => ['general', 'v2rayn', 'v2rayng', 'passwall', 'ssrplus', 'sagernet'],
+        'quantumult' => ['quantumult%20x', 'quantumult-x'],
+        'loon' => ['loon'],
+        'shadowrocket' => ['shadowrocket'],
+        'shadowsocks' => ['shadowsocks'],
+        'surge' => ['surge'],
+        'singbox' => ['sing-box', 'hiddify', 'sfm'],
+        'surfboard' => ['surfboard'],
+    ];
+
     public static function GenerateRandomLink()
     {
         for ($i = 0; $i < 10; $i++) {
@@ -49,18 +56,18 @@ class LinkController extends BaseController
         if ($Elink != null) {
             return $Elink->token;
         }
-        $NLink         = new Link();
+        $NLink = new Link();
         $NLink->userid = $userid;
-        $NLink->token  = self::GenerateRandomLink();
+        $NLink->token = self::GenerateRandomLink();
         $NLink->save();
 
         return $NLink->token;
     }
 
     /**
-     * @param Request   $request
-     * @param Response  $response
-     * @param array     $args
+     * @param Request $request
+     * @param Response $response
+     * @param array $args
      */
     public static function GetContent($request, $response, $args)
     {
@@ -85,13 +92,13 @@ class LinkController extends BaseController
         // 筛选节点部分
         $Rule['type'] = (isset($opts['type']) ? trim($opts['type']) : 'all');
         $Rule['is_mu'] = ($_ENV['mergeSub'] === true ? 1 : 0);
-        if (isset($opts['mu'])) $Rule['is_mu'] = (int) $opts['mu'];
+        if (isset($opts['mu'])) $Rule['is_mu'] = (int)$opts['mu'];
 
         if (isset($opts['class'])) {
             $class = trim(urldecode($opts['class']));
             $Rule['content']['class'] = array_map(
                 function ($item) {
-                    return (int) $item;
+                    return (int)$item;
                 },
                 explode('-', $class)
             );
@@ -101,7 +108,7 @@ class LinkController extends BaseController
             $noclass = trim(urldecode($opts['noclass']));
             $Rule['content']['noclass'] = array_map(
                 function ($item) {
-                    return (int) $item;
+                    return (int)$item;
                 },
                 explode('-', $noclass)
             );
@@ -114,18 +121,18 @@ class LinkController extends BaseController
         // Emoji
         $Rule['emoji'] = $_ENV['add_emoji_to_node_name'];
         if (isset($opts['emoji'])) {
-            $Rule['emoji'] = (bool) $opts['emoji'];
+            $Rule['emoji'] = (bool)$opts['emoji'];
         }
 
         // 显示流量以及到期时间等
         $Rule['extend'] = $_ENV['enable_sub_extend'];
         if (isset($opts['extend'])) {
-            $Rule['extend'] = (bool) $opts['extend'];
+            $Rule['extend'] = (bool)$opts['extend'];
         }
 
         // 兼容原版
         if (isset($opts['mu'])) {
-            $mu = (int) $opts['mu'];
+            $mu = (int)$opts['mu'];
             switch ($mu) {
                 case 0:
                     $opts['sub'] = 1;
@@ -148,42 +155,50 @@ class LinkController extends BaseController
         // 订阅类型
         $subscribe_type = '';
 
-        $getBody = '';
-
-        $sub_type_array = ['list', 'clash', 'surge', 'surfboard', 'quantumult', 'quantumultx', 'sub'];
+        $sub_type_array = ['clash', 'sub'];
+        $hasSubType = false;
         foreach ($sub_type_array as $key) {
             if (isset($opts[$key])) {
                 $query_value = $opts[$key];
                 if ($query_value != '0' && $query_value != '') {
-
                     // 兼容代码开始
                     if ($key == 'sub' && $query_value > 4) {
-                        $query_value = 1;
+                        $query_value = 3;
                     }
                     // 兼容代码结束
-
-                    if ($key == 'list') {
-                        $SubscribeExtend = self::getSubscribeExtend($query_value);
-                    } else {
-                        $SubscribeExtend = self::getSubscribeExtend($key, $query_value);
-                    }
+                    $SubscribeExtend = self::getSubscribeExtend($key, $query_value);
                     $filename = $SubscribeExtend['filename'] . '_' . time() . '.' . $SubscribeExtend['suffix'];
                     $subscribe_type = $SubscribeExtend['filename'];
-
                     $class = ('get' . $SubscribeExtend['class']);
                     $content = self::$class($user, $query_value, $opts, $Rule);
-                    $getBody = self::getBody(
-                        $user,
-                        $response,
-                        $content,
-                        $filename
-                    );
+                    $hasSubType = true;
                     break;
                 }
-                continue;
             }
         }
-
+        if (!$hasSubType) {
+            $userAgent = strtolower($request->getHeader('User-Agent')[0] ?? '');
+            $client = 'unknown';
+            foreach (self::$clientFlags as $type => $flags) {
+                foreach ($flags as $flag) {
+                    if (strpos($userAgent, $flag) !== false) {
+                        $client = $type;
+                        break;
+                    }
+                }
+            }
+            $SubscribeExtend = self::getSubscribeExtend($client);
+            $filename = $SubscribeExtend['filename'] . '_' . time() . '.' . $SubscribeExtend['suffix'];
+            $subscribe_type = $SubscribeExtend['filename'];
+            $class = ('get' . $SubscribeExtend['class']);
+            $content = self::$class($user, 0, $opts, $Rule);
+        }
+        $getBody = self::getBody(
+            $user,
+            $response,
+            $content,
+            $filename
+        );
         // 记录订阅日志
         if ($_ENV['subscribeLog'] === true) {
             self::Subscribe_log($user, $subscribe_type, $request->getHeaderLine('User-Agent'));
@@ -195,7 +210,7 @@ class LinkController extends BaseController
     /**
      * 获取订阅类型的文件名
      *
-     * @param string      $type  订阅类型
+     * @param string $type 订阅类型
      * @param string|null $value 值
      *
      * @return array
@@ -206,22 +221,22 @@ class LinkController extends BaseController
             case 'ss':
                 $return = [
                     'filename' => 'SS',
-                    'suffix'   => 'txt',
-                    'class'    => 'Sub'
+                    'suffix' => 'txt',
+                    'class' => 'Sub'
                 ];
                 break;
             case 'ssa':
                 $return = [
                     'filename' => 'SSA',
-                    'suffix'   => 'json',
-                    'class'    => 'Lists'
+                    'suffix' => 'json',
+                    'class' => 'Lists'
                 ];
                 break;
             case 'ssr':
                 $return = [
                     'filename' => 'SSR',
-                    'suffix'   => 'txt',
-                    'class'    => 'Sub'
+                    'suffix' => 'txt',
+                    'class' => 'Sub'
                 ];
                 break;
             case 'sub':
@@ -231,23 +246,17 @@ class LinkController extends BaseController
                     3 => 'v2rayn',
                     4 => 'trojan',
                 ];
-                $str = (!in_array($value, $strArray) ? $strArray[$value] : $strArray[1]);
+                $str = (!in_array($value, $strArray) ? $strArray[$value] : $strArray[3]);
                 $return = self::getSubscribeExtend($str);
                 break;
             case 'clash':
                 if ($value !== null) {
-                    if ((int) $value == 2) {
-                        $return = self::getSubscribeExtend('clashr');
-                        $return['class'] = 'Clash';
-                    } else {
-                        $return = self::getSubscribeExtend('clash');
-                        $return['class'] = 'Clash';
-                    }
+                    $return = self::getSubscribeExtend((int)$value == 2 ? 'clashr' : 'clash');
                 } else {
                     $return = [
                         'filename' => 'Clash',
-                        'suffix'   => 'yaml',
-                        'class'    => 'Lists'
+                        'suffix' => 'yaml',
+                        'class' => 'Clash'
                     ];
                 }
                 break;
@@ -255,49 +264,49 @@ class LinkController extends BaseController
                 if ($value !== null) {
                     $return = [
                         'filename' => 'Surge',
-                        'suffix'   => 'conf',
-                        'class'    => 'Surge'
+                        'suffix' => 'conf',
+                        'class' => 'Surge'
                     ];
                     $return['filename'] .= $value;
                 } else {
                     $return = [
                         'filename' => 'SurgeList',
-                        'suffix'   => 'list',
-                        'class'    => 'Lists'
+                        'suffix' => 'list',
+                        'class' => 'Lists'
                     ];
                 }
                 break;
             case 'clashr':
                 $return = [
                     'filename' => 'ClashR',
-                    'suffix'   => 'yaml',
-                    'class'    => 'Lists'
+                    'suffix' => 'yaml',
+                    'class' => 'Lists'
                 ];
                 break;
             case 'v2rayn':
                 $return = [
                     'filename' => 'V2RayN',
-                    'suffix'   => 'txt',
-                    'class'    => 'Sub'
+                    'suffix' => 'txt',
+                    'class' => 'Sub'
                 ];
                 break;
             case 'kitsunebi':
                 $return = [
                     'filename' => 'Kitsunebi',
-                    'suffix'   => 'txt',
-                    'class'    => 'Lists'
+                    'suffix' => 'txt',
+                    'class' => 'Lists'
                 ];
                 break;
             case 'surfboard':
                 $return = [
                     'filename' => 'Surfboard',
-                    'suffix'   => 'conf',
-                    'class'    => 'Surfboard'
+                    'suffix' => 'conf',
+                    'class' => 'Surfboard'
                 ];
                 break;
             case 'quantumult':
                 if ($value !== null) {
-                    if ((int) $value == 2) {
+                    if ((int)$value == 2) {
                         $return = self::getSubscribeExtend('quantumult_sub');
                     } else {
                         $return = self::getSubscribeExtend('quantumult_conf');
@@ -305,16 +314,16 @@ class LinkController extends BaseController
                 } else {
                     $return = [
                         'filename' => 'Quantumult',
-                        'suffix'   => 'conf',
-                        'class'    => 'Lists'
+                        'suffix' => 'conf',
+                        'class' => 'Lists'
                     ];
                 }
                 break;
             case 'quantumultx':
                 $return = [
                     'filename' => 'QuantumultX',
-                    'suffix'   => 'txt',
-                    'class'    => 'Lists'
+                    'suffix' => 'txt',
+                    'class' => 'Lists'
                 ];
                 if ($value !== null) {
                     $return['class'] = 'QuantumultX';
@@ -323,43 +332,43 @@ class LinkController extends BaseController
             case 'shadowrocket':
                 $return = [
                     'filename' => 'Shadowrocket',
-                    'suffix'   => 'txt',
-                    'class'    => 'Lists'
+                    'suffix' => 'txt',
+                    'class' => 'Lists'
                 ];
                 break;
             case 'clash_provider':
                 $return = [
                     'filename' => 'ClashProvider',
-                    'suffix'   => 'yaml',
-                    'class'    => 'Lists'
+                    'suffix' => 'yaml',
+                    'class' => 'Lists'
                 ];
                 break;
             case 'clashr_provider':
                 $return = [
                     'filename' => 'ClashRProvider',
-                    'suffix'   => 'yaml',
-                    'class'    => 'Lists'
+                    'suffix' => 'yaml',
+                    'class' => 'Lists'
                 ];
                 break;
             case 'quantumult_sub':
                 $return = [
                     'filename' => 'QuantumultSub',
-                    'suffix'   => 'conf',
-                    'class'    => 'Quantumult'
+                    'suffix' => 'conf',
+                    'class' => 'Quantumult'
                 ];
                 break;
             case 'quantumult_conf':
                 $return = [
                     'filename' => 'QuantumultConf',
-                    'suffix'   => 'conf',
-                    'class'    => 'Quantumult'
+                    'suffix' => 'conf',
+                    'class' => 'Quantumult'
                 ];
                 break;
             default:
                 $return = [
                     'filename' => 'UndefinedNode',
-                    'suffix'   => 'txt',
-                    'class'    => 'Sub'
+                    'suffix' => 'txt',
+                    'class' => 'Sub'
                 ];
                 break;
         }
@@ -369,22 +378,22 @@ class LinkController extends BaseController
     /**
      * 记录订阅日志
      *
-     * @param User   $user 用户
+     * @param User $user 用户
      * @param string $type 订阅类型
-     * @param string $ua   UA
+     * @param string $ua UA
      *
      * @return void
      */
     private static function Subscribe_log($user, $type, $ua)
     {
-        $log                     = new UserSubscribeLog();
-        $log->user_name          = $user->user_name;
-        $log->user_id            = $user->id;
-        $log->email              = $user->email;
-        $log->subscribe_type     = $type;
-        $log->request_ip         = $_SERVER['REMOTE_ADDR'];
-        $log->request_time       = date('Y-m-d H:i:s');
-        $antiXss                 = new AntiXSS();
+        $log = new UserSubscribeLog();
+        $log->user_name = $user->user_name;
+        $log->user_id = $user->id;
+        $log->email = $user->email;
+        $log->subscribe_type = $type;
+        $log->request_ip = $_SERVER['REMOTE_ADDR'];
+        $log->request_time = date('Y-m-d H:i:s');
+        $antiXss = new AntiXSS();
         $log->request_user_agent = $antiXss->xss_clean($ua);
         $log->save();
     }
@@ -392,9 +401,9 @@ class LinkController extends BaseController
     /**
      * 响应内容
      *
-     * @param User   $user
-     * @param array  $response
-     * @param string $content  订阅内容
+     * @param User $user
+     * @param array $response
+     * @param string $content 订阅内容
      * @param string $filename 文件名
      */
     public static function getBody($user, $response, $content, $filename): ResponseInterface
@@ -427,7 +436,7 @@ class LinkController extends BaseController
      * 订阅链接汇总
      *
      * @param User $user 用户
-     * @param int  $int  当前用户访问的订阅类型
+     * @param int $int 当前用户访问的订阅类型
      *
      * @return array
      */
@@ -438,31 +447,31 @@ class LinkController extends BaseController
         }
         $userapiUrl = $_ENV['subUrl'] . self::GenerateSSRSubCode($user->id);
         $return_info = [
-            'link'            => '',
+            'link' => '',
             // sub
-            'ss'              => '?sub=2',
-            'ssr'             => '?sub=1',
-            'v2ray'           => '?sub=3',
-            'trojan'          => '?sub=4',
+            'ss' => '?sub=2',
+            'ssr' => '?sub=1',
+            'v2ray' => '?sub=3',
+            'trojan' => '?sub=4',
             // apps
-            'ssa'             => '?list=ssa',
-            'clash'           => '?clash=1',
-            'clash_provider'  => '?list=clash',
-            'clashr'          => '?clash=2',
+            'ssa' => '?list=ssa',
+            'clash' => '?clash=1',
+            'clash_provider' => '?list=clash',
+            'clashr' => '?clash=2',
             'clashr_provider' => '?list=clashr',
-            'surge'           => '?surge=' . $int,
-            'surge_node'      => '?list=surge',
-            'surge2'          => '?surge=2',
-            'surge3'          => '?surge=3',
-            'surge4'          => '?surge=4',
-            'surfboard'       => '?surfboard=1',
-            'quantumult'      => '?quantumult=' . $int,
-            'quantumult_v2'   => '?list=quantumult',
-            'quantumult_sub'  => '?quantumult=2',
+            'surge' => '?surge=' . $int,
+            'surge_node' => '?list=surge',
+            'surge2' => '?surge=2',
+            'surge3' => '?surge=3',
+            'surge4' => '?surge=4',
+            'surfboard' => '?surfboard=1',
+            'quantumult' => '?quantumult=' . $int,
+            'quantumult_v2' => '?list=quantumult',
+            'quantumult_sub' => '?quantumult=2',
             'quantumult_conf' => '?quantumult=3',
-            'quantumultx'     => '?list=quantumultx',
-            'shadowrocket'    => '?list=shadowrocket',
-            'kitsunebi'       => '?list=kitsunebi'
+            'quantumultx' => '?list=quantumultx',
+            'shadowrocket' => '?list=shadowrocket',
+            'kitsunebi' => '?list=kitsunebi'
         ];
 
         return array_map(
@@ -478,7 +487,7 @@ class LinkController extends BaseController
         $return = null;
         switch ($list) {
             case 'ss':
-                $return = AppURI::getItemUrl($item, 1);
+                $return = AppURI::getSSURI($item, 1);
                 break;
             case 'ssr':
                 $return = AppURI::getItemUrl($item, 0);
@@ -569,7 +578,7 @@ class LinkController extends BaseController
     public static function getListExtend($user, $list)
     {
         $return = [];
-        $info_array = (count($_ENV['sub_message']) != 0 ? (array) $_ENV['sub_message'] : []);
+        $info_array = (count($_ENV['sub_message']) != 0 ? (array)$_ENV['sub_message'] : []);
         if (strtotime($user->expire_in) > time()) {
             if ($user->transfer_enable == 0) {
                 $unusedTraffic = '请勿使用-剩余流量：0';
@@ -584,8 +593,8 @@ class LinkController extends BaseController
                 $expire_in .= '无限期';
             }
         } else {
-            $unusedTraffic  = '账户已过期，请续费后使用';
-            $expire_in      = '账户已过期，请续费后使用';
+            $unusedTraffic = '账户已过期，请续费后使用';
+            $expire_in = '账户已过期，请续费后使用';
         }
         if (!in_array($list, ['quantumult', 'quantumultx', 'shadowrocket'])) {
             $info_array[] = $unusedTraffic;
@@ -594,25 +603,25 @@ class LinkController extends BaseController
         $baseUrl = explode('//', $_ENV['baseUrl'])[1];
         $baseUrl = explode('/', $baseUrl)[0];
         $Extend = [
-            'remark'          => '',
-            'type'            => '',
-            'add'             => $baseUrl,
-            'address'         => $baseUrl,
-            'port'            => 10086,
-            'method'          => 'chacha20-ietf',
-            'passwd'          => $user->passwd,
-            'id'              => $user->getUuid(),
-            'aid'             => 0,
-            'net'             => 'tcp',
-            'headerType'      => 'none',
-            'host'            => '',
-            'path'            => '/',
-            'tls'             => '',
-            'protocol'        => 'origin',
-            'protocol_param'  => '',
-            'obfs'            => 'plain',
-            'obfs_param'      => '',
-            'group'           => $_ENV['appName']
+            'remark' => '',
+            'type' => '',
+            'add' => $baseUrl,
+            'address' => $baseUrl,
+            'port' => 10086,
+            'method' => 'chacha20-ietf',
+            'passwd' => $user->passwd,
+            'id' => $user->getUuid(),
+            'aid' => 0,
+            'net' => 'tcp',
+            'headerType' => 'none',
+            'host' => '',
+            'path' => '/',
+            'tls' => '',
+            'protocol' => 'origin',
+            'protocol_param' => '',
+            'obfs' => 'plain',
+            'obfs_param' => '',
+            'group' => $_ENV['appName']
         ];
         if ($list == 'shadowrocket') {
             $return[] = ('STATUS=' . $unusedTraffic . '.♥.' . $expire_in . PHP_EOL . 'REMARKS=' . $_ENV['appName']);
@@ -640,10 +649,10 @@ class LinkController extends BaseController
     /**
      * Surge 配置
      *
-     * @param User  $user  用户
-     * @param int   $surge 订阅类型
-     * @param array $opts  request
-     * @param array $Rule  节点筛选规则
+     * @param User $user 用户
+     * @param int $surge 订阅类型
+     * @param array $opts request
+     * @param array $Rule 节点筛选规则
      *
      * @return string
      */
@@ -678,10 +687,10 @@ class LinkController extends BaseController
     /**
      * Quantumult 配置
      *
-     * @param User  $user       用户
-     * @param int   $quantumult 订阅类型
-     * @param array $opts       request
-     * @param array $Rule       节点筛选规则
+     * @param User $user 用户
+     * @param int $quantumult 订阅类型
+     * @param array $opts request
+     * @param array $Rule 节点筛选规则
      *
      * @return string
      */
@@ -715,9 +724,9 @@ class LinkController extends BaseController
                 break;
         }
 
-        $All_Proxy          = '';
-        $All_Proxy_name     = '';
-        $BackChina_name     = '';
+        $All_Proxy = '';
+        $All_Proxy_name = '';
+        $BackChina_name = '';
         foreach ($items as $item) {
             $out = AppURI::getQuantumultURI($item);
             if ($out !== null) {
@@ -730,12 +739,12 @@ class LinkController extends BaseController
             }
         }
         $ProxyGroups = [
-            'proxy_group'       => base64_encode("🍃 Proxy  :  static, 🏃 Auto\n🏃 Auto\n🚀 Direct\n" . $All_Proxy_name),
-            'domestic_group'    => base64_encode("🍂 Domestic  :  static, 🚀 Direct\n🚀 Direct\n🍃 Proxy\n" . $BackChina_name),
-            'others_group'      => base64_encode("☁️ Others  :   static, 🍃 Proxy\n🚀 Direct\n🍃 Proxy"),
-            'direct_group'      => base64_encode("🚀 Direct : static, DIRECT\nDIRECT"),
-            'apple_group'       => base64_encode("🍎 Only  :  static, 🚀 Direct\n🚀 Direct\n🍃 Proxy"),
-            'auto_group'        => base64_encode("🏃 Auto  :  auto\n" . $All_Proxy_name),
+            'proxy_group' => base64_encode("🍃 Proxy  :  static, 🏃 Auto\n🏃 Auto\n🚀 Direct\n" . $All_Proxy_name),
+            'domestic_group' => base64_encode("🍂 Domestic  :  static, 🚀 Direct\n🚀 Direct\n🍃 Proxy\n" . $BackChina_name),
+            'others_group' => base64_encode("☁️ Others  :   static, 🍃 Proxy\n🚀 Direct\n🍃 Proxy"),
+            'direct_group' => base64_encode("🚀 Direct : static, DIRECT\nDIRECT"),
+            'apple_group' => base64_encode("🍎 Only  :  static, 🚀 Direct\n🚀 Direct\n🍃 Proxy"),
+            'auto_group' => base64_encode("🏃 Auto  :  auto\n" . $All_Proxy_name),
         ];
         $render = ConfRender::getTemplateRender();
         $render->assign('All_Proxy', $All_Proxy)->assign('ProxyGroups', $ProxyGroups);
@@ -746,10 +755,10 @@ class LinkController extends BaseController
     /**
      * QuantumultX 配置
      *
-     * @param User  $user        用户
-     * @param int   $quantumultx 订阅类型
-     * @param array $opts        request
-     * @param array $Rule        节点筛选规则
+     * @param User $user 用户
+     * @param int $quantumultx 订阅类型
+     * @param array $opts request
+     * @param array $Rule 节点筛选规则
      *
      * @return string
      */
@@ -761,10 +770,10 @@ class LinkController extends BaseController
     /**
      * Surfboard 配置
      *
-     * @param User  $user      用户
-     * @param int   $surfboard 订阅类型
-     * @param array $opts      request
-     * @param array $Rule      节点筛选规则
+     * @param User $user 用户
+     * @param int $surfboard 订阅类型
+     * @param array $opts request
+     * @param array $Rule 节点筛选规则
      *
      * @return string
      */
@@ -795,10 +804,10 @@ class LinkController extends BaseController
     /**
      * Clash 配置
      *
-     * @param User  $user  用户
-     * @param int   $clash 订阅类型
-     * @param array $opts  request
-     * @param array $Rule  节点筛选规则
+     * @param User $user 用户
+     * @param int $clash 订阅类型
+     * @param array $opts request
+     * @param array $Rule 节点筛选规则
      *
      * @return string
      */
@@ -828,38 +837,49 @@ class LinkController extends BaseController
     /**
      * 通用订阅，ssr & v2rayn
      *
-     * @param User   $user 用户
-     * @param int    $sub  订阅类型
-     * @param array  $opts request
-     * @param array  $Rule 节点筛选规则
+     * @param User $user 用户
+     * @param int $sub 订阅类型
+     * @param array $opts request
+     * @param array $Rule 节点筛选规则
      *
      * @return string
      */
+//    public static function getSub($user, $sub, $opts, $Rule)
+//    {
+//        $return_url = '';
+//        switch ($sub) {
+//            case 2: // SS
+//                $Rule['type'] = 'ss';
+//                $getListExtend = $Rule['extend'] ? self::getListExtend($user, 'ss') : [];
+//                break;
+//            case 3: // V2
+//                $Rule['type'] = 'vmess';
+//                $getListExtend = $Rule['extend'] ? self::getListExtend($user, 'v2rayn') : [];
+//                break;
+//            case 4: // Trojan
+//                $Rule['type'] = 'trojan';
+//                $getListExtend = $Rule['extend'] ? self::getListExtend($user, 'trojan') : [];
+//                break;
+//            default: // SSR
+//                $Rule['type'] = 'ssr';
+//                $getListExtend = $Rule['extend'] ? self::getListExtend($user, 'ssr') : [];
+//                break;
+//        }
+//        if ($Rule['extend']) {
+//            $return_url .= implode(PHP_EOL, $getListExtend) . PHP_EOL;
+//        }
+//        $return_url .= URL::get_NewAllUrl($user, $Rule);
+//        return base64_encode($return_url);
+//    }
     public static function getSub($user, $sub, $opts, $Rule)
     {
         $return_url = '';
-        switch ($sub) {
-            case 2: // SS
-                $Rule['type'] = 'ss';
-                $getListExtend = $Rule['extend'] ? self::getListExtend($user, 'ss') : [];
-                break;
-            case 3: // V2
-                $Rule['type'] = 'vmess';
-                $getListExtend = $Rule['extend'] ? self::getListExtend($user, 'v2rayn') : [];
-                break;
-            case 4: // Trojan
-                $Rule['type'] = 'trojan';
-                $getListExtend = $Rule['extend'] ? self::getListExtend($user, 'trojan') : [];
-                break;
-            default: // SSR
-                $Rule['type'] = 'ssr';
-                $getListExtend = $Rule['extend'] ? self::getListExtend($user, 'ssr') : [];
-                break;
-        }
+        $Rule['type'] = 'vmess';
+        $getListExtend = $Rule['extend'] ? self::getListExtend($user, 'v2rayn') : [];
+        $return_url .= URL::getAllUrl($user, $Rule);
         if ($Rule['extend']) {
             $return_url .= implode(PHP_EOL, $getListExtend) . PHP_EOL;
         }
-        $return_url .= URL::get_NewAllUrl($user, $Rule);
         return base64_encode($return_url);
     }
 }

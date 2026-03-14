@@ -146,8 +146,8 @@ class URL
     /**
      * 获取全部节点对象
      *
-     * @param User  $user
-     * @param mixed $sort  数值或数组
+     * @param User $user
+     * @param mixed $sort 数值或数组
      * @param array $rules 节点筛选规则
      */
     public static function getNodes(User $user, $sort, array $rules = []): \Illuminate\Database\Eloquent\Collection
@@ -193,13 +193,13 @@ class URL
      * ]
      * ```
      *
-     * @param User  $user 用户
+     * @param User $user 用户
      * @param array $Rule 节点筛选规则
      */
     public static function getNew_AllItems(User $user, array $Rule): array
     {
         $is_ss = [0];
-        $is_mu = (isset($Rule['is_mu']) ? $Rule['is_mu'] : (int) $_ENV['mergeSub']);
+        $is_mu = (isset($Rule['is_mu']) ? $Rule['is_mu'] : (int)$_ENV['mergeSub']);
         $emoji = (isset($Rule['emoji']) ? $Rule['emoji'] : false);
 
         switch ($Rule['type']) {
@@ -353,7 +353,7 @@ class URL
      *  ]
      * ```
      *
-     * @param User  $user 用户
+     * @param User $user 用户
      * @param array $Rule 节点筛选规则
      */
     public static function get_NewAllUrl(User $user, array $Rule): string
@@ -374,6 +374,57 @@ class URL
             }
         }
         return $return_url;
+    }
+
+    public static function getAllUrl(User $user, array $Rule): string
+    {
+        $return_url = '';
+        if (strtotime($user->expire_in) < time()) {
+            return $return_url;
+        }
+        $items = self::getAllItems($user, $Rule);
+        foreach ($items as $item) {
+            $out = [];
+            if ($item['type'] == 'vmess' || $item['type'] == 'vless') {
+                $out = LinkController::getListItem($item, 'v2rayn');
+            } else if ($item['type'] == 'ss') {
+                $out = LinkController::getListItem($item, 'ss');
+            }
+            if ($out !== null) {
+                $return_url .= $out . PHP_EOL;
+            }
+        }
+        return $return_url;
+    }
+
+    public static function getAllItems(User $user, array $Rule): array
+    {
+        $query = Node::query();
+        // 群组筛选，不是管理员，只能看到该用户同一群组的节点
+        if (!$user->is_admin) {
+            $group = ($user->node_group != 0 ? [0, $user->node_group] : [0]);
+            $query->whereIn('node_group', $group)
+                ->where('node_class', '<=', $user->class);
+        }
+        // 等级筛选 end
+        $nodes = $query->where('type', '1')->orderBy('name')->get();
+        $emoji = ($Rule['emoji'] ?? false);
+        $return_array = [];
+        foreach ($nodes as $node) {
+            if (in_array($node->sort, [0, 11, 12])) {
+                $node_class = [
+                    0 => 'getSSItem',               // SS
+                    11 => 'getV2RayItem',           // V2Ray
+                    12 => 'getVlessItem',           // V2Ray
+                ];
+                $class = $node_class[$node->sort];
+                $item = $node->$class($user, 0, 0, 0, $emoji);
+                if ($item != null) {
+                    $return_array[] = $item;
+                }
+            }
+        }
+        return $return_array;
     }
 
     public static function getItemUrl($item, $is_ss)
@@ -437,8 +488,8 @@ class URL
         $item['class'] = $node->node_class;
         if (!$arrout) {
             return 'vmess://' . base64_encode(
-                json_encode($item, 320)
-            );
+                    json_encode($item, 320)
+                );
         }
         return $item;
     }

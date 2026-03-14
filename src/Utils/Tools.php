@@ -571,7 +571,36 @@ class Tools
         }
         return $item;
     }
+    public static function vl2Array($node,$method)
+    {
+        $server = explode(';', $node);
+        $item['add'] = $server[0];
+        if ($server[1] == '0' || $server[1] == '') {
+            $item['port'] = 443;
+        } else {
+            $item['port'] = (int)$server[1];
+        }
+        $item['aid'] = (int)$server[2];
+        $item['net'] = $server[3];
+        $item['security'] = $server[4];
 
+        $item = array_merge($item, URL::parse_args($server[5]));
+        if (array_key_exists('server', $item)) {
+            $item['add'] = $item['server'];
+            $item['servername'] = $item['server'];
+            unset($item['server']);
+        }
+        if (array_key_exists('outside_port', $item)) {
+            $item['port'] = (int)$item['outside_port'];
+            unset($item['outside_port']);
+        }
+        $methodData = json_decode($method,true);
+        $destExplode = explode(':', $methodData['dest']);
+        $item['sni'] = $destExplode[0];
+        $item['pbk'] = $methodData['public_key'];
+
+        return $item;
+    }
     public static function checkTls($node)
     {
         $server = self::v2Array($node);
