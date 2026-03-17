@@ -2,6 +2,9 @@
 
 namespace App\Command;
 
+use App\Utils\Tools;
+use App\Models\User;
+
 class Tool extends Command
 {
     public $description = ''
@@ -49,6 +52,18 @@ class Tool extends Command
             curl_close($ch);
             if ($deleteWebhookReturn->ok && $deleteWebhookReturn->result && $bot->setWebhook($_ENV['baseUrl'] . '/telegram_callback?token=' . $_ENV['telegram_request_token']) == 1) {
                 echo('Old Bot 设置成功！' . PHP_EOL);
+            }
+        }
+    }
+
+    public function resetPasswd()
+    {
+        foreach (User::cursor() as $user) {
+            $passwdArray = explode(':', $user->passwd);
+
+            if (count($passwdArray) < 2) {
+                $user->passwd = Tools::getServerKey($user->reg_date, 16) . ':' . Tools::getServerKey($user->reg_date, 32);
+                $user->save();
             }
         }
     }
