@@ -177,36 +177,36 @@ class UserController extends BaseController
 
     public function addAliveIp($request, $response, $args)
     {
-//        $params = $request->getQueryParams();
-//
-//        $data = $request->getParam('data');
-//        $node_id = $params['node_id'];
-//        if ($node_id == '0') {
-//            $node = Node::where('node_ip', $_SERVER['REMOTE_ADDR'])->first();
-//            $node_id = $node->id;
-//        }
-//        $node = Node::find($node_id);
-//
-//        if ($node == null) {
-//            $res = [
-//                'ret' => 0
-//            ];
-//            return $this->echoJson($response, $res);
-//        }
-//        if (count($data) > 0) {
-//            foreach ($data as $log) {
-//                $ip = $log['ip'];
-//                $userid = $log['user_id'];
-//
-//                // log
-//                $ip_log = new Ip();
-//                $ip_log->userid = $userid;
-//                $ip_log->nodeid = $node_id;
-//                $ip_log->ip = $ip;
-//                $ip_log->datetime = time();
-//                $ip_log->save();
-//            }
-//        }
+        $params = $request->getQueryParams();
+
+        $data = $request->getParam('data');
+        $node_id = $params['node_id'];
+        if ($node_id == '0') {
+            $node = Node::where('node_ip', $_SERVER['REMOTE_ADDR'])->first();
+            $node_id = $node->id;
+        }
+        $node = Node::find($node_id);
+
+        if ($node == null) {
+            $res = [
+                'ret' => 0
+            ];
+            return $this->echoJson($response, $res);
+        }
+        if (count($data) > 0) {
+            foreach ($data as $log) {
+                $ip = $log['ip'];
+                $userid = $log['user_id'];
+
+                // log
+                $ip_log = new Ip();
+                $ip_log->userid = $userid;
+                $ip_log->nodeid = $node_id;
+                $ip_log->ip = $ip;
+                $ip_log->datetime = time();
+                $ip_log->save();
+            }
+        }
 
         $res = [
             'ret' => 1,
