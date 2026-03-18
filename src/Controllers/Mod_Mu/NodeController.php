@@ -69,6 +69,7 @@ class NodeController extends BaseController
             $methodKeyLengthMap = [
                 '2022-blake3-aes-128-gcm' => 16,
                 '2022-blake3-aes-256-gcm' => 32,
+                '2022-blake3-chacha20-poly1305' => 32,
             ];
             $keyLength = $methodKeyLengthMap[$method] ?? null;
             $serverKey = $keyLength ? Tools::getServerKey($node->create_at, $keyLength) : null;

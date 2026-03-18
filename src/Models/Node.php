@@ -140,11 +140,6 @@ class Node extends Model
             return false;
         }
 
-        $nodeSort = [1, 2, 5, 9, 999];
-        if (in_array($this->sort, $nodeSort)) {
-            return null;
-        }
-
         return ($this->node_heartbeat > time() - $delay);
     }
 

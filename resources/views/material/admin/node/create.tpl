@@ -40,6 +40,7 @@
                                         <label class="floating-label" for="sort">节点类型</label>
                                         <select id="sort" class="form-control maxwidth-edit" name="sort">
                                             <option value="0">Shadowsocks</option>
+                                            <option value="1">AnyTLS</option>
                                             <option value="11">V2Ray</option>
                                         </select>
                                     </div>
@@ -144,12 +145,9 @@
                                     <div class="form-group form-group-label">
                                         <label class="floating-label" for="sort">加密方式</label>
                                         <select id="method" name="method" class="form-control maxwidth-edit">
-                                            <option value="0">aes-128-gcm</option>
-                                            <option value="1">aes-192-gcm</option>
-                                            <option value="2">aes-256-gcm</option>
-                                            <option value="3">chacha20-ietf-poly1305</option>
-                                            <option value="4">2022-blake3-aes-128-gcm</option>
-                                            <option value="5">2022-blake3-aes-256-gcm</option>
+                                            <option value="1">2022-blake3-chacha20-poly1305</option>
+                                            <option value="2">2022-blake3-aes-128-gcm</option>
+                                            <option value="3">2022-blake3-aes-256-gcm</option>
                                         </select>
                                     </div>
                                 </div>
@@ -243,6 +241,7 @@
                 vlessSwitch.checked = false;
             }
         }
+
         function toggleMethod() {
             if (sortSelect.value === "0") {
                 methodGroup.style.display = "block";  // 显示
@@ -250,6 +249,7 @@
                 methodGroup.style.display = "none";   // 隐藏
             }
         }
+
         function toggleFlow() {
             if (vlessSwitch.checked) {
                 vlessGroup.style.display = "block";
@@ -366,22 +366,27 @@
             bandwidthlimit_resetday: {required: true}
         },
         submitHandler: () => {
-            if ($$.getElementById('custom_method').checked) {
-                var custom_method = 1;
+            let method;
+            let custom_method;
+            if (sortSelect.value === "0") {
+                custom_method = 0;
+                method = $$getValue('method');
             } else {
-                var custom_method = 0;
+                custom_method = 1;
+                method = buildJson();
             }
-
+            let type;
             if ($$.getElementById('type').checked) {
-                var type = 1;
+                type = 1;
             } else {
-                var type = 0;
+                type = 0;
             }
             {/literal}
+            let custom_rss;
             if ($$.getElementById('custom_rss').checked) {
-                var custom_rss = 1;
+                custom_rss = 1;
             } else {
-                var custom_rss = 0;
+                custom_rss = 0;
             }
             $.ajax({
                 type: "POST",
@@ -391,7 +396,7 @@
                     name: $$getValue('name'),
                     server: $$getValue('server'),
                     node_ip: $$getValue('node_ip'),
-                    method: $$getValue('method'),
+                    method,
                     custom_method,
                     rate: $$getValue('rate'),
                     info: $$getValue('info'),
@@ -419,8 +424,8 @@
                 error: (jqXHR) => {
                     $("#result").modal();
                     $$.getElementById('msg').innerHTML = `发生错误：${
-                            jqXHR.status
-                            }`;
+                        jqXHR.status
+                    }`;
                 }
             });
         }

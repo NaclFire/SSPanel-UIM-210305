@@ -88,10 +88,12 @@ class UserController extends BaseController
                     continue;
                 }
             }
+            // 获取连接密码字段，用‘:’分割
+            $passwdArray = explode(':', $user_raw->passwd);
             if ($node->method === '2022-blake3-aes-128-gcm') {
-                $user_raw->passwd = Tools::getServerKey($user_raw->reg_date, 16);
-            } else if ($node->method === '2022-blake3-aes-256-gcm') {
-                $user_raw->passwd = Tools::getServerKey($user_raw->reg_date, 32);
+                $user_raw->passwd = $passwdArray[0];
+            } else {
+                $user_raw->passwd = $passwdArray[1];
             }
             $user_raw = Tools::keyFilter($user_raw, $key_list);
             $users[] = $user_raw;

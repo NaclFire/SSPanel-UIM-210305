@@ -42,6 +42,7 @@
                                         <label class="floating-label" for="sort">节点类型</label>
                                         <select id="sort" class="form-control maxwidth-edit" name="sort">
                                             <option value="0" {if $node->sort==0}selected{/if}>Shadowsocks</option>
+                                            <option value="1" {if $node->sort==1}selected{/if}>AnyTLS</option>
                                             <option value="11" {if $node->sort==11||$node->sort==12}selected{/if}>V2Ray</option>
                                         </select>
                                     </div>
@@ -94,17 +95,8 @@
                                 <div class="form-group form-group-label" id="method_group" style="display:none;">
                                     <label class="floating-label" for="method">加密方式</label>
                                     <select id="method" name="method" class="form-control maxwidth-edit">
-                                        <option value="aes-128-gcm" {if $node->method=='aes-128-gcm'}selected{/if}>
-                                            aes-128-gcm
-                                        </option>
-                                        <option value="aes-192-gcm" {if $node->method=='aes-192-gcm'}selected{/if}>
-                                            aes-192-gcm
-                                        </option>
-                                        <option value="aes-256-gcm" {if $node->method=='aes-256-gcm'}selected{/if}>
-                                            aes-256-gcm
-                                        </option>
-                                        <option value="chacha20-ietf-poly1305" {if $node->method=='chacha20-ietf-poly1305'}selected{/if}>
-                                            chacha20-ietf-poly1305
+                                        <option value="2022-blake3-chacha20-poly1305" {if $node->method=='2022-blake3-chacha20-poly1305'}selected{/if}>
+                                            2022-blake3-chacha20-poly1305
                                         </option>
                                         <option value="2022-blake3-aes-128-gcm" {if $node->method=='2022-blake3-aes-128-gcm'}selected{/if}>
                                             2022-blake3-aes-128-gcm
@@ -432,7 +424,7 @@
                     name: $$getValue('name'),
                     server: $$getValue('server'),
                     node_ip: $$getValue('node_ip'),
-                    method: method,
+                    method,
                     custom_method,
                     rate: $$getValue('rate'),
                     info: $$getValue('info'),

@@ -93,24 +93,19 @@ class NodeController extends AdminController
             $req_node_ip = $node->server;
         }
 
-        $nodeSort = [2, 5, 9, 999];     // 无需更新 IP 的节点类型
-        if (!in_array($node->sort, $nodeSort)) {
-            $server_list = explode(';', $node->server);
-            if (!Tools::is_ip($server_list[0])) {
-                $node->node_ip = gethostbyname($server_list[0]);
-            } else {
-                $node->node_ip = $req_node_ip;
-            }
-            if ($node->node_ip == '') {
-                return $response->withJson(
-                    [
-                        'ret' => 0,
-                        'msg' => '获取节点IP失败，请检查您输入的节点地址是否正确！'
-                    ]
-                );
-            }
+        $server_list = explode(';', $node->server);
+        if (!Tools::is_ip($server_list[0])) {
+            $node->node_ip = gethostbyname($server_list[0]);
         } else {
-            $node->node_ip = '';
+            $node->node_ip = $req_node_ip;
+        }
+        if ($node->node_ip == '') {
+            return $response->withJson(
+                [
+                    'ret' => 0,
+                    'msg' => '获取节点IP失败，请检查您输入的节点地址是否正确！'
+                ]
+            );
         }
 
         if ($node->sort == 1) {
@@ -189,17 +184,11 @@ class NodeController extends AdminController
             $req_node_ip = $node->server;
         }
 
-        $success = true;
-        $nodeSort = [2, 5, 9, 999];     // 无需更新 IP 的节点类型
-        if (!in_array($node->sort, $nodeSort)) {
-            $server_list = explode(';', $node->server);
-            if (!Tools::is_ip($server_list[0])) {
-                $success = $node->changeNodeIp($server_list[0]);
-            } else {
-                $success = $node->changeNodeIp($req_node_ip);
-            }
+        $server_list = explode(';', $node->server);
+        if (!Tools::is_ip($server_list[0])) {
+            $success = $node->changeNodeIp($server_list[0]);
         } else {
-            $node->node_ip = '';
+            $success = $node->changeNodeIp($req_node_ip);
         }
 
         if (!$success) {
@@ -348,10 +337,9 @@ class NodeController extends AdminController
         $search = $request->getParam('search')['value'];
 
         if ($order_field == 'outaddress' || $order_field == 'op') {
-            $order_field = 'server';
+            $order_field = 'name';
         }
 
-        $nodes = [];
         $query = Node::query();
         if ($search) {
             $v = (int)(new DatatablesHelper())->query('select version()')[0]['version()'];
@@ -382,14 +370,17 @@ class NodeController extends AdminController
         $data = [];
         foreach ($nodes as $node) {
             $tempdata = [];
-            $tempdata['op'] = '<a class="btn btn-brand" ' . ($node->sort == 999 ? 'disabled' : 'href="/admin/node/' . $node->id . '/edit"') . '>编辑</a>
-                <a class="btn btn-brand-accent" ' . ($node->sort == 999 ? 'disabled' : 'id="delete" value="' . $node->id . '" href="javascript:void(0);" onClick="delete_modal_show(\'' . $node->id . '\')"') . '>删除</a>';
+            $tempdata['op'] = '<a class="btn btn-brand" href="/admin/node/' . $node->id . '/edit">编辑</a>
+                <a class="btn btn-brand-accent" id="delete" value="' . $node->id . '" href="javascript:void(0);" onClick="delete_modal_show(\'' . $node->id . '\')">删除</a>';
             $tempdata['id'] = $node->id;
             $tempdata['name'] = $node->name;
             $tempdata['type'] = ((bool)$node->type ? '显示' : '隐藏');
             switch ($node->sort) {
                 case 0:
                     $sort = 'Shadowsocks';
+                    break;
+                case 1:
+                    $sort = 'AnyTLS';
                     break;
                 case 11:
                 case 12:

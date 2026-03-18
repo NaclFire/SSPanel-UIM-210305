@@ -41,7 +41,7 @@ class NodeController extends UserController
         }
 
         $db = new DatatablesHelper();
-        $infoLogs = $db->query('SELECT * FROM ( SELECT * FROM `ss_node_info` WHERE log_time > ' . (time() - 300) . ' ORDER BY id DESC LIMIT 999999999999 ) t GROUP BY node_id ORDER BY id DESC');
+//        $infoLogs = $db->query('SELECT * FROM ( SELECT * FROM `ss_node_info` WHERE log_time > ' . (time() - 300) . ' ORDER BY id DESC LIMIT 999999999999 ) t GROUP BY node_id ORDER BY id DESC');
         $onlineLogs = $db->query('SELECT * FROM ( SELECT * FROM `ss_node_online_log` WHERE log_time > ' . (time() - 300) . ' ORDER BY id DESC LIMIT 999999999999 ) t GROUP BY node_id ORDER BY id DESC');
 
         $array_nodes = [];
@@ -110,12 +110,12 @@ class NodeController extends UserController
             }
 
             $array_node['latest_load'] = -1;
-            foreach ($infoLogs as $log) {
-                if ($log['node_id'] == $node->id) {
-                    $array_node['latest_load'] = (explode(' ', $log['load']))[0] * 100;
-                    break;
-                }
-            }
+//            foreach ($infoLogs as $log) {
+//                if ($log['node_id'] == $node->id) {
+//                    $array_node['latest_load'] = (explode(' ', $log['load']))[0] * 100;
+//                    break;
+//                }
+//            }
 
             $array_node['traffic_used'] = Tools::flowAutoShow($node->node_bandwidth);
             $array_node['traffic_limit'] = (int) Tools::flowToGB($node->node_bandwidth_limit);

@@ -117,13 +117,14 @@ class UserController extends AdminController
             }
         }
         // do reg user
+        $date = date('Y-m-d H:i:s');
         $user = new User();
         $current_timestamp = time();
         $pass = Tools::genRandomChar();
         $user->user_name = $email;
         $user->email = $email;
         $user->pass = Hash::passwordHash($pass);
-        $user->passwd = Tools::genRandomChar(6);
+        $user->passwd = Tools::getServerKey($date, 16) . ':' . Tools::getServerKey($date, 32);
         $user->uuid = Uuid::uuid3(Uuid::NAMESPACE_DNS, $email . '|' . $current_timestamp);
         $user->port = Tools::getAvPort();
         $user->t = 0;
@@ -148,7 +149,7 @@ class UserController extends AdminController
         $user->node_connector = (int)Config::getconfig('Register.string.defaultConn');
         $user->node_speedlimit = (int)Config::getconfig('Register.string.defaultSpeedlimit');
         $user->expire_in = date('Y-m-d H:i:s', time() + (int)Config::getconfig('Register.string.defaultExpire_in') * 86400);
-        $user->reg_date = date('Y-m-d H:i:s');
+        $user->reg_date = $date;
         $user->reg_ip = $_SERVER['REMOTE_ADDR'];
         $user->plan = 'A';
         $user->theme = $_ENV['theme'];
