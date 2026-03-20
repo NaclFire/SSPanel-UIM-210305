@@ -1,19 +1,3 @@
-/*
- Navicat Premium Data Transfer
-
- Source Server         : SSPanel
- Source Server Type    : MySQL
- Source Server Version : 50731
- Source Host           : localhost:3306
- Source Schema         : niniubiwoc_xyz
-
- Target Server Type    : MySQL
- Target Server Version : 50731
- File Encoding         : 65001
-
- Date: 18/03/2026 09:18:55
-*/
-
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 

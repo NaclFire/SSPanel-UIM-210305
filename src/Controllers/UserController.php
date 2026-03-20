@@ -1206,11 +1206,6 @@ class UserController extends BaseController
             $res['msg'] = '密码不能为空';
             return $response->getBody()->write(json_encode($res));
         }
-        if (!Tools::is_validate($pwd)) {
-            $res['ret'] = 0;
-            $res['msg'] = '密码无效';
-            return $response->getBody()->write(json_encode($res));
-        }
         if ($otheruuid != null) {
             $res['ret'] = 0;
             $res['msg'] = '目前出现一些问题，请稍后再试';
