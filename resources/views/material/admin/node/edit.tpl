@@ -34,7 +34,9 @@
                                 <div class="form-group form-group-label">
                                     <label class="floating-label" for="server">节点IP</label>
                                     <input class="form-control maxwidth-edit" id="node_ip" name="node_ip" type="text" value="{$node->node_ip}">
-                                    <p class="form-control-guide"><i class="material-icons">info</i>支持多个ip对接同一个节点，多个以“;”分隔。
+                                    <p class="form-control-guide"><i class="material-icons">info</i>支持多个ip对接同一个节点，多个以“;”分隔，双栈机器以#分隔。
+                                    </p>
+                                    <p class="form-control-guide"><i class="material-icons">info</i>例：1.1.1.1#2409:8c54:80:120:0:1:0:5b:1.1.1.2#2409:8c54:80:120:0:1:0:5c
                                     </p>
                                 </div>
                                 <div class="form-group form-group-label">

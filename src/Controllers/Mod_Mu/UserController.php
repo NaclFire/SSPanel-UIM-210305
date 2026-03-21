@@ -126,8 +126,19 @@ class UserController extends BaseController
         if (count($nodeIpList) == 1) {
             $this->logOnlineUser($node_id, $data);
         } else {
-            if ($nodeIpList[0] == $_SERVER['REMOTE_ADDR']) {
-                $this->logOnlineUser($node_id, $data);
+            // 查看node_ip是否是双栈
+            $nodeIpVersion = explode('#', $nodeIpList[0]);
+            // 双栈ip分割之后再处理
+            if (count($nodeIpVersion) == 2) {
+                if ($nodeIpVersion[0] == $_SERVER['REMOTE_ADDR']) {
+                    $this->logOnlineUser($node_id, $data);
+                } elseif ($nodeIpVersion[1] == $_SERVER['REMOTE_ADDR']) {
+                    $this->logOnlineUser($node_id, $data);
+                }
+            } else {
+                if ($nodeIpList[0] == $_SERVER['REMOTE_ADDR']) {
+                    $this->logOnlineUser($node_id, $data);
+                }
             }
         }
 
