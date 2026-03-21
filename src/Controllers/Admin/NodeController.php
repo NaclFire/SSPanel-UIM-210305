@@ -78,7 +78,6 @@ class NodeController extends AdminController
         $node->method = $request->getParam('method');
         $node->custom_method = $request->getParam('custom_method');
         $node->custom_rss = $request->getParam('custom_rss');
-        $node->mu_only = $request->getParam('mu_only');
         $node->traffic_rate = $request->getParam('rate');
         $node->info = $request->getParam('info');
         $node->type = $request->getParam('type');
@@ -94,33 +93,43 @@ class NodeController extends AdminController
         }
 
         $server_list = explode(';', $node->server);
-        if (!Tools::is_ip($server_list[0])) {
-            $node->node_ip = gethostbyname($server_list[0]);
+        $nodeIps = explode(';', $req_node_ip);
+        if (Tools::is_ip($server_list[0])) {
+            // 如果节点地址第一个参数是ip，需要查看节点ip是否配置了多ip接入
+            if (count($nodeIps) === 1) {
+                return $response->withJson(
+                    [
+                        'ret' => 0,
+                        'msg' => '节点IP为多IP时，节点地址需要填写域名！'
+                    ]
+                );
+            }
         } else {
-            $node->node_ip = $req_node_ip;
-        }
-        if ($node->node_ip == '') {
-            return $response->withJson(
-                [
-                    'ret' => 0,
-                    'msg' => '获取节点IP失败，请检查您输入的节点地址是否正确！'
-                ]
-            );
+            if (count($nodeIps) > 1) {
+                // 如果节点地址第一个参数是域名，多ip接入时不需要更新节点ip
+                $node->node_ip = $req_node_ip;
+            } else {
+                // 非多ip接入，根据域名获取ip地址
+                $success = $node->changeNodeIp($server_list[0]);
+                if (!$success) {
+                    return $response->withJson(
+                        [
+                            'ret' => 0,
+                            'msg' => '更新节点IP失败，请检查您输入的节点地址是否正确！'
+                        ]
+                    );
+                }
+            }
         }
 
-        if ($node->sort == 1) {
-            Radius::AddNas($node->node_ip, $request->getParam('server'));
-        }
+//        if ($node->sort == 1) {
+//            Radius::AddNas($node->node_ip, $request->getParam('server'));
+//        }
         $node->node_class = $request->getParam('class');
         $node->node_bandwidth_limit = $request->getParam('node_bandwidth_limit') * 1024 * 1024 * 1024;
         $node->bandwidthlimit_resetday = $request->getParam('bandwidthlimit_resetday');
 
         $node->save();
-
-        if ($_ENV['cloudflare_enable'] == true) {
-            $domain_name = explode('.' . $_ENV['cloudflare_name'], $node->server);
-            CloudflareDriver::updateRecord($domain_name[0], $node->node_ip);
-        }
 
         if (Config::getconfig('Telegram.bool.AddNode')) {
             Telegram::Send(
@@ -172,7 +181,6 @@ class NodeController extends AdminController
         $node->method = $request->getParam('method');
         $node->custom_method = $request->getParam('custom_method');
         $node->custom_rss = $request->getParam('custom_rss');
-        $node->mu_only = $request->getParam('mu_only');
         $node->traffic_rate = $request->getParam('rate');
         $node->info = $request->getParam('info');
         $node->node_speedlimit = $request->getParam('node_speedlimit');
@@ -185,35 +193,50 @@ class NodeController extends AdminController
         }
 
         $server_list = explode(';', $node->server);
-        if (!Tools::is_ip($server_list[0])) {
-            $success = $node->changeNodeIp($server_list[0]);
+        $nodeIps = explode(';', $req_node_ip);
+        if (Tools::is_ip($server_list[0])) {
+            // 如果节点地址第一个参数是ip，需要查看节点ip是否配置了多ip接入
+            if (count($nodeIps) === 1) {
+                return $response->withJson(
+                    [
+                        'ret' => 0,
+                        'msg' => '节点IP为多IP时，节点地址需要填写域名！'
+                    ]
+                );
+            }
         } else {
-            $success = $node->changeNodeIp($req_node_ip);
-        }
-
-        if (!$success) {
-            return $response->withJson(
-                [
-                    'ret' => 0,
-                    'msg' => '更新节点IP失败，请检查您输入的节点地址是否正确！'
-                ]
-            );
-        }
-
-        if (in_array($node->sort, array(0, 10, 11, 12))) {
-            Tools::updateRelayRuleIp($node);
-        }
-
-        if ($node->sort == 1) {
-            $SS_Node = Node::where('sort', '=', 0)->where('server', '=', $request->getParam('server'))->first();
-            if ($SS_Node != null) {
-                if ($SS_Node->node_heartbeat == 0 || time() - $SS_Node->node_heartbeat < 300) {
-                    Radius::AddNas(gethostbyname($request->getParam('server')), $request->getParam('server'));
-                }
+            if (count($nodeIps) > 1) {
+                // 如果节点地址第一个参数是域名，多ip接入时不需要更新节点ip
+                $node->node_ip = $req_node_ip;
             } else {
-                Radius::AddNas(gethostbyname($request->getParam('server')), $request->getParam('server'));
+                // 非多ip接入，根据域名获取ip地址
+                $success = $node->changeNodeIp($server_list[0]);
+                if (!$success) {
+                    return $response->withJson(
+                        [
+                            'ret' => 0,
+                            'msg' => '更新节点IP失败，请检查您输入的节点地址是否正确！'
+                        ]
+                    );
+                }
             }
         }
+
+
+//        if (in_array($node->sort, array(0, 10, 11, 12))) {
+//            Tools::updateRelayRuleIp($node);
+//        }
+
+//        if ($node->sort == 1) {
+//            $SS_Node = Node::where('sort', '=', 0)->where('server', '=', $request->getParam('server'))->first();
+//            if ($SS_Node != null) {
+//                if ($SS_Node->node_heartbeat == 0 || time() - $SS_Node->node_heartbeat < 300) {
+//                    Radius::AddNas(gethostbyname($request->getParam('server')), $request->getParam('server'));
+//                }
+//            } else {
+//                Radius::AddNas(gethostbyname($request->getParam('server')), $request->getParam('server'));
+//            }
+//        }
 
         $node->status = $request->getParam('status');
         $node->node_class = $request->getParam('class');

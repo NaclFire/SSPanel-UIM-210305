@@ -335,30 +335,6 @@ class AppURI
                     }
                 }
                 break;
-            case 'ssr':
-                // if (
-                //     in_array($item['method'], ['rc4-md5-6', 'des-ede3-cfb', 'xsalsa20', 'none'])
-                //     ||
-                //     in_array($item['protocol'], array_merge(Config::getSupportParam('allow_none_protocol'), ['verify_deflate']))
-                //     ||
-                //     in_array($item['obfs'], ['tls1.2_ticket_fastauth'])
-                // ) {
-                //     // 不支持的
-                //     break;
-                // }
-                $return = [
-                    'name' => $item['remark'],
-                    'type' => 'ssr',
-                    'server' => $item['address'],
-                    'port' => $item['port'],
-                    'cipher' => $item['method'],
-                    'password' => $item['passwd'],
-                    'protocol' => $item['protocol'],
-                    'protocolparam' => $item['protocol_param'],
-                    'obfs' => $item['obfs'],
-                    'obfsparam' => $item['obfs_param']
-                ];
-                break;
             case 'vmess':
                 if (!in_array($item['net'], array('ws', 'tcp'))) {
                     break;
@@ -412,16 +388,6 @@ class AppURI
                         'short-id' => null
                     ];
                 }
-                break;
-            case 'trojan':
-                $return = [
-                    'name' => $item['remark'],
-                    'type' => 'trojan',
-                    'server' => $item['address'],
-                    'port' => $item['port'],
-                    'password' => $item['passwd'],
-                    'sni' => $item['host']
-                ];
                 break;
         }
         return $return;

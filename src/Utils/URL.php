@@ -199,7 +199,6 @@ class URL
     public static function getNew_AllItems(User $user, array $Rule): array
     {
         $is_ss = [0];
-        $is_mu = (isset($Rule['is_mu']) ? $Rule['is_mu'] : (int)$_ENV['mergeSub']);
         $emoji = (isset($Rule['emoji']) ? $Rule['emoji'] : false);
 
         switch ($Rule['type']) {
@@ -228,12 +227,9 @@ class URL
 
         // 单端口 sort = 9
         $mu_nodes = [];
-        if ($is_mu != 0 && in_array($Rule['type'], ['all', 'ss', 'ssr'])) {
+        if (in_array($Rule['type'], ['all', 'ss', 'ssr'])) {
             $mu_node_query = Node::query();
             $mu_node_query->where('sort', 9)->where('type', '1');
-            if ($is_mu != 1) {
-                $mu_node_query->where('server', $is_mu);
-            }
             if (!$user->is_admin) {
                 $group = ($user->node_group != 0 ? [0, $user->node_group] : [0]);
                 $mu_node_query->where('node_class', '<=', $user->class)
@@ -241,9 +237,6 @@ class URL
             }
             $mu_nodes = $mu_node_query->get();
         }
-
-        // 获取适用于用户的中转规则
-        $relay_rules = $user->getRelays();
 
         $return_array = [];
         foreach ($nodes as $node) {
@@ -279,59 +272,8 @@ class URL
                 if ($item != null) {
                     $return_array[] = $item;
                 }
-                continue;
             }
             // 其他类型单端口节点 End
-
-            // SS 节点
-            if (in_array($node->sort, [0, 10])) {
-                // 节点非只启用单端口 && 只获取普通端口
-                if ($node->mu_only != 1 && ($is_mu == 0 || ($is_mu != 0 && $_ENV['mergeSub'] === true))) {
-                    foreach ($is_ss as $ss) {
-                        if ($node->sort == 10) {
-                            // SS 中转
-                            $relay_rule_id = 0;
-                            $relay_rule = Tools::pick_out_relay_rule($node->id, $user->port, $relay_rules);
-                            if ($relay_rule != null && $relay_rule->dist_node() != null) {
-                                $relay_rule_id = $relay_rule->id;
-                            }
-                            $item = $node->getItem($user, 0, $relay_rule_id, $ss, $emoji);
-                        } else {
-                            // SS 非中转
-                            $item = $node->getItem($user, 0, 0, $ss, $emoji);
-                        }
-                        if ($item != null) {
-                            $return_array[] = $item;
-                        }
-                    }
-                }
-                // 获取 SS 普通端口 End
-
-                // 非只启用普通端口 && 获取单端口
-                if ($node->mu_only != -1 && $is_mu != 0) {
-                    foreach ($is_ss as $ss) {
-                        foreach ($mu_nodes as $mu_node) {
-                            if ($node->sort == 10) {
-                                // SS 中转
-                                $relay_rule_id = 0;
-                                $relay_rule = Tools::pick_out_relay_rule($node->id, $mu_node->server, $relay_rules);
-                                if ($relay_rule != null && $relay_rule->dist_node() != null) {
-                                    $relay_rule_id = $relay_rule->id;
-                                }
-                                $item = $node->getItem($user, $mu_node->server, $relay_rule_id, $ss, $emoji);
-                            } else {
-                                // SS 非中转
-                                $item = $node->getItem($user, $mu_node->server, 0, $ss, $emoji);
-                            }
-                            if ($item != null) {
-                                $return_array[] = $item;
-                            }
-                        }
-                    }
-                }
-                // 获取 SS 单端口 End
-            }
-            // SS 节点 End
         }
 
         return $return_array;
@@ -356,26 +298,6 @@ class URL
      * @param User $user 用户
      * @param array $Rule 节点筛选规则
      */
-    public static function get_NewAllUrl(User $user, array $Rule): string
-    {
-        $return_url = '';
-        if (strtotime($user->expire_in) < time()) {
-            return $return_url;
-        }
-        $items = URL::getNew_AllItems($user, $Rule);
-        foreach ($items as $item) {
-            if ($item['type'] == 'vmess') {
-                $out = LinkController::getListItem($item, 'v2rayn');
-            } else {
-                $out = LinkController::getListItem($item, $Rule['type']);
-            }
-            if ($out !== null) {
-                $return_url .= $out . PHP_EOL;
-            }
-        }
-        return $return_url;
-    }
-
     public static function getAllUrl(User $user, array $Rule): string
     {
         $return_url = '';

@@ -32,7 +32,6 @@ class Node extends Model
     protected $casts = [
         'node_speedlimit' => 'float',
         'traffic_rate' => 'float',
-        'mu_only' => 'int',
         'sort' => 'int',
     ];
 

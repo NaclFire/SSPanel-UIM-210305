@@ -32,7 +32,7 @@
                                 <div class="form-group form-group-label">
                                     <label class="floating-label" for="server">节点IP</label>
                                     <input class="form-control maxwidth-edit" id="node_ip" name="node_ip" type="text">
-                                    <p class="form-control-guide"><i class="material-icons">info</i>如果“节点地址”填写为域名，则此处的值会被忽视
+                                    <p class="form-control-guide"><i class="material-icons">info</i>支持多个ip对接同一个节点，多个以“;”分隔。
                                     </p>
                                 </div>
                                 <div class="form-group form-group-label">
@@ -110,16 +110,6 @@
                                                    checked="checked" disabled><span class="switch-toggle"></span>自定义协议&混淆
                                         </label>
                                     </div>
-                                </div>
-                                <div class="form-group form-group-label" hidden="hidden">
-                                    <label for="mu_only">
-                                        <label class="floating-label" for="sort">单端口多用户启用</label>
-                                        <select id="mu_only" class="form-control maxwidth-edit" name="is_multi_user">
-                                            <option value="-1">只启用普通端口</option>
-                                            <option value="0">单端口多用户与普通端口并存</option>
-                                            <option value="1">只启用单端口多用户</option>
-                                        </select>
-                                    </label>
                                 </div>
                             </div>
                         </div>
@@ -408,8 +398,7 @@
                     class: $$getValue('class'),
                     node_bandwidth_limit: $$getValue('node_bandwidth_limit'),
                     bandwidthlimit_resetday: $$getValue('bandwidthlimit_resetday'),
-                    custom_rss,
-                    mu_only: $$getValue('mu_only')
+                    custom_rss
                 },
                 success: data => {
                     if (data.ret) {

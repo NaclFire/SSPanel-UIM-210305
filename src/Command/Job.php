@@ -23,6 +23,7 @@ use App\Models\User;
 use App\Models\UserSubscribeLog;
 use App\Services\Config;
 use App\Services\Mail;
+use App\Utils\CloudflareDriver;
 use App\Utils\DatatablesHelper;
 use App\Utils\QQWry;
 use App\Utils\Radius;
@@ -511,7 +512,7 @@ class Job extends Command
         }
 
         echo '用户检测开始' . PHP_EOL;
-        $users = User::all();
+        $users = User::where('class', '>', 1)->get();
         foreach ($users as $user) {
             if (($user->transfer_enable <= $user->u + $user->d || $user->enable == 0 || (strtotime($user->expire_in) < time() && strtotime($user->expire_in) > 644447105))
                 && RadiusBan::where(
@@ -702,28 +703,62 @@ class Job extends Command
             }
         }
 
-        //更新节点 IP，每分钟
-        $nodes = Node::all();
-        $allNodeID = [];
+        // 多ip对接节点，检查ip可用性
+        echo '节点ip检测开始' . PHP_EOL;
+        // 只检测ip字段是多个ip格式的节点
+        $nodes = Node::where('node_ip', 'like', '%;%')->get();
         foreach ($nodes as $node) {
-            $allNodeID[] = $node->id;
-            $nodeSort = [2, 5, 9, 999];     // 无需更新 IP 的节点类型
-            if (!in_array($node->sort, $nodeSort)) {
-                $server = $node->getOutServer();
-                if (!Tools::is_ip($server) && $node->changeNodeIp($server)) {
+            $nodeIps = explode(';', $node->node_ip);
+            echo '开始检测：' . $node->name . PHP_EOL;
+            $milliseconds = (int)(microtime(true) * 1000);
+            // 检测间隔超过5分钟
+            if ($milliseconds - $node->last_check_time > 5 * 60 * 1000) {
+                $availableIp = '';
+                foreach ($nodeIps as $nodeIp) {
+                    // 测试ip是否能ping通
+                    if (Tools::pingIp($nodeIp)) {
+                        // 更新cloudflare上节点域名解析的ip
+                        CloudflareDriver::updateRecord(explode(';', $node->server)[0], $nodeIp);
+                        $availableIp = $nodeIp;
+                        echo '域名：' . explode(';', $node->server)[0] . '，已解析ip：' . $availableIp . PHP_EOL;
+                        $node->last_check_time = $milliseconds;
+                        break;
+                    } else {
+                        echo 'ip : ' . $nodeIp . '不可用' . PHP_EOL;
+                    }
+                }
+                $key = array_search($availableIp, $nodeIps);
+                if ($key !== false) {
+                    $item = $nodeIps[$key];
+                    unset($nodeIps[$key]);
+                    array_unshift($nodeIps, $item);
+                    $node->node_ip = implode(';', $nodeIps);
                     $node->save();
                 }
-                if (in_array($node->sort, array(0, 10, 12))) {
-                    Tools::updateRelayRuleIp($node);
-                }
             }
+
         }
+        echo '节点ip检测结束' . PHP_EOL;
+        //更新节点 IP，每分钟
+//        $nodes = Node::all();
+//        $allNodeID = [];
+//        foreach ($nodes as $node) {
+//            $allNodeID[] = $node->id;
+//            $server = $node->getOutServer();
+//            if (!Tools::is_ip($server) && $node->changeNodeIp($server)) {
+//                $node->save();
+//            }
+//            if (in_array($node->sort, array(0, 10, 12))) {
+//                Tools::updateRelayRuleIp($node);
+//            }
+//        }
 
         // 删除无效的中转
-        $allNodeID = implode(', ', $allNodeID);
-        $datatables = new DatatablesHelper();
-        $datatables->query(
-            'DELETE FROM `relay` WHERE `source_node_id` NOT IN(' . $allNodeID . ') OR `dist_node_id` NOT IN(' . $allNodeID . ')'
-        );
+//        $allNodeID = implode(', ', $allNodeID);
+//        $datatables = new DatatablesHelper();
+//        $datatables->query(
+//            'DELETE FROM `relay` WHERE `source_node_id` NOT IN(' . $allNodeID . ') OR `dist_node_id` NOT IN(' . $allNodeID . ')'
+//        );
     }
+
 }

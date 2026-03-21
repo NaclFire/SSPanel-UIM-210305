@@ -53,11 +53,6 @@ class UserController extends BaseController
             ];
             return $this->echoJson($response, $res);
         }
-
-        /*
-         * 1. 请不要把管理员作为单端口承载用户
-         * 2. 请不要把真实用户作为单端口承载用户
-         */
         $users_raw = User::where(
             static function ($query) use ($node) {
                 $query->where(
@@ -126,11 +121,16 @@ class UserController extends BaseController
             ];
             return $this->echoJson($response, $res);
         }
-        $online_log = new NodeOnlineLog();
-        $online_log->node_id = $node_id;
-        $online_log->online_user = count($data);
-        $online_log->log_time = time();
-        $online_log->save();
+        // 多ip节点，记录在线用户时，只记录在用ip。
+        $nodeIpList = explode(';', $node->node_ip);
+        if (count($nodeIpList) == 1) {
+            $this->logOnlineUser($node_id, $data);
+        } else {
+            if ($nodeIpList[0] == $_SERVER['REMOTE_ADDR']) {
+                $this->logOnlineUser($node_id, $data);
+            }
+        }
+
         if (count($data) > 0) {
             foreach ($data as $log) {
                 $user_id = $log['user_id'];
@@ -254,5 +254,14 @@ class UserController extends BaseController
             'data' => 'ok',
         ];
         return $this->echoJson($response, $res);
+    }
+
+    private function logOnlineUser($node_id, $data)
+    {
+        $online_log = new NodeOnlineLog();
+        $online_log->node_id = $node_id;
+        $online_log->online_user = count($data);
+        $online_log->log_time = time();
+        $online_log->save();
     }
 }

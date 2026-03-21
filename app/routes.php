@@ -50,12 +50,12 @@ return function (SlimApp $app) {
         $this->post('/buy_traffic_package', App\Controllers\UserController::class . ':buy_traffic_package');
 
         // Relay Mange
-        $this->get('/relay', App\Controllers\User\RelayController::class . ':index');
-        $this->get('/relay/create', App\Controllers\User\RelayController::class . ':create');
-        $this->post('/relay', App\Controllers\User\RelayController::class . ':add');
-        $this->get('/relay/{id}/edit', App\Controllers\User\RelayController::class . ':edit');
-        $this->put('/relay/{id}', App\Controllers\User\RelayController::class . ':update');
-        $this->delete('/relay', App\Controllers\User\RelayController::class . ':delete');
+//        $this->get('/relay', App\Controllers\User\RelayController::class . ':index');
+//        $this->get('/relay/create', App\Controllers\User\RelayController::class . ':create');
+//        $this->post('/relay', App\Controllers\User\RelayController::class . ':add');
+//        $this->get('/relay/{id}/edit', App\Controllers\User\RelayController::class . ':edit');
+//        $this->put('/relay/{id}', App\Controllers\User\RelayController::class . ':update');
+//        $this->delete('/relay', App\Controllers\User\RelayController::class . ':delete');
 
         $this->get('/ticket', App\Controllers\User\TicketController::class . ':ticket');
         $this->get('/ticket/create', App\Controllers\User\TicketController::class . ':ticket_create');
@@ -103,12 +103,6 @@ return function (SlimApp $app) {
 
         // 订阅记录
         $this->get('/subscribe_log', App\Controllers\UserController::class . ':subscribe_log');
-
-        // getUserAllURL
-        $this->get('/getUserAllURL', App\Controllers\UserController::class . ':getUserAllURL');
-
-        // getPcClient
-        $this->get('/getPcClient', App\Controllers\UserController::class . ':getPcClient');
 
         $this->post('/code/f2fpay', App\Services\Payment::class . ':purchase');
         $this->get('/code/codepay', App\Services\Payment::class . ':purchase');
@@ -181,14 +175,14 @@ return function (SlimApp $app) {
         $this->post('/ticket/ajax', App\Controllers\Admin\TicketController::class . ':ajax');
 
         // Relay Mange
-        $this->get('/relay', App\Controllers\Admin\RelayController::class . ':index');
-        $this->get('/relay/create', App\Controllers\Admin\RelayController::class . ':create');
-        $this->post('/relay', App\Controllers\Admin\RelayController::class . ':add');
-        $this->get('/relay/{id}/edit', App\Controllers\Admin\RelayController::class . ':edit');
-        $this->put('/relay/{id}', App\Controllers\Admin\RelayController::class . ':update');
-        $this->delete('/relay', App\Controllers\Admin\RelayController::class . ':delete');
-        $this->get('/relay/path_search/{id}', App\Controllers\Admin\RelayController::class . ':path_search');
-        $this->post('/relay/ajax', App\Controllers\Admin\RelayController::class . ':ajax_relay');
+//        $this->get('/relay', App\Controllers\Admin\RelayController::class . ':index');
+//        $this->get('/relay/create', App\Controllers\Admin\RelayController::class . ':create');
+//        $this->post('/relay', App\Controllers\Admin\RelayController::class . ':add');
+//        $this->get('/relay/{id}/edit', App\Controllers\Admin\RelayController::class . ':edit');
+//        $this->put('/relay/{id}', App\Controllers\Admin\RelayController::class . ':update');
+//        $this->delete('/relay', App\Controllers\Admin\RelayController::class . ':delete');
+//        $this->get('/relay/path_search/{id}', App\Controllers\Admin\RelayController::class . ':path_search');
+//        $this->post('/relay/ajax', App\Controllers\Admin\RelayController::class . ':ajax_relay');
 
         // Shop Mange
         $this->get('/shop', App\Controllers\Admin\ShopController::class . ':index');
@@ -396,8 +390,4 @@ return function (SlimApp $app) {
     });
     $app->get('/sublink', App\Controllers\HomeController::class . ':getSubLink');
     //doc end
-
-    $app->group('/getClient', function () {
-        $this->get('/{token}', App\Controllers\UserController::class . ':getClientfromToken');
-    });
 };

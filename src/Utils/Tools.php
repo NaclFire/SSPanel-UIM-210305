@@ -2,9 +2,12 @@
 
 namespace App\Utils;
 
+use Cloudflare\API\Auth\APIKey;
 use App\Models\{Model, User, Node, Relay};
 use App\Services\Config;
 use DateTime;
+use Cloudflare\API\Adapter\Guzzle;
+use Cloudflare\API\Endpoints\Zones;
 
 class Tools
 {
@@ -571,7 +574,8 @@ class Tools
         }
         return $item;
     }
-    public static function vl2Array($node,$method)
+
+    public static function vl2Array($node, $method)
     {
         $server = explode(';', $node);
         $item['add'] = $server[0];
@@ -594,13 +598,14 @@ class Tools
             $item['port'] = (int)$item['outside_port'];
             unset($item['outside_port']);
         }
-        $methodData = json_decode($method,true);
+        $methodData = json_decode($method, true);
         $destExplode = explode(':', $methodData['dest']);
         $item['sni'] = $destExplode[0];
         $item['pbk'] = $methodData['public_key'];
 
         return $item;
     }
+
     public static function checkTls($node)
     {
         $server = self::v2Array($node);
@@ -1036,5 +1041,44 @@ class Tools
         }
         $html .= '</ul>';
         return $html;
+    }
+
+    public static function pingIp($ip, $count = 5, $timeout = 1): bool
+    {
+        // 防止命令注入
+        $ip = escapeshellarg($ip);
+
+        if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+            // Windows
+            // -n 次数
+            // -w 超时（毫秒）
+            $command = "ping -n {$count} -w " . ($timeout * 1000) . " {$ip}";
+        } else {
+            // Linux / Mac
+            // -c 次数
+            // -W 单次超时（秒）
+            $command = "ping -c {$count} -W {$timeout} {$ip}";
+        }
+
+        exec($command, $output, $status);
+
+        // 👉 解析结果（判断是否“全部失败”）
+        $text = implode("\n", $output);
+
+        if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+            // Windows 判断丢失率
+            // Lost = 5 (100% loss)
+            if (preg_match('/Lost = \d+ \((100% loss)\)/', $text)) {
+                return false;
+            }
+        } else {
+            // Linux 判断接收数
+            // 0 received
+            if (strpos($text, '0 received') !== false) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

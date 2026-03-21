@@ -40,18 +40,18 @@ class CloudflareDriver
         $key = new APIKey($_ENV['cloudflare_email'], $_ENV['cloudflare_key']);
         $adapter = new Guzzle($key);
         $zones = new Zones($adapter);
-
-        $zoneID = $zones->getZoneID($_ENV['cloudflare_name']);
+        $domainList = explode('.', $name);
+        $zoneID = $zones->getZoneID($domainList[1] . '.' . $domainList[2]);
 
         $dns = new DNS($adapter);
 
         $r = $dns->listRecords($zoneID, '', $name);
         $recordCount = $r->result_info->count;
-        $records = $r->result;
 
         if ($recordCount == 0) {
             self::addRecord($dns, $zoneID, 'A', $name, $content);
         } elseif ($recordCount >= 1) {
+            $records = $r->result;
             foreach ($records as $record) {
                 $recordID = $record->id;
                 self::modifyRecord($dns, $zoneID, $recordID, $name, $content, $proxied);

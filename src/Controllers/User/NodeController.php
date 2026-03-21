@@ -66,7 +66,6 @@ class NodeController extends UserController
             $array_node['name']       = $node->name;
             $array_node['sort']       = $node->sort;
             $array_node['info']       = $node->info;
-            $array_node['mu_only']    = $node->mu_only;
             $array_node['group']      = $node->node_group;
 
             if ($node->sort == 13) {
