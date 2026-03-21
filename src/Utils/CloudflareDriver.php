@@ -21,6 +21,7 @@ class CloudflareDriver
     public static function modifyRecord(DNS $dns, $zoneID, $recordID, $name, $content, $type, $proxied = false)
     {
         $details = ['type' => $type, 'name' => $name, 'content' => $content, 'proxied' => $proxied];
+        echo '$details = ' . \GuzzleHttp\json_encode($details);
         if ($dns->updateRecordDetails($zoneID, $recordID, $details)->success == true) {
             return 1;
         }
@@ -57,13 +58,14 @@ class CloudflareDriver
         } else {
             return;
         }
+        echo 'type = ' . $type . PHP_EOL;
         if ($recordCount == 0) {
             self::addRecord($dns, $zoneID, $type, $name, $content);
         } elseif ($recordCount >= 1) {
             $records = $r->result;
             foreach ($records as $record) {
                 $recordID = $record->id;
-                self::modifyRecord($dns, $zoneID, $recordID, $name, $content, $proxied, $type);
+                self::modifyRecord($dns, $zoneID, $recordID, $name, $content, $type, $proxied);
             }
         }
     }

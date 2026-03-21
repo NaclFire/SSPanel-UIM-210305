@@ -714,6 +714,7 @@ class Job extends Command
             $milliseconds = (int)(microtime(true) * 1000);
             // 检测间隔超过5分钟
             if ($milliseconds - $node->last_check_time > 5 * 60 * 1000) {
+                echo '当前节点超过5分钟未检测' . PHP_EOL;
                 $availableIp = '';
                 foreach ($nodeIps as $nodeIp) {
                     // 查看node_ip是否是双栈
@@ -725,11 +726,14 @@ class Job extends Command
                     }
                     // 测试ip是否能ping通
                     if (Tools::pingIp($nodeIpV4)) {
-                        // 更新cloudflare上节点域名解析的ip
-                        CloudflareDriver::updateRecord(explode(';', $node->server)[0], $nodeIpV4);
-                        $availableIp = $nodeIpV4;
-                        echo '域名：' . explode(';', $node->server)[0] . '，已解析ip：' . $availableIp . PHP_EOL;
-                        $node->last_check_time = $milliseconds;
+                        // 如果第一个ip和当前要解析的ip一致才执行更新DNS
+                        if (!str_contains($nodeIps[0], $nodeIpV4)) {
+                            // 更新cloudflare上节点域名解析的ip
+                            CloudflareDriver::updateRecord(explode(';', $node->server)[0], $nodeIpV4);
+                            $availableIp = $nodeIp;
+                            echo '域名：' . explode(';', $node->server)[0] . '，已解析ip：' . $availableIp . PHP_EOL;
+                            $node->last_check_time = $milliseconds;
+                        }
                         break;
                     } else {
                         echo 'ip : ' . $nodeIp . '不可用' . PHP_EOL;
