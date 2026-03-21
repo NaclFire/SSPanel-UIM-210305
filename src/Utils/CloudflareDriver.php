@@ -18,9 +18,9 @@ class CloudflareDriver
 {
 
     // @todo: parameters
-    public static function modifyRecord(DNS $dns, $zoneID, $recordID, $name, $content, $proxied = false)
+    public static function modifyRecord(DNS $dns, $zoneID, $recordID, $name, $content, $type, $proxied = false)
     {
-        $details = ['type' => 'A', 'name' => $name, 'content' => $content, 'proxied' => $proxied];
+        $details = ['type' => $type, 'name' => $name, 'content' => $content, 'proxied' => $proxied];
         if ($dns->updateRecordDetails($zoneID, $recordID, $details)->success == true) {
             return 1;
         }
@@ -63,7 +63,7 @@ class CloudflareDriver
             $records = $r->result;
             foreach ($records as $record) {
                 $recordID = $record->id;
-                self::modifyRecord($dns, $zoneID, $recordID, $name, $content, $proxied);
+                self::modifyRecord($dns, $zoneID, $recordID, $name, $content, $proxied, $type);
             }
         }
     }
