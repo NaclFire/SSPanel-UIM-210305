@@ -716,11 +716,18 @@ class Job extends Command
             if ($milliseconds - $node->last_check_time > 5 * 60 * 1000) {
                 $availableIp = '';
                 foreach ($nodeIps as $nodeIp) {
+                    // 查看node_ip是否是双栈
+                    $nodeIpVersion = explode('#', $nodeIp);
+                    if (count($nodeIpVersion) == 2) {
+                        $nodeIpV4 = $nodeIpVersion[0];
+                    } else {
+                        $nodeIpV4 = $nodeIp;
+                    }
                     // 测试ip是否能ping通
-                    if (Tools::pingIp($nodeIp)) {
+                    if (Tools::pingIp($nodeIpV4)) {
                         // 更新cloudflare上节点域名解析的ip
-                        CloudflareDriver::updateRecord(explode(';', $node->server)[0], $nodeIp);
-                        $availableIp = $nodeIp;
+                        CloudflareDriver::updateRecord(explode(';', $node->server)[0], $nodeIpV4);
+                        $availableIp = $nodeIpV4;
                         echo '域名：' . explode(';', $node->server)[0] . '，已解析ip：' . $availableIp . PHP_EOL;
                         $node->last_check_time = $milliseconds;
                         break;
