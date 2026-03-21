@@ -514,7 +514,7 @@ class Job extends Command
         echo '用户检测开始' . PHP_EOL;
         $users = User::where('class', '!=', 0)->get();
         foreach ($users as $user) {
-            echo '用户：' . $user->user_name . PHP_EOL;
+//            echo '用户：' . $user->user_name . PHP_EOL;
             if (($user->transfer_enable <= $user->u + $user->d || $user->enable == 0 || (strtotime($user->expire_in) < time() && strtotime($user->expire_in) > 644447105))
                 && RadiusBan::where(
                     'userid',

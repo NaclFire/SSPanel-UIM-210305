@@ -48,8 +48,17 @@ class CloudflareDriver
         $r = $dns->listRecords($zoneID, '', $name);
         $recordCount = $r->result_info->count;
 
+        // 获取ip版本
+        $ipVersion = Tools::getIpVersion($content);
+        if ($ipVersion == 4) {
+            $type = 'A';
+        } elseif ($ipVersion == 6) {
+            $type = 'AAA';
+        } else {
+            return;
+        }
         if ($recordCount == 0) {
-            self::addRecord($dns, $zoneID, 'A', $name, $content);
+            self::addRecord($dns, $zoneID, $type, $name, $content);
         } elseif ($recordCount >= 1) {
             $records = $r->result;
             foreach ($records as $record) {

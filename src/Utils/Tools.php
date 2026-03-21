@@ -157,7 +157,16 @@ class Tools
     {
         return preg_match("/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/", $a);
     }
-
+    public static function getIpVersion($ip)
+    {
+        if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+            return 4;
+        }
+        if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
+            return 6;
+        }
+        return false; // 非法 IP
+    }
     // Unix time to Date Time
     public static function toDateTime($time)
     {
