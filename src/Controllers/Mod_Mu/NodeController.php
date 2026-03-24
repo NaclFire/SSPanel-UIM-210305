@@ -61,6 +61,7 @@ class NodeController extends BaseController
         // 判断是否为 JSON
         $decoded = json_decode($method, true);
         $serverKey = null;
+
         if (json_last_error() === JSON_ERROR_NONE) {
             $customConfig = $decoded;
             $method = "";
@@ -75,21 +76,29 @@ class NodeController extends BaseController
             $serverKey = $keyLength ? Tools::getServerKey($node->create_at, $keyLength) : null;
         }
 
+        // 构建返回数据
+        $data = [
+            'node_group' => $node->node_group,
+            'node_class' => $node->node_class,
+            'node_speedlimit' => $node->node_speedlimit,
+            'traffic_rate' => $node->traffic_rate,
+            'sort' => $node->sort,
+            'server' => $node_server,
+            'method' => $method,
+            'server_key' => $serverKey,
+            'type' => 'ss-panel-v3-mod_Uim',
+        ];
+
+        // 仅当 customConfig 非空时才添加
+        if ($customConfig !== "") {
+            $data['custom_config'] = $customConfig;
+        }
+
         $res = [
             'ret' => 1,
-            'data' => [
-                'node_group' => $node->node_group,
-                'node_class' => $node->node_class,
-                'node_speedlimit' => $node->node_speedlimit,
-                'traffic_rate' => $node->traffic_rate,
-                'sort' => $node->sort,
-                'server' => $node_server,
-                'method' => $method,
-                'custom_config' => $customConfig,
-                'server_key' => $serverKey,
-                'type' => 'ss-panel-v3-mod_Uim'
-            ],
+            'data' => $data,
         ];
+
         return $this->echoJson($response, $res);
     }
 
