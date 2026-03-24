@@ -58,7 +58,6 @@ class NodeController extends BaseController
         }
         $node_server = $node->server;
         $method = $node->method;
-        $customConfig = $node->method;
         // 判断是否为 JSON
         $decoded = json_decode($method, true);
         $serverKey = null;
@@ -66,6 +65,7 @@ class NodeController extends BaseController
             $customConfig = $decoded;
             $method = "";
         } else {
+            $customConfig = "";
             $methodKeyLengthMap = [
                 '2022-blake3-aes-128-gcm' => 16,
                 '2022-blake3-aes-256-gcm' => 32,
