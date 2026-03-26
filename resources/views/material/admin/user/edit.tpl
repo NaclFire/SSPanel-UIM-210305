@@ -58,37 +58,11 @@
                                     </label>
                                 </div>
                             </div>
-                            <!--<div class="form-group form-group-label">
-                                <div class="checkbox switch">
-                                    <label for="ga_enable">
-                                        <input {if $edit_user->ga_enable==1}checked{/if} class="access-hide"
-                                               id="ga_enable" type="checkbox"><span class="switch-toggle"></span>是否开启二次验证
-                                    </label>
-                                </div>
-                            </div>-->
                             {if $user->isAdmin()}
                                 <div class="form-group form-group-label">
                                     <label class="floating-label" for="money">金钱</label>
                                     <input class="form-control maxwidth-edit" id="money" type="text"
                                            value="{$edit_user->money}">
-                                </div>
-                            {/if}
-                            {if $user->isAdmin()}
-                                <div class="form-group form-group-label">
-                                    <label for="is_multi_user">
-                                        <label class="floating-label" for="sort">单端口多用户承载端口</label>
-                                        <select id="is_multi_user" class="form-control maxwidth-edit"
-                                                name="is_multi_user">
-                                            <option value="0" {if $edit_user->is_multi_user==0}selected{/if}>非单端口多用户承载端口
-                                            </option>
-                                            <option value="1" {if $edit_user->is_multi_user==1}selected{/if}>
-                                                混淆式单端口多用户承载端口
-                                            </option>
-                                            <option value="2" {if $edit_user->is_multi_user==2}selected{/if}>
-                                                协议式单端口多用户承载端口
-                                            </option>
-                                        </select>
-                                    </label>
                                 </div>
                             {/if}
                         </div>
@@ -125,47 +99,6 @@
                                     <label class="floating-label" for="all_detect_number">累计违规次数</label>
                                     <input class="form-control maxwidth-edit" id="all_detect_number" type="text"
                                            value="{$edit_user->all_detect_number}" readonly>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="card">
-                        <div class="card-main">
-                            <div class="card-inner">
-                                <div class="form-group form-group-label">
-                                    <label class="floating-label" for="port">连接端口</label>
-                                    <input class="form-control maxwidth-edit" id="port" type="text"
-                                           value="{$edit_user->port}">
-                                </div>
-                                <div class="form-group form-group-label">
-                                    <label class="floating-label" for="passwd">连接密码</label>
-                                    <input class="form-control maxwidth-edit" id="passwd" type="text"
-                                           value="{$edit_user->passwd}">
-                                </div>
-                                <div class="form-group form-group-label">
-                                    <label class="floating-label" for="method">自定义加密</label>
-                                    <input class="form-control maxwidth-edit" id="method" type="text"
-                                           value="{$edit_user->method}">
-                                </div>
-                                <div class="form-group form-group-label">
-                                    <label class="floating-label" for="protocol">自定义协议</label>
-                                    <input class="form-control maxwidth-edit" id="protocol" type="text"
-                                           value="{$edit_user->protocol}">
-                                </div>
-                                <div class="form-group form-group-label">
-                                    <label class="floating-label" for="protocol_param">自定义协议参数</label>
-                                    <input class="form-control maxwidth-edit" id="protocol_param" type="text"
-                                           value="{$edit_user->protocol_param}">
-                                </div>
-                                <div class="form-group form-group-label">
-                                    <label class="floating-label" for="obfs">自定义混淆方式</label>
-                                    <input class="form-control maxwidth-edit" id="obfs" type="text"
-                                           value="{$edit_user->obfs}">
-                                </div>
-                                <div class="form-group form-group-label">
-                                    <label class="floating-label" for="obfs_param">自定义混淆参数</label>
-                                    <input class="form-control maxwidth-edit" id="obfs_param" type="text"
-                                           value="{$edit_user->obfs_param}">
                                 </div>
                             </div>
                         </div>
@@ -297,26 +230,6 @@
                         </div>
                     </div>
                 </div>
-                {if $user->isAdmin()}
-                    <div class="card">
-                        <div class="card-main">
-                            <div class="card-inner">
-                                <div class="form-group form-group-label">
-                                    <label class="floating-label"
-                                           for="node_speedlimit">禁止用户访问的IP，一行一个</label>
-                                    <textarea class="form-control maxwidth-edit" id="forbidden_ip"
-                                              rows="8">{$edit_user->get_forbidden_ip()}</textarea>
-                                </div>
-                                <div class="form-group form-group-label">
-                                    <label class="floating-label"
-                                           for="node_speedlimit">禁止用户访问的端口，一行一个</label>
-                                    <textarea class="form-control maxwidth-edit" id="forbidden_port"
-                                              rows="8">{$edit_user->get_forbidden_port()}</textarea>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                {/if}
                 <div class="card">
                     <div class="card-main">
                         <div class="card-inner">
@@ -407,7 +320,6 @@
             } else {
                 enable = 0;
             }
-            var ga_enable = {$user->ga_enable};
             $.ajax({
                 type: "PUT",
                 url: "/admin/user/{$edit_user->id}",
@@ -417,33 +329,22 @@
                     pass: $$getValue('pass'),
                     auto_reset_day: $$getValue('auto_reset_day'),
                     auto_reset_bandwidth: $$getValue('auto_reset_bandwidth'),
-                    is_multi_user: $$getValue('is_multi_user'),
-                    port: $$getValue('port'),
                     group: $$getValue('group'),
-                    passwd: $$getValue('passwd'),
                     transfer_enable: $$getValue('transfer_enable'),
                     invite_num: $$getValue('invite_num'),
                     node_speedlimit: $$getValue('node_speedlimit'),
-                    method: $$getValue('method'),
                     remark: $$getValue('remark'),
                     money: (document.getElementById('money')) ? $$getValue('money') : {$edit_user->money},
                     discount_rate: (document.getElementById('discount_rate')) ? $$getValue('discount_rate') : 1,
                     enable,
                     is_salesman,
                     is_admin,
-                    ga_enable,
                     ban_time: $$getValue('ban_time'),
                     ref_by: $$getValue('ref_by'),
-                    forbidden_ip: $$getValue('forbidden_ip'),
-                    forbidden_port: $$getValue('forbidden_port'),
                     class: $$getValue('class'),
                     class_expire: $$getValue('class_expire'),
                     expire_in: $$getValue('expire_in'),
                     node_connector: $$getValue('node_connector'),
-                    protocol: $$getValue('protocol'),
-                    protocol_param: $$getValue('protocol_param'),
-                    obfs: $$getValue('obfs'),
-                    obfs_param: $$getValue('obfs_param'),
                 },
                 success: data => {
                     if (data.ret) {

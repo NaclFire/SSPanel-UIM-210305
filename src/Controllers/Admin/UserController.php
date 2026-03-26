@@ -428,33 +428,16 @@ class UserController extends AdminController
 
         $user->auto_reset_day = $request->getParam('auto_reset_day');
         $user->auto_reset_bandwidth = $request->getParam('auto_reset_bandwidth');
-        $origin_port = $user->port;
-        $user->port = $request->getParam('port');
-
-        $relay_rules = Relay::where('user_id', $user->id)->where('port', $origin_port)->get();
-        foreach ($relay_rules as $rule) {
-            $rule->port = $user->port;
-            $rule->save();
-        }
 
         $user->addMoneyLog($request->getParam('money') - $user->money);
-
-        $user->passwd = $request->getParam('passwd');
         $user->is_salesman = $request->getParam('is_salesman');
         $user->discount_rate = $request->getParam('discount_rate');
-        $user->protocol = $request->getParam('protocol');
-        $user->protocol_param = $request->getParam('protocol_param');
-        $user->obfs = $request->getParam('obfs');
-        $user->obfs_param = $request->getParam('obfs_param');
-        $user->is_multi_user = $request->getParam('is_multi_user');
         $user->transfer_enable = Tools::toGB($request->getParam('transfer_enable'));
         $user->invite_num = $request->getParam('invite_num');
-        $user->method = $request->getParam('method');
         $user->node_speedlimit = $request->getParam('node_speedlimit');
         $user->node_connector = $request->getParam('node_connector');
         $user->enable = $request->getParam('enable');
         $user->is_admin = $request->getParam('is_admin');
-        $user->ga_enable = $request->getParam('ga_enable');
         $user->node_group = $request->getParam('group');
         $user->ref_by = $request->getParam('ref_by');
         $user->remark = $request->getParam('remark');
@@ -462,9 +445,6 @@ class UserController extends AdminController
         $user->class = $request->getParam('class');
         $user->class_expire = $request->getParam('class_expire');
         $user->expire_in = $request->getParam('expire_in');
-
-        $user->forbidden_ip = str_replace(PHP_EOL, ',', $request->getParam('forbidden_ip'));
-        $user->forbidden_port = str_replace(PHP_EOL, ',', $request->getParam('forbidden_port'));
 
         // 手动封禁
         $ban_time = (int)$request->getParam('ban_time');
