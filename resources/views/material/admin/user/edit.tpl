@@ -58,11 +58,37 @@
                                     </label>
                                 </div>
                             </div>
+                            <!--<div class="form-group form-group-label">
+                                <div class="checkbox switch">
+                                    <label for="ga_enable">
+                                        <input {if $edit_user->ga_enable==1}checked{/if} class="access-hide"
+                                               id="ga_enable" type="checkbox"><span class="switch-toggle"></span>是否开启二次验证
+                                    </label>
+                                </div>
+                            </div>-->
                             {if $user->isAdmin()}
                                 <div class="form-group form-group-label">
                                     <label class="floating-label" for="money">金钱</label>
                                     <input class="form-control maxwidth-edit" id="money" type="text"
                                            value="{$edit_user->money}">
+                                </div>
+                            {/if}
+                            {if $user->isAdmin()}
+                                <div class="form-group form-group-label">
+                                    <label for="is_multi_user">
+                                        <label class="floating-label" for="sort">单端口多用户承载端口</label>
+                                        <select id="is_multi_user" class="form-control maxwidth-edit"
+                                                name="is_multi_user">
+                                            <option value="0" {if $edit_user->is_multi_user==0}selected{/if}>非单端口多用户承载端口
+                                            </option>
+                                            <option value="1" {if $edit_user->is_multi_user==1}selected{/if}>
+                                                混淆式单端口多用户承载端口
+                                            </option>
+                                            <option value="2" {if $edit_user->is_multi_user==2}selected{/if}>
+                                                协议式单端口多用户承载端口
+                                            </option>
+                                        </select>
+                                    </label>
                                 </div>
                             {/if}
                         </div>
@@ -99,6 +125,47 @@
                                     <label class="floating-label" for="all_detect_number">累计违规次数</label>
                                     <input class="form-control maxwidth-edit" id="all_detect_number" type="text"
                                            value="{$edit_user->all_detect_number}" readonly>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-main">
+                            <div class="card-inner">
+                                <div class="form-group form-group-label">
+                                    <label class="floating-label" for="port">连接端口</label>
+                                    <input class="form-control maxwidth-edit" id="port" type="text"
+                                           value="{$edit_user->port}">
+                                </div>
+                                <div class="form-group form-group-label">
+                                    <label class="floating-label" for="passwd">连接密码</label>
+                                    <input class="form-control maxwidth-edit" id="passwd" type="text"
+                                           value="{$edit_user->passwd}">
+                                </div>
+                                <div class="form-group form-group-label">
+                                    <label class="floating-label" for="method">自定义加密</label>
+                                    <input class="form-control maxwidth-edit" id="method" type="text"
+                                           value="{$edit_user->method}">
+                                </div>
+                                <div class="form-group form-group-label">
+                                    <label class="floating-label" for="protocol">自定义协议</label>
+                                    <input class="form-control maxwidth-edit" id="protocol" type="text"
+                                           value="{$edit_user->protocol}">
+                                </div>
+                                <div class="form-group form-group-label">
+                                    <label class="floating-label" for="protocol_param">自定义协议参数</label>
+                                    <input class="form-control maxwidth-edit" id="protocol_param" type="text"
+                                           value="{$edit_user->protocol_param}">
+                                </div>
+                                <div class="form-group form-group-label">
+                                    <label class="floating-label" for="obfs">自定义混淆方式</label>
+                                    <input class="form-control maxwidth-edit" id="obfs" type="text"
+                                           value="{$edit_user->obfs}">
+                                </div>
+                                <div class="form-group form-group-label">
+                                    <label class="floating-label" for="obfs_param">自定义混淆参数</label>
+                                    <input class="form-control maxwidth-edit" id="obfs_param" type="text"
+                                           value="{$edit_user->obfs_param}">
                                 </div>
                             </div>
                         </div>
@@ -230,6 +297,26 @@
                         </div>
                     </div>
                 </div>
+                {if $user->isAdmin()}
+                    <div class="card">
+                        <div class="card-main">
+                            <div class="card-inner">
+                                <div class="form-group form-group-label">
+                                    <label class="floating-label"
+                                           for="node_speedlimit">禁止用户访问的IP，一行一个</label>
+                                    <textarea class="form-control maxwidth-edit" id="forbidden_ip"
+                                              rows="8">{$edit_user->get_forbidden_ip()}</textarea>
+                                </div>
+                                <div class="form-group form-group-label">
+                                    <label class="floating-label"
+                                           for="node_speedlimit">禁止用户访问的端口，一行一个</label>
+                                    <textarea class="form-control maxwidth-edit" id="forbidden_port"
+                                              rows="8">{$edit_user->get_forbidden_port()}</textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {/if}
                 <div class="card">
                     <div class="card-main">
                         <div class="card-inner">
