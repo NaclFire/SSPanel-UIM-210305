@@ -70,7 +70,7 @@ class LinkController extends BaseController
      */
     public static function GetContent($request, $response, $args)
     {
-        echo '订阅开始';
+//        echo '订阅开始';
         if (!$_ENV['Subscribe']) {
             return null;
         }
@@ -121,7 +121,7 @@ class LinkController extends BaseController
         }
         if (!$hasSubType) {
             $userAgent = strtolower($request->getHeader('User-Agent')[0] ?? '');
-            echo '$userAgent = ' . $userAgent . PHP_EOL;
+//            echo '$userAgent = ' . $userAgent . PHP_EOL;
             $client = 'unknown';
             foreach (self::$clientFlags as $type => $flags) {
                 foreach ($flags as $flag) {

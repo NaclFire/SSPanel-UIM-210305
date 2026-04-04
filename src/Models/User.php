@@ -35,7 +35,7 @@ class User extends Model
     public $isAdmin;
 
     protected $casts = [
-        't'               => 'float',
+        't'               => 'int',
         'u'               => 'float',
         'd'               => 'float',
         'port'            => 'int',
