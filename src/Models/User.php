@@ -36,10 +36,10 @@ class User extends Model
 
     protected $casts = [
         't'               => 'int',
-        'u'               => 'float',
-        'd'               => 'float',
+        'u'               => 'bigint',
+        'd'               => 'bigint',
         'port'            => 'int',
-        'transfer_enable' => 'float',
+        'transfer_enable' => 'bigint',
         'enable'          => 'int',
         'is_admin'        => 'boolean',
         'is_multi_user'   => 'int',
