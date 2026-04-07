@@ -157,8 +157,20 @@ class Node extends Model
 
     public function changeNodeIp($server_name)
     {
-        $ip = gethostbyname($server_name);
-        if ($ip == '') {
+        $records = dns_get_record("google.com", DNS_A + DNS_AAAA);
+        $ipv4 = '';
+        $ipv6 = '';
+        foreach ($records as $r) {
+            if (isset($r['ip'])) {
+                $ipv4 = $r['ip'];
+            }
+            if (isset($r['ipv6'])) {
+                $ipv6 = $r['ipv6'];
+            }
+        }
+        $ip = $ipv4.'#'.$ipv6;
+//        $ip = gethostbyname($server_name);
+        if ($ip == '#') {
             return false;
         }
         $this->attributes['node_ip'] = $ip;

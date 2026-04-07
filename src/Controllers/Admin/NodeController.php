@@ -97,7 +97,7 @@ class NodeController extends AdminController
         $nodeIps = explode(';', $req_node_ip);
         if (Tools::is_ip($server_list[0])) {
             // 如果节点地址第一个参数是ip，需要查看节点ip是否配置了多ip接入
-            if (count($nodeIps) === 1) {
+            if (count($nodeIps) > 1) {
                 return $response->withJson(
                     [
                         'ret' => 0,
