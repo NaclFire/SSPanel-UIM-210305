@@ -168,7 +168,11 @@ class Node extends Model
                 $ipv6 = $r['ipv6'];
             }
         }
-        $ip = $ipv4.'#'.$ipv6;
+        $parts = [];
+        if ($ipv4 !== '') $parts[] = $ipv4;
+        if ($ipv6 !== '') $parts[] = $ipv6;
+
+        $ip = implode('#', $parts);
 //        $ip = gethostbyname($server_name);
         if ($ip == '#') {
             return false;
