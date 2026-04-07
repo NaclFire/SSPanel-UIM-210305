@@ -157,7 +157,7 @@ class Node extends Model
 
     public function changeNodeIp($server_name)
     {
-        $records = dns_get_record("google.com", DNS_A + DNS_AAAA);
+        $records = dns_get_record($server_name, DNS_A + DNS_AAAA);
         $ipv4 = '';
         $ipv6 = '';
         foreach ($records as $r) {
