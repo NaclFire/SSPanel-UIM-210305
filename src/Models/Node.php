@@ -157,17 +157,34 @@ class Node extends Model
 
     public function changeNodeIp($server_name)
     {
-        $records = dns_get_record($server_name, DNS_A + DNS_AAAA);
-        $ipv4 = '';
-        $ipv6 = '';
-        foreach ($records as $r) {
-            if (!empty($r['ip']) && filter_var($r['ip'], FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
-                $ipv4 = $r['ip'];
-            }
-            if (!empty($r['ipv6']) && filter_var($r['ipv6'], FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
-                $ipv6 = $r['ipv6'];
-            }
-        }
+        $ch = curl_init($server_name);
+        curl_setopt($ch, CURLOPT_NOBODY, true);
+        curl_setopt($ch, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_exec($ch);
+        $info = curl_getinfo($ch);
+        curl_close($ch);
+
+        $ipv4 = $info['primary_ip'];
+        curl_setopt($ch, CURLOPT_NOBODY, true);
+        curl_setopt($ch, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V6);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_exec($ch);
+        $info = curl_getinfo($ch);
+        curl_close($ch);
+
+        $ipv6 = $info['primary_ip'];
+//        $records = socket_addrinfo_lookup($server_name, DNS_A + DNS_AAAA);
+//        $ipv4 = '';
+//        $ipv6 = '';
+//        foreach ($records as $r) {
+//            if (!empty($r['ip']) && filter_var($r['ip'], FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+//                $ipv4 = $r['ip'];
+//            }
+//            if (!empty($r['ipv6']) && filter_var($r['ipv6'], FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
+//                $ipv6 = $r['ipv6'];
+//            }
+//        }
         $parts = [];
         if ($ipv4 !== '') $parts[] = $ipv4;
         if ($ipv6 !== '') $parts[] = $ipv6;
