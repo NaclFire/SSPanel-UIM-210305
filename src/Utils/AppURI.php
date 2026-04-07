@@ -91,6 +91,7 @@ class AppURI
                     'pbk' => $item['pbk'],
                     'sni' => $item['sni'],
                     'servername' => $item['servername'],
+                    'fp' => Tools::getRandFingerprint()
                 ];
                 $result = http_build_query($node);
                 $return = ('vless://' . $item['id'] . '@' . $item['add'] . ':' . $item['port'] . '?' . $result . '#' . urlencode($item['remark']));
@@ -382,7 +383,7 @@ class AppURI
                 } else if ($item['security'] == 'reality') {
                     $return['tls'] = true;
                     $return['servername'] = $item['sni'];
-                    $return['client-fingerprint'] = Tools::getRandFingerprint();
+                    $return['fp'] = Tools::getRandFingerprint();
                     $return['reality-opts'] = [
                         'public-key' => $item['pbk'],
                         'short-id' => null
