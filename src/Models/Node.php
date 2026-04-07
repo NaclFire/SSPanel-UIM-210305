@@ -161,10 +161,10 @@ class Node extends Model
         $ipv4 = '';
         $ipv6 = '';
         foreach ($records as $r) {
-            if (isset($r['ip'])) {
+            if (!empty($r['ip']) && filter_var($r['ip'], FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
                 $ipv4 = $r['ip'];
             }
-            if (isset($r['ipv6'])) {
+            if (!empty($r['ipv6']) && filter_var($r['ipv6'], FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
                 $ipv6 = $r['ipv6'];
             }
         }
