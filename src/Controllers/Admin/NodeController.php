@@ -26,6 +26,7 @@ class NodeController extends AdminController
             'op' => '操作',
             'id' => 'ID',
             'name' => '节点名称',
+            'online_user' => '在线人数',
             'type' => '显示与隐藏',
             'sort' => '类型',
             'server' => '节点地址',
@@ -359,9 +360,10 @@ class NodeController extends AdminController
         $limit_length = $request->getParam('length');
         $search = $request->getParam('search')['value'];
 
-        if ($order_field == 'outaddress' || $order_field == 'op') {
+        if ($order_field == 'outaddress' || $order_field == 'op' || $order_field == 'online_user') {
             $order_field = 'name';
         }
+
 
         $query = Node::query();
         if ($search) {
@@ -391,6 +393,20 @@ class NodeController extends AdminController
         $count_filtered = $query_count->count();
 
         $data = [];
+        $time = time() - 300;
+
+        $sql = "SELECT l.*
+                FROM ss_node_online_log l
+                INNER JOIN (
+                    SELECT node_id, MAX(id) AS max_id
+                    FROM ss_node_online_log
+                    WHERE log_time > {$time}
+                    GROUP BY node_id
+                ) t ON l.id = t.max_id
+                ORDER BY l.id DESC
+                ";
+        $db = new DatatablesHelper();
+        $onlineLogs = $db->query($sql);
         foreach ($nodes as $node) {
             $tempdata = [];
             $tempdata['op'] = '<a class="btn btn-brand" href="/admin/node/' . $node->id . '/edit">编辑</a>
@@ -398,6 +414,14 @@ class NodeController extends AdminController
             $tempdata['id'] = $node->id;
             $tempdata['name'] = $node->name;
             $tempdata['type'] = ((bool)$node->type ? '显示' : '隐藏');
+            $tempdata['online_user'] = 0;
+            foreach ($onlineLogs as $log) {
+                if ($log['node_id'] != $node->id) {
+                    continue;
+                }
+                $tempdata['online_user'] = $log['online_user'];
+                break;
+            }
             switch ($node->sort) {
                 case 0:
                     $sort = 'Shadowsocks';

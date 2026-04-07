@@ -26,14 +26,14 @@ use Psr\Http\Message\ResponseInterface;
 class NodeController extends UserController
 {
     /**
-     * @param Request   $request
-     * @param Response  $response
-     * @param array     $args
+     * @param Request $request
+     * @param Response $response
+     * @param array $args
      */
     public function node($request, $response, $args): ResponseInterface
     {
-        $user        = $this->user;
-        $nodes       = Node::where('type', 1)->orderBy('node_class')->orderBy('name')->get();
+        $user = $this->user;
+        $nodes = Node::where('type', 1)->orderBy('node_class')->orderBy('name')->get();
         $relay_rules = Relay::where('user_id', $this->user->id)->orwhere('user_id', 0)->orderBy('id', 'asc')->get();
 
         if (!Tools::is_protocol_relay($user)) {
@@ -42,8 +42,20 @@ class NodeController extends UserController
 
         $db = new DatatablesHelper();
 //        $infoLogs = $db->query('SELECT * FROM ( SELECT * FROM `ss_node_info` WHERE log_time > ' . (time() - 300) . ' ORDER BY id DESC LIMIT 999999999999 ) t GROUP BY node_id ORDER BY id DESC');
-        $onlineLogs = $db->query('SELECT * FROM ( SELECT * FROM `ss_node_online_log` WHERE log_time > ' . (time() - 300) . ' ORDER BY id DESC LIMIT 999999999999 ) t GROUP BY node_id ORDER BY id DESC');
+        $time = time() - 300;
 
+        $sql = "SELECT l.*
+                FROM ss_node_online_log l
+                INNER JOIN (
+                    SELECT node_id, MAX(id) AS max_id
+                    FROM ss_node_online_log
+                    WHERE log_time > {$time}
+                    GROUP BY node_id
+                ) t ON l.id = t.max_id
+                ORDER BY l.id DESC
+                ";
+
+        $onlineLogs = $db->query($sql);
         $array_nodes = [];
         $nodes_muport = [];
 
@@ -53,20 +65,20 @@ class NodeController extends UserController
             }
 
             if ($node->sort == 9) {
-                $mu_user             = User::where('port', '=', $node->server)->first();
+                $mu_user = User::where('port', '=', $node->server)->first();
                 $mu_user->obfs_param = $this->user->getMuMd5();
-                $nodes_muport[]      = ['server' => $node, 'user' => $mu_user];
+                $nodes_muport[] = ['server' => $node, 'user' => $mu_user];
                 continue;
             }
 
-            $array_node               = [];
-            $array_node['raw_node']   = $node;
-            $array_node['id']         = $node->id;
-            $array_node['class']      = $node->node_class;
-            $array_node['name']       = $node->name;
-            $array_node['sort']       = $node->sort;
-            $array_node['info']       = $node->info;
-            $array_node['group']      = $node->node_group;
+            $array_node = [];
+            $array_node['raw_node'] = $node;
+            $array_node['id'] = $node->id;
+            $array_node['class'] = $node->node_class;
+            $array_node['name'] = $node->name;
+            $array_node['sort'] = $node->sort;
+            $array_node['info'] = $node->info;
+            $array_node['group'] = $node->node_group;
 
             if ($node->sort == 13) {
                 $server = Tools::ssv2Array($node->server);
@@ -90,11 +102,7 @@ class NodeController extends UserController
                 if ($log['node_id'] != $node->id) {
                     continue;
                 }
-                if (in_array($node->sort, array(0, 7, 8, 10, 11, 12, 13, 14))) {
-                    $array_node['online_user'] = $log['online_user'];
-                } else {
-                    $array_node['online_user'] = -1;
-                }
+                $array_node['online_user'] = $log['online_user'];
                 break;
             }
 
@@ -117,7 +125,7 @@ class NodeController extends UserController
 //            }
 
             $array_node['traffic_used'] = Tools::flowAutoShow($node->node_bandwidth);
-            $array_node['traffic_limit'] = (int) Tools::flowToGB($node->node_bandwidth_limit);
+            $array_node['traffic_limit'] = (int)Tools::flowToGB($node->node_bandwidth_limit);
             if ($node->node_speedlimit == 0.0) {
                 $array_node['bandwidth'] = 0;
             } elseif ($node->node_speedlimit >= 1024.00) {
@@ -127,7 +135,7 @@ class NodeController extends UserController
             }
 
             $array_node['traffic_rate'] = $node->traffic_rate;
-            $array_node['status']       = $node->status;
+            $array_node['status'] = $node->status;
 
             $array_nodes[] = $array_node;
         }
@@ -145,15 +153,15 @@ class NodeController extends UserController
     }
 
     /**
-     * @param Request   $request
-     * @param Response  $response
-     * @param array     $args
+     * @param Request $request
+     * @param Response $response
+     * @param array $args
      */
     public function nodeAjax($request, $response, $args): ResponseInterface
     {
-        $id           = $args['id'];
-        $point_node   = Node::find($id);
-        $prefix       = explode(' - ', $point_node->name);
+        $id = $args['id'];
+        $point_node = Node::find($id);
+        $prefix = explode(' - ', $point_node->name);
         return $response->write(
             $this->view()
                 ->assign('point_node', $point_node)
@@ -164,17 +172,17 @@ class NodeController extends UserController
     }
 
     /**
-     * @param Request   $request
-     * @param Response  $response
-     * @param array     $args
+     * @param Request $request
+     * @param Response $response
+     * @param array $args
      */
     public function nodeInfo($request, $response, $args)
     {
-        $user          = $this->user;
-        $id            = $args['id'];
-        $mu            = $request->getQueryParams()['ismu'];
+        $user = $this->user;
+        $id = $args['id'];
+        $mu = $request->getQueryParams()['ismu'];
         $relay_rule_id = $request->getQueryParams()['relay_rule'];
-        $node          = Node::find($id);
+        $node = Node::find($id);
         if ($node == null) {
             return null;
         }
