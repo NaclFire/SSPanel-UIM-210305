@@ -726,7 +726,7 @@ class Job extends Command
                     }
                     // 测试ip是否能ping通
                     if (Tools::pingIp($nodeIpV4)) {
-                        // 如果第一个ip和当前要解析的ip一致才执行更新DNS
+                        // 如果第一个ip和当前要解析的ip不一致才执行更新DNS
                         if (!str_contains($nodeIps[0], $nodeIpV4)) {
                             // 更新cloudflare上节点域名解析的ip
                             CloudflareDriver::updateRecord(explode(';', $node->server)[0], $nodeIpV4);

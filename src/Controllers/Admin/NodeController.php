@@ -76,7 +76,7 @@ class NodeController extends AdminController
         $node->name = $request->getParam('name');
         $node->server = trim($request->getParam('server'));
         $node->method = $request->getParam('method');
-        $node->custom_method = $request->getParam('custom_method');
+        $node->custom_obfs = $request->getParam('custom_obfs');
         $node->custom_rss = $request->getParam('custom_rss');
         $node->traffic_rate = $request->getParam('rate');
         $node->info = $request->getParam('info');
@@ -179,7 +179,7 @@ class NodeController extends AdminController
         $node->node_group = $request->getParam('group');
         $node->server = trim($request->getParam('server'));
         $node->method = $request->getParam('method');
-        $node->custom_method = $request->getParam('custom_method');
+        $node->custom_obfs = $request->getParam('custom_obfs');
         $node->custom_rss = $request->getParam('custom_rss');
         $node->traffic_rate = $request->getParam('rate');
         $node->info = $request->getParam('info');
@@ -406,8 +406,10 @@ class NodeController extends AdminController
                     $sort = 'AnyTLS';
                     break;
                 case 11:
+                    $sort = 'Vmess';
+                    break;
                 case 12:
-                    $sort = 'V2Ray 节点';
+                    $sort = 'VLESS';
                     break;
                 default:
                     $sort = '系统保留';
