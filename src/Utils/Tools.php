@@ -1090,4 +1090,10 @@ class Tools
 
         return true;
     }
+
+    public static function getRandFingerprint(): string
+    {
+        $fingerprints = ['chrome', 'firefox', 'safari', 'ios', 'edge', 'qq'];
+        return $fingerprints[array_rand($fingerprints)];
+    }
 }

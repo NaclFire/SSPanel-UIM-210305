@@ -707,48 +707,55 @@ class Job extends Command
         // 多ip对接节点，检查ip可用性
         echo '节点ip检测开始' . PHP_EOL;
         // 只检测ip字段是多个ip格式的节点
-        $nodes = Node::where('node_ip', 'like', '%;%')->get();
+//        $nodes = Node::where('node_ip', 'like', '%;%')->get();
+        $nodes = Node::all();
         foreach ($nodes as $node) {
-            $nodeIps = explode(';', $node->node_ip);
-            echo '开始检测：' . $node->name . PHP_EOL;
-            $milliseconds = (int)(microtime(true) * 1000);
-            // 检测间隔超过5分钟
-            if ($milliseconds - $node->last_check_time > 5 * 60 * 1000) {
-                echo '当前节点超过5分钟未检测' . PHP_EOL;
-                $availableIp = '';
-                foreach ($nodeIps as $nodeIp) {
-                    // 查看node_ip是否是双栈
-                    $nodeIpVersion = explode('#', $nodeIp);
-                    if (count($nodeIpVersion) == 2) {
-                        $nodeIpV4 = $nodeIpVersion[0];
-                    } else {
-                        $nodeIpV4 = $nodeIp;
-                    }
-                    // 测试ip是否能ping通
-                    if (Tools::pingIp($nodeIpV4)) {
-                        // 如果第一个ip和当前要解析的ip不一致才执行更新DNS
-                        if (!str_contains($nodeIps[0], $nodeIpV4)) {
-                            // 更新cloudflare上节点域名解析的ip
-                            CloudflareDriver::updateRecord(explode(';', $node->server)[0], $nodeIpV4);
-                            $availableIp = $nodeIp;
-                            echo '域名：' . explode(';', $node->server)[0] . '，已解析ip：' . $availableIp . PHP_EOL;
-                            $node->last_check_time = $milliseconds;
+            if (str_contains($node->node_ip, ';')) {
+                $nodeIps = explode(';', $node->node_ip);
+                echo '开始检测：' . $node->name . PHP_EOL;
+                $milliseconds = (int)(microtime(true) * 1000);
+                // 检测间隔超过5分钟
+                if ($milliseconds - $node->last_check_time > 5 * 60 * 1000) {
+                    echo '当前节点超过5分钟未检测' . PHP_EOL;
+                    $availableIp = '';
+                    foreach ($nodeIps as $nodeIp) {
+                        // 查看node_ip是否是双栈
+                        $nodeIpVersion = explode('#', $nodeIp);
+                        if (count($nodeIpVersion) == 2) {
+                            $nodeIpV4 = $nodeIpVersion[0];
+                        } else {
+                            $nodeIpV4 = $nodeIp;
                         }
-                        break;
-                    } else {
-                        echo 'ip : ' . $nodeIp . '不可用' . PHP_EOL;
+                        // 测试ip是否能ping通
+                        if (Tools::pingIp($nodeIpV4)) {
+                            // 如果第一个ip和当前要解析的ip一致才执行更新DNS
+                            if (!str_contains($nodeIps[0], $nodeIpV4)) {
+                                // 更新cloudflare上节点域名解析的ip
+                                CloudflareDriver::updateRecord(explode(';', $node->server)[0], $nodeIpV4);
+                                $availableIp = $nodeIp;
+                                echo '域名：' . explode(';', $node->server)[0] . '，已解析ip：' . $availableIp . PHP_EOL;
+                                $node->last_check_time = $milliseconds;
+                            }
+                            break;
+                        } else {
+                            echo 'ip : ' . $nodeIp . '不可用' . PHP_EOL;
+                        }
+                    }
+                    $key = array_search($availableIp, $nodeIps);
+                    if ($key !== false) {
+                        $item = $nodeIps[$key];
+                        unset($nodeIps[$key]);
+                        array_unshift($nodeIps, $item);
+                        $node->node_ip = implode(';', $nodeIps);
+                        $node->save();
                     }
                 }
-                $key = array_search($availableIp, $nodeIps);
-                if ($key !== false) {
-                    $item = $nodeIps[$key];
-                    unset($nodeIps[$key]);
-                    array_unshift($nodeIps, $item);
-                    $node->node_ip = implode(';', $nodeIps);
+            } else {
+                $server = $node->getOutServer();
+                if (!Tools::is_ip($server) && $node->changeNodeIp($server)) {
                     $node->save();
                 }
             }
-
         }
         echo '节点ip检测结束' . PHP_EOL;
         //更新节点 IP，每分钟

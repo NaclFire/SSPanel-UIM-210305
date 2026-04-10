@@ -91,16 +91,14 @@ class AppURI
                     'pbk' => $item['pbk'],
                     'sni' => $item['sni'],
                     'servername' => $item['servername'],
+                    'fp' => Tools::getRandFingerprint()
                 ];
                 $result = http_build_query($node);
-                $return = ('vless://' . $item['id'] . '@' . $item['add'] . ':' . $item['port'] . '?' . $result . '#' . urlencode($item['remark']));
+                $return = ('vless://' . $item['id'] . '@' . $item['add'] . ':' . $item['port'] . '?' . $result . '#' . rawurlencode($item['remark']));
                 break;
             case 'ss':
                 $personal_info = $item['method'] . ':' . $item['passwd'];
-                $return = 'ss://' . Tools::base64_url_encode($personal_info) . '@' . $item['address'] . ':' . $item['port'];
-                $return .= ($_ENV['add_appName_to_ss_uri'] === true
-                    ? '#' . rawurlencode($_ENV['appName'] . ' - ' . $item['remark'])
-                    : '#' . rawurlencode($item['remark']));
+                $return = 'ss://' . Tools::base64_url_encode($personal_info) . '@' . $item['address'] . ':' . $item['port'].'#' . rawurlencode($item['remark']);
                 break;
         }
         return $return;

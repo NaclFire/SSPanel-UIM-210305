@@ -35,11 +35,11 @@ class User extends Model
     public $isAdmin;
 
     protected $casts = [
-        't'               => 'float',
-        'u'               => 'float',
-        'd'               => 'float',
+        't'               => 'int',
+        'u'               => 'bigint',
+        'd'               => 'bigint',
         'port'            => 'int',
-        'transfer_enable' => 'float',
+        'transfer_enable' => 'bigint',
         'enable'          => 'int',
         'is_admin'        => 'boolean',
         'is_multi_user'   => 'int',

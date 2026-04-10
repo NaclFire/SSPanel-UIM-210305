@@ -157,6 +157,7 @@ class Node extends Model
 
     public function changeNodeIp($server_name)
     {
+
         $ip = gethostbyname($server_name);
         if ($ip == '') {
             return false;
