@@ -713,9 +713,9 @@ class Job extends Command
             if (str_contains($node->node_ip, ';')) {
                 $nodeIps = explode(';', $node->node_ip);
                 echo '开始检测：' . $node->name . PHP_EOL;
-                $milliseconds = (int)(microtime(true) * 1000);
+                $milliseconds = microtime(true);
                 // 检测间隔超过5分钟
-                if ($milliseconds - $node->last_check_time > 5 * 60 * 1000) {
+                if ($milliseconds - $node->last_check_time > 5 * 60) {
                     echo '当前节点超过5分钟未检测' . PHP_EOL;
                     $availableIp = '';
                     foreach ($nodeIps as $nodeIp) {
