@@ -734,8 +734,8 @@ class Job extends Command
                                 CloudflareDriver::updateRecord(explode(';', $node->server)[0], $nodeIpV4);
                                 $availableIp = $nodeIp;
                                 echo '域名：' . explode(';', $node->server)[0] . '，已解析ip：' . $availableIp . PHP_EOL;
-                                $node->last_check_time = $milliseconds;
                             }
+                            $node->last_check_time = $milliseconds;
                             break;
                         } else {
                             echo 'ip : ' . $nodeIp . '不可用' . PHP_EOL;
