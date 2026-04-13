@@ -736,6 +736,7 @@ class Job extends Command
                                 echo '域名：' . explode(';', $node->server)[0] . '，已解析ip：' . $availableIp . PHP_EOL;
                             }
                             $node->last_check_time = $milliseconds;
+                            $node->save();
                             break;
                         } else {
                             echo 'ip : ' . $nodeIp . '不可用' . PHP_EOL;
