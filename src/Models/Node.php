@@ -157,13 +157,37 @@ class Node extends Model
 
     public function changeNodeIp($server_name)
     {
+        $records = dns_get_record($server_name, DNS_A | DNS_AAAA);
 
-        $ip = gethostbyname($server_name);
-        if ($ip == '') {
+        if (empty($records)) {
             return false;
         }
-        $this->attributes['node_ip'] = $ip;
-        return true;
+
+        $ipv4 = null;
+        $ipv6 = null;
+
+        foreach ($records as $record) {
+            if (isset($record['ip']) && !$ipv4) {
+                $ipv4 = $record['ip'];      // IPv4
+            }
+
+            if (isset($record['ipv6']) && !$ipv6) {
+                $ipv6 = $record['ipv6'];    // IPv6
+            }
+        }
+
+        // 优先 IPv4，其次 IPv6
+        if ($ipv4 !== null) {
+            $this->attributes['node_ip'] = $ipv4;
+            return true;
+        }
+
+        if ($ipv6 !== null) {
+            $this->attributes['node_ip'] = $ipv6;
+            return true;
+        }
+
+        return false;
     }
 
     public function getNodeIp()
