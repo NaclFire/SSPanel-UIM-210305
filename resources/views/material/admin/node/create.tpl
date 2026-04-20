@@ -43,6 +43,7 @@
                                         <select id="sort" class="form-control maxwidth-edit" name="sort">
                                             <option value="0">Shadowsocks</option>
                                             <option value="1">AnyTLS</option>
+                                            <option value="2">TUIC</option>
                                             <option value="11">V2Ray</option>
                                         </select>
                                     </div>

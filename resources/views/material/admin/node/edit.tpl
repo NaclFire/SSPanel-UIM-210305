@@ -45,6 +45,7 @@
                                         <select id="sort" class="form-control maxwidth-edit" name="sort">
                                             <option value="0" {if $node->sort==0}selected{/if}>Shadowsocks</option>
                                             <option value="1" {if $node->sort==1}selected{/if}>AnyTLS</option>
+                                            <option value="2" {if $node->sort==2}selected{/if}>TUIC</option>
                                             <option value="11" {if $node->sort==11||$node->sort==12}selected{/if}>V2Ray</option>
                                         </select>
                                     </div>
