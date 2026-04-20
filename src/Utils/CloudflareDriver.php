@@ -64,8 +64,14 @@ class CloudflareDriver
         } elseif ($recordCount >= 1) {
             $records = $r->result;
             foreach ($records as $record) {
-                $recordID = $record->id;
-                self::modifyRecord($dns, $zoneID, $recordID, $name, $content, $type, $proxied);
+                try {
+                    if ($record->content !== $content) {
+                        $recordID = $record->id;
+                        self::modifyRecord($dns, $zoneID, $recordID, $name, $content, $type, $proxied);
+                    }
+                } catch (\Exception $e) {
+                    echo $e->getMessage() . PHP_EOL;
+                }
             }
         }
     }

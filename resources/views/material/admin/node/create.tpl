@@ -43,8 +43,25 @@
                                         <select id="sort" class="form-control maxwidth-edit" name="sort">
                                             <option value="0">Shadowsocks</option>
                                             <option value="1">AnyTLS</option>
+                                            <option value="2">TUIC</option>
                                             <option value="11">V2Ray</option>
                                         </select>
+                                    </div>
+                                </div>
+                                <div class="form-group form-group-label" id="method_group" style="display:none;">
+                                    <div class="form-group form-group-label">
+                                        <label class="floating-label" for="sort">加密方式</label>
+                                        <select id="method" name="method" class="form-control maxwidth-edit">
+                                            <option value="1">2022-blake3-chacha20-poly1305</option>
+                                            <option value="2">2022-blake3-aes-128-gcm</option>
+                                            <option value="3">2022-blake3-aes-256-gcm</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group form-group-label">
+                                        <label class="floating-label" for="method">混淆</label>
+                                        <input class="form-control maxwidth-edit" id="custom_obfs" name="custom_obfs" type="text" value="">
+                                        <p class="form-control-guide"><i class="material-icons">info</i>可为空，配置格式：obfs=http;obfs-host=www.bing.com;path=/
+                                        </p>
                                     </div>
                                 </div>
                                 <div class="form-group form-group-label" id="vless_switch_group" style="display:none;">
@@ -98,15 +115,6 @@
                                 </div>
                                 <div class="form-group form-group-label" hidden="hidden">
                                     <div class="checkbox switch">
-                                        <label for="custom_method">
-                                            <input class="access-hide" id="custom_method" type="checkbox"
-                                                   name="custom_method" checked="checked" disabled><span
-                                                    class="switch-toggle"></span>自定义加密
-                                        </label>
-                                    </div>
-                                </div>
-                                <div class="form-group form-group-label" hidden="hidden">
-                                    <div class="checkbox switch">
                                         <label for="custom_rss">
                                             <input class="access-hide" id="custom_rss" type="checkbox" name="custom_rss"
                                                    checked="checked" disabled><span class="switch-toggle"></span>自定义协议&混淆
@@ -131,18 +139,6 @@
                                     <label class="floating-label" for="status">节点状态</label>
                                     <input class="form-control maxwidth-edit" id="status" type="text" name="status"
                                            value="可用">
-                                </div>
-
-                                <div class="form-group form-group-label" id="method_group" style="display:none;">
-                                    <div class="form-group form-group-label">
-                                        <label class="floating-label" for="sort">加密方式</label>
-                                        <select id="method" name="method" class="form-control maxwidth-edit">
-                                            <option value="1">2022-blake3-chacha20-poly1305</option>
-                                            <option value="2">2022-blake3-aes-128-gcm</option>
-                                            <option value="3">2022-blake3-aes-256-gcm</option>
-                                        </select>
-                                    </div>
-
                                 </div>
                                 <div class="form-group form-group-label">
                                     <label class="floating-label" for="info">节点描述</label>
@@ -360,12 +356,9 @@
         },
         submitHandler: () => {
             let method;
-            let custom_method;
             if (sortSelect.value === "0") {
-                custom_method = 0;
                 method = $$getValue('method');
             } else {
-                custom_method = 1;
                 method = buildJson();
             }
             let type;
@@ -390,7 +383,7 @@
                     server: $$getValue('server'),
                     node_ip: $$getValue('node_ip'),
                     method,
-                    custom_method,
+                    custom_obfs: $$getValue('custom_obfs'),
                     rate: $$getValue('rate'),
                     info: $$getValue('info'),
                     type,

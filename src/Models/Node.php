@@ -5,19 +5,19 @@ namespace App\Models;
 /**
  * Node Model
  *
- * @property-read   int $id         id
- * @property        string $name       Display name
- * @property        int $type       If node display @todo Correct column name and type
- * @property        string $server     Domain
- * @property        string $method     Crypt method @deprecated
- * @property        string $info       Infomation
- * @property        string $status     Status description
- * @property        int $sort       Node type @todo Correct column name to `type`
- * @property        int $custom_method  Customs node crypt @deprecated
- * @property        float $traffic_rate   Node traffic rate
+ * @property-read   int $id              id
+ * @property        string $name         Display name
+ * @property        int $type            If node display @todo Correct column name and type
+ * @property        string $server       Domain
+ * @property        string $method       Crypt method
+ * @property        string $info         Infomation
+ * @property        string $status       Status description
+ * @property        int $sort            Node type @todo Correct column name to `type`
+ * @property        int $custom_obfs     Customs node obfs
+ * @property        float $traffic_rate  Node traffic rate
  * @todo More property
- * @property        bool $online     If node is online
- * @property        bool $gfw_block  If node is blocked by GFW
+ * @property        bool $online         If node is online
+ * @property        bool $gfw_block      If node is blocked by GFW
  */
 
 use App\Services\Config;
@@ -157,13 +157,37 @@ class Node extends Model
 
     public function changeNodeIp($server_name)
     {
+        $records = dns_get_record($server_name, DNS_A | DNS_AAAA);
 
-        $ip = gethostbyname($server_name);
-        if ($ip == '') {
+        if (empty($records)) {
             return false;
         }
-        $this->attributes['node_ip'] = $ip;
-        return true;
+
+        $ipv4 = null;
+        $ipv6 = null;
+
+        foreach ($records as $record) {
+            if (isset($record['ip']) && !$ipv4) {
+                $ipv4 = $record['ip'];      // IPv4
+            }
+
+            if (isset($record['ipv6']) && !$ipv6) {
+                $ipv6 = $record['ipv6'];    // IPv6
+            }
+        }
+
+        // 优先 IPv4，其次 IPv6
+        if ($ipv4 !== null) {
+            $this->attributes['node_ip'] = $ipv4;
+            return true;
+        }
+
+        if ($ipv6 !== null) {
+            $this->attributes['node_ip'] = $ipv6;
+            return true;
+        }
+
+        return false;
     }
 
     public function getNodeIp()

@@ -45,6 +45,7 @@
                                         <select id="sort" class="form-control maxwidth-edit" name="sort">
                                             <option value="0" {if $node->sort==0}selected{/if}>Shadowsocks</option>
                                             <option value="1" {if $node->sort==1}selected{/if}>AnyTLS</option>
+                                            <option value="2" {if $node->sort==2}selected{/if}>TUIC</option>
                                             <option value="11" {if $node->sort==11||$node->sort==12}selected{/if}>V2Ray</option>
                                         </select>
                                     </div>
@@ -95,31 +96,30 @@
                                     </div>
                                 </div>
                                 <div class="form-group form-group-label" id="method_group" style="display:none;">
-                                    <label class="floating-label" for="method">加密方式</label>
-                                    <select id="method" name="method" class="form-control maxwidth-edit">
-                                        <option value="2022-blake3-chacha20-poly1305" {if $node->method=='2022-blake3-chacha20-poly1305'}selected{/if}>
-                                            2022-blake3-chacha20-poly1305
-                                        </option>
-                                        <option value="2022-blake3-aes-128-gcm" {if $node->method=='2022-blake3-aes-128-gcm'}selected{/if}>
-                                            2022-blake3-aes-128-gcm
-                                        </option>
-                                        <option value="2022-blake3-aes-256-gcm" {if $node->method=='2022-blake3-aes-256-gcm'}selected{/if}>
-                                            2022-blake3-aes-256-gcm
-                                        </option>
-                                    </select>
+                                    <div class="form-group form-group-label">
+                                        <label class="floating-label" for="method">加密方式</label>
+                                        <select id="method" name="method" class="form-control maxwidth-edit">
+                                            <option value="2022-blake3-chacha20-poly1305" {if $node->method=='2022-blake3-chacha20-poly1305'}selected{/if}>
+                                                2022-blake3-chacha20-poly1305
+                                            </option>
+                                            <option value="2022-blake3-aes-128-gcm" {if $node->method=='2022-blake3-aes-128-gcm'}selected{/if}>
+                                                2022-blake3-aes-128-gcm
+                                            </option>
+                                            <option value="2022-blake3-aes-256-gcm" {if $node->method=='2022-blake3-aes-256-gcm'}selected{/if}>
+                                                2022-blake3-aes-256-gcm
+                                            </option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group form-group-label">
+                                        <label class="floating-label" for="method">自定义混淆</label>
+                                        <input class="form-control maxwidth-edit" id="custom_obfs" name="custom_obfs" type="text" value="{$node->custom_obfs}">
+                                        <p class="form-control-guide"><i class="material-icons">info</i>可为空，配置格式：obfs=http;obfs-host=www.bing.com;path=/
+                                        </p>
+                                    </div>
                                 </div>
                                 <div class="form-group form-group-label">
                                     <label class="floating-label" for="rate">流量比例</label>
                                     <input class="form-control maxwidth-edit" id="rate" name="rate" type="text" value="{$node->traffic_rate}">
-                                </div>
-                                <div class="form-group form-group-label" hidden="hidden">
-                                    <div class="checkbox switch">
-                                        <label for="custom_method">
-                                            <input {if $node->custom_method==1}checked{/if} class="access-hide" id="custom_method" name="custom_method" type="checkbox">
-                                            <span class="switch-toggle"></span>
-                                            自定义加密
-                                        </label>
-                                    </div>
                                 </div>
                                 <div class="form-group form-group-label" hidden="hidden">
                                     <div class="checkbox switch">
@@ -376,12 +376,9 @@
         },
         submitHandler: () => {
             let method;
-            let custom_method;
             if (sortSelect.value === "0") {
-                custom_method = 0;
                 method = $$getValue('method');
             } else {
-                custom_method = 1;
                 method = buildJson();
             }
             let sort;
@@ -413,7 +410,7 @@
                     server: $$getValue('server'),
                     node_ip: $$getValue('node_ip'),
                     method,
-                    custom_method,
+                    custom_obfs: $$getValue('custom_obfs'),
                     rate: $$getValue('rate'),
                     info: $$getValue('info'),
                     type,
