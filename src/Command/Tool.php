@@ -55,7 +55,17 @@ class Tool extends Command
             }
         }
     }
+    public function resetPasswd()
+    {
+        foreach (User::cursor() as $user) {
+            $passwdArray = explode(':', $user->passwd);
 
+            if (count($passwdArray) < 2) {
+                $user->passwd = Tools::getServerKey($user->reg_date, 16) . ':' . Tools::getServerKey($user->reg_date, 32);
+                $user->save();
+            }
+        }
+    }
     /**
      * 下载使用文档
      *
