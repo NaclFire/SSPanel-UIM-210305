@@ -380,8 +380,10 @@
             let method;
             if (sortSelect.value === "0") {
                 method = $$getValue('method');
-            } else {
+            } else if (sortSelect.value === "11") {
                 method = buildJson();
+            } else {
+                method = "";
             }
             let sort;
             if ($$.getElementById('enable_vless').checked) {

@@ -343,6 +343,19 @@
             });
         });
     });
+
+    function buildJson() {
+        const data = {
+            dest: document.getElementById("dest").value,
+            private_key: document.getElementById("private_key").value,
+            public_key: document.getElementById("public_key").value,
+            short_id: null
+        };
+        const json = JSON.stringify(data);
+        console.log(json);
+        return json;
+    }
+
     $('#main_form').validate({
         rules: {
             name: {required: true},
@@ -360,8 +373,10 @@
             let method;
             if (sortSelect.value === "0") {
                 method = $$getValue('method');
-            } else {
+            } else if (sortSelect.value === "11") {
                 method = buildJson();
+            } else {
+                method = "";
             }
             let type;
             if ($$.getElementById('type').checked) {
