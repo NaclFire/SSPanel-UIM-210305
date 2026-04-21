@@ -58,22 +58,37 @@ class NodeController extends BaseController
         }
         $node_server = $node->server;
         $method = $node->method;
-        // 判断是否为 JSON
-        $decoded = json_decode($method, true);
         $serverKey = null;
-
-        if (json_last_error() === JSON_ERROR_NONE) {
-            $customConfig = $decoded;
-            $method = "";
-        } else {
-            $customConfig = "";
-            $methodKeyLengthMap = [
-                '2022-blake3-aes-128-gcm' => 16,
-                '2022-blake3-aes-256-gcm' => 32,
-                '2022-blake3-chacha20-poly1305' => 32,
-            ];
-            $keyLength = $methodKeyLengthMap[$method] ?? null;
-            $serverKey = $keyLength ? Tools::getServerKey($node->create_at, $keyLength) : null;
+        switch ($node->sort) {
+            case 0:
+                // SS节点
+                $customConfig = "";
+                $methodKeyLengthMap = [
+                    '2022-blake3-aes-128-gcm' => 16,
+                    '2022-blake3-aes-256-gcm' => 32,
+                    '2022-blake3-chacha20-poly1305' => 32,
+                ];
+                $keyLength = $methodKeyLengthMap[$method] ?? null;
+                $serverKey = $keyLength ? Tools::getServerKey($node->create_at, $keyLength) : null;
+                break;
+            case 1:
+                // todo AnyTLS节点
+                break;
+            case 2:
+                // TUIC节点
+                $method = null;
+                break;
+            case 11:
+                // Vmess
+            case 12:
+                // VLESS
+                $customConfig = json_decode($method, true);;
+                $method = null;
+                break;
+            default:
+                $method = null;
+                $serverKey = null;
+                break;
         }
 
         // 构建返回数据
@@ -90,7 +105,7 @@ class NodeController extends BaseController
         ];
 
         // 仅当 customConfig 非空时才添加
-        if ($customConfig !== "") {
+        if (!empty($customConfig)) {
             $data['custom_config'] = $customConfig;
         }
 
