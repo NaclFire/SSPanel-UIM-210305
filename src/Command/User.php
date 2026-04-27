@@ -170,11 +170,12 @@ class User extends Command
             $current_timestamp = time();
             // create admin user
             // do reg user
+            $date = date('Y-m-d H:i:s');
             $user = new ModelsUser();
             $user->user_name = 'admin';
             $user->email = $email;
             $user->pass = Hash::passwordHash($passwd);
-            $user->passwd = Tools::genRandomChar(6);
+            $user->passwd = Tools::getServerKey($date, 16) . ':' . Tools::getServerKey($date, 32);
             $user->uuid = Uuid::uuid3(Uuid::NAMESPACE_DNS, $email . '|' . $current_timestamp);
             $user->port = Tools::getLastPort() + 1;
             $user->t = 0;
@@ -185,7 +186,7 @@ class User extends Command
             $user->ref_by = 0;
             $user->is_admin = 1;
             $user->expire_in = date('Y-m-d H:i:s', time() + (int)Config::getconfig('Register.string.defaultExpire_in') * 86400);
-            $user->reg_date = date('Y-m-d H:i:s');
+            $user->reg_date = $date;
             $user->money = 0;
             $user->im_type = 1;
             $user->im_value = '';

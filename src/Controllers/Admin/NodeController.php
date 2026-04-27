@@ -429,6 +429,9 @@ class NodeController extends AdminController
                 case 1:
                     $sort = 'AnyTLS';
                     break;
+                case 2:
+                    $sort = 'TUIC';
+                    break;
                 case 11:
                     $sort = 'Vmess';
                     break;
