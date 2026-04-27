@@ -83,7 +83,7 @@ class UserController extends BaseController
                     continue;
                 }
             }
-            if ($node->sort == 2) {
+            if ($node->sort === 1) {
                 // AnyTLS设置password为uuid
                 $user_raw->passwd = $user_raw->uuid;
             } else {
