@@ -83,15 +83,21 @@ class UserController extends BaseController
                     continue;
                 }
             }
-            // 获取连接密码字段，用‘:’分割
-            $passwdArray = explode(':', $user_raw->passwd);
-            if ($node->method === '2022-blake3-aes-128-gcm') {
-                $user_raw->passwd = $passwdArray[0];
+            if ($node->sort === 1) {
+                // AnyTLS设置password为uuid
+                $user_raw->passwd = $user_raw->uuid;
             } else {
-                $user_raw->passwd = $passwdArray[1];
+                // 获取连接密码字段，用‘:’分割
+                $passwdArray = explode(':', $user_raw->passwd);
+                if ($node->method === '2022-blake3-aes-128-gcm') {
+                    $user_raw->passwd = $passwdArray[0];
+                } else {
+                    $user_raw->passwd = $passwdArray[1];
+                }
             }
             $user_raw = Tools::keyFilter($user_raw, $key_list);
             $users[] = $user_raw;
+
         }
         $res = [
             'ret' => 1,
