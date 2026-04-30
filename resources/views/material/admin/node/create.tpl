@@ -30,6 +30,8 @@
                                     </p>
                                     <p class="form-control-guide"><i class="material-icons">info</i>TUIC节点格式：tuic.example.com:443;grpc=true|servicename=edge-tuic
                                     </p>
+                                    <p class="form-control-guide"><i class="material-icons">info</i>AnyTLS节点格式：anytls.example.com:443;grpc=1|servicename=data
+                                    </p>
                                 </div>
                                 <div class="form-group form-group-label">
                                     <label class="floating-label" for="server">节点IP</label>
