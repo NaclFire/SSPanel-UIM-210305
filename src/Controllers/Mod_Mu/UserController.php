@@ -111,10 +111,22 @@ class UserController extends BaseController
             $users_raw = $redis->get($cacheKey);
         }
 
-        $users_raw = json_decode(
-            gzuncompress($users_raw),
-            true
-        );
+        if ($users_raw !== null) {
+
+            // 尝试解压
+            $data = @gzuncompress($users_raw);
+
+            if ($data !== false) {
+                // gzip缓存
+                $users = json_decode($data, true);
+            } else {
+                // 普通json缓存（兼容旧版本）
+                $users = json_decode($users_raw, true);
+            }
+
+        } else {
+            $users = [];
+        }
 
         /* ===============================
          * ⭐ 节点权限筛选（高性能 foreach）
@@ -122,7 +134,7 @@ class UserController extends BaseController
 
         $filtered_users = [];
 
-        foreach ($users_raw as $user) {
+        foreach ($users as $user) {
 
             if ($user['is_admin'] == 1) {
                 $filtered_users[] = $user;

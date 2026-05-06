@@ -793,6 +793,7 @@ class Job extends Command
                 'uuid',
                 'email',
                 'class',
+                'passwd',
                 'node_group',
                 'is_admin',
                 'u',

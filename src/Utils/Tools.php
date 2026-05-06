@@ -450,7 +450,7 @@ class Tools
      */
     public static function keyFilter($object, $filter_array)
     {
-        foreach ($object->toArray() as $key => $value) {
+        foreach ($object as $key => $value) {
             if (!in_array($key, $filter_array)) {
                 unset($object->$key);
             }
