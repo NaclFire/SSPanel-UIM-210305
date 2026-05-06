@@ -28,176 +28,181 @@ class UserController extends BaseController
      */
     public function index($request, $response, $args)
     {
+        $redis = new RedisClient();
+
+        /* ===============================
+         * 获取节点
+         * =============================== */
+
         $node_id = $request->getQueryParam('node_id', '0');
 
         if ($node_id == '0') {
             $node = Node::where('node_ip', $_SERVER['REMOTE_ADDR'])->first();
-            $node_id = $node->id;
         } else {
-            $node = Node::where('id', '=', $node_id)->first();
-            if ($node == null) {
-                $res = [
-                    'ret' => 0
-                ];
-                return $this->echoJson($response, $res);
-            }
+            $node = Node::where('id', $node_id)->first();
         }
-        $node->node_heartbeat = time();
-        $node->save();
-
-        // 节点流量耗尽则返回 null
-        if (($node->node_bandwidth_limit != 0) && $node->node_bandwidth_limit < $node->node_bandwidth) {
-            $users = null;
-            $res = [
-                'ret' => 1,
-                'data' => $users
-            ];
-            return $this->echoJson($response, $res);
-        }
-        $redis = new RedisClient();
-        $key = "node_users:{$node->id}";
-        $users_raw = $redis->get($key);
-        if ($users_raw !== null) {
-            $users_raw = collect(json_decode($users_raw));
-        } else {
-            // Redis miss 才访问数据库（极少发生）
-            $users_raw = User::where(function ($query) use ($node) {
-                $query->where(function ($query1) use ($node) {
-                    if ($node->node_group != 0) {
-                        $query1->where('class', '>=', $node->node_class)
-                            ->where('node_group', $node->node_group);
-                    } else {
-                        $query1->where('class', '>=', $node->node_class);
-                    }
-
-                })->orWhere('is_admin', 1);
-            })
-                ->where('enable', 1)
-                ->where('expire_in', '>', date('Y-m-d H:i:s'))
-                ->get();
-            $redis->setex($key, 120, json_encode($users_raw));
-        }
-        $users = array();
-        $key_list = array(
-            'email', 'node_speedlimit', 'id', 'passwd', 'node_connector', 'uuid'
-        );
-
-        foreach ($users_raw as $user_raw) {
-            if ($user_raw->transfer_enable <= $user_raw->u + $user_raw->d) {
-                if ($_ENV['keep_connect'] === true) {
-                    // 流量耗尽用户限速至 1Mbps
-                    $user_raw->node_speedlimit = 1;
-                } else {
-                    continue;
-                }
-            }
-            if ($node->sort === 1) {
-                // AnyTLS设置password为uuid
-                $user_raw->passwd = $user_raw->uuid;
-            } else {
-                // 获取连接密码字段，用‘:’分割
-                $passwdArray = explode(':', $user_raw->passwd);
-                if ($node->method === '2022-blake3-aes-128-gcm') {
-                    $user_raw->passwd = $passwdArray[0];
-                } else {
-                    $user_raw->passwd = $passwdArray[1];
-                }
-            }
-            $user_raw = Tools::keyFilter($user_raw, $key_list);
-            $users[] = $user_raw;
-
-        }
-        $res = [
-            'ret' => 1,
-            'data' => $users
-        ];
-        return $this->echoJson($response, $res);
-    }
-
-    //   Update Traffic
-    public function addTraffic($request, $response, $args)
-    {
-        $params = $request->getQueryParams();
-
-        $data = $request->getParam('data');
-        $this_time_total_bandwidth = 0;
-        $node_id = $params['node_id'];
-        if ($node_id == '0') {
-            $node = Node::where('node_ip', $_SERVER['REMOTE_ADDR'])->first();
-            $node_id = $node->id;
-        }
-        $node = Node::find($node_id);
 
         if ($node == null) {
-            $res = [
+            return $this->echoJson($response, ['ret' => 0]);
+        }
+
+        /* ===============================
+         * ⭐ 心跳改为 Redis（避免写 MySQL）
+         * =============================== */
+
+        $redis->setex("node:heartbeat:{$node->id}", 120, time());
+
+        /* ===============================
+         * 节点流量限制
+         * =============================== */
+
+        if (
+            $node->node_bandwidth_limit != 0 &&
+            $node->node_bandwidth_limit < $node->node_bandwidth
+        ) {
+            return $this->echoJson($response, [
                 'ret' => 1,
-                'data' => 'ok',
-            ];
-            return $this->echoJson($response, $res);
+                'data' => null
+            ]);
         }
-        // 多ip节点，记录在线用户时，只记录在用ip。
-        $nodeIpList = explode(';', $node->node_ip);
-        if (count($nodeIpList) == 1) {
-            $this->logOnlineUser($node_id, $data);
-        } else {
-            // 查看node_ip是否是双栈
-            $nodeIpVersion = explode('#', $nodeIpList[0]);
-            // 双栈ip分割之后再处理
-            if (count($nodeIpVersion) == 2) {
-                if ($nodeIpVersion[0] == $_SERVER['REMOTE_ADDR']) {
-                    $this->logOnlineUser($node_id, $data);
-                } elseif ($nodeIpVersion[1] == $_SERVER['REMOTE_ADDR']) {
-                    $this->logOnlineUser($node_id, $data);
+
+        /* ===============================
+         * ⭐ 获取用户缓存
+         * =============================== */
+
+        $cacheKey = "users:all";
+        $users_raw = $redis->get($cacheKey);
+
+        if (empty($users_raw)) {
+
+            // 防缓存击穿锁
+            if (!$redis->get("users:lock")) {
+
+                $redis->setex("users:lock", 5, 1);
+
+                $users_raw = User::where('enable', 1)
+                    ->where('class', '>', 0)
+                    ->where('expire_in', '>', date('Y-m-d H:i:s'))
+                    ->get([
+                        'id',
+                        'uuid',
+                        'email',
+                        'passwd',
+                        'class',
+                        'node_group',
+                        'node_speedlimit',
+                        'node_connector',
+                        'is_admin',
+                        'u',
+                        'd',
+                        'transfer_enable'
+                    ])
+                    ->toArray();
+
+                // ⭐ gzip 压缩（极大降低 Redis 压力）
+                $redis->setex(
+                    $cacheKey,
+                    120,
+                    gzcompress(json_encode($users_raw))
+                );
+            }
+
+            usleep(200000); // 等缓存生成
+            $users_raw = $redis->get($cacheKey);
+        }
+
+        $users_raw = json_decode(
+            gzuncompress($users_raw),
+            true
+        );
+
+        /* ===============================
+         * ⭐ 节点权限筛选（高性能 foreach）
+         * =============================== */
+
+        $filtered_users = [];
+
+        foreach ($users_raw as $user) {
+
+            if ($user['is_admin'] == 1) {
+                $filtered_users[] = $user;
+                continue;
+            }
+
+            if ($node->node_group != 0) {
+
+                if (
+                    $user['class'] >= $node->node_class &&
+                    $user['node_group'] == $node->node_group
+                ) {
+                    $filtered_users[] = $user;
                 }
+
             } else {
-                if ($nodeIpList[0] == $_SERVER['REMOTE_ADDR']) {
-                    $this->logOnlineUser($node_id, $data);
+
+                if ($user['class'] >= $node->node_class) {
+                    $filtered_users[] = $user;
                 }
             }
         }
 
-        if (count($data) > 0) {
-            foreach ($data as $log) {
-                $user_id = $log['user_id'];
-                $user = User::find($user_id);
-                if ($user == null) {
-                    continue;
-                }
-                if ($user->class == 0) {
-                    continue;
-                }
-                $u = $log['u'];
-                $d = $log['d'];
-                $user->t = time();
-                $user->u += $u * $node->traffic_rate;
-                $user->d += $d * $node->traffic_rate;
-                $this_time_total_bandwidth += $u + $d;
-                if (!$user->save()) {
-                    continue;
-                }
+        /* ===============================
+         * ⭐ 生成节点用户列表
+         * =============================== */
 
-                // log
-                $traffic = new TrafficLog();
-                $traffic->user_id = $user_id;
-                $traffic->u = $u;
-                $traffic->d = $d;
-                $traffic->node_id = $node_id;
-                $traffic->rate = $node->traffic_rate;
-                $traffic->traffic = $u + $d;
-                $traffic->log_time = time();
-                $traffic->type = 0;
-                $traffic->save();
-            }
-        }
+        $users = [];
 
-        $node->node_bandwidth += $this_time_total_bandwidth;
-        $node->save();
-
-        $res = [
-            'ret' => 1,
-            'data' => 'ok',
+        $key_list = [
+            'email',
+            'node_speedlimit',
+            'id',
+            'passwd',
+            'node_connector',
+            'uuid'
         ];
-        return $this->echoJson($response, $res);
+
+        foreach ($filtered_users as $user) {
+
+            /* ---- 流量耗尽判断 ---- */
+
+            if ($user['transfer_enable'] <= $user['u'] + $user['d']) {
+
+                if ($_ENV['keep_connect'] === true) {
+                    $user['node_speedlimit'] = 1;
+                } else {
+                    continue;
+                }
+            }
+
+            /* ---- 密码处理 ---- */
+
+            if ($node->sort === 1) {
+
+                // AnyTLS
+                $user['passwd'] = $user['uuid'];
+
+            } else {
+
+                $passwdArray = explode(':', $user['passwd']);
+
+                if ($node->method === '2022-blake3-aes-128-gcm') {
+                    $user['passwd'] = $passwdArray[0] ?? '';
+                } else {
+                    $user['passwd'] = $passwdArray[1] ?? '';
+                }
+            }
+
+            $users[] = Tools::keyFilter($user, $key_list);
+        }
+
+        /* ===============================
+         * 返回
+         * =============================== */
+
+        return $this->echoJson($response, [
+            'ret' => 1,
+            'data' => $users
+        ]);
     }
 
     public function addAliveIp($request, $response, $args)

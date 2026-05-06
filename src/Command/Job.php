@@ -785,40 +785,27 @@ class Job extends Command
     public function CacheNodeUsers()
     {
         $redis = new RedisClient();
-
-        // 只查询真正需要的用户
-        $allUsers = User::where('enable', 1)
+        $users = User::where('enable', 1)
             ->where('class', '>', 0)
             ->where('expire_in', '>', date('Y-m-d H:i:s'))
-            ->get();
+            ->get([
+                'id',
+                'uuid',
+                'email',
+                'class',
+                'node_group',
+                'is_admin',
+                'u',
+                'd',
+                'transfer_enable'
+            ]);
 
-        $nodes = Node::all();
+        $redis->setex(
+            "users:all",
+            120,
+            json_encode($users)
+        );
 
-        foreach ($nodes as $node) {
-
-            $nodeUsers = $allUsers->filter(function ($user) use ($node) {
-
-                // admin 永远允许
-                if ($user->is_admin == 1) {
-                    return true;
-                }
-
-                if ($node->node_group != 0) {
-                    return $user->class >= $node->node_class
-                        && $user->node_group == $node->node_group;
-                }
-
-                return $user->class >= $node->node_class;
-            });
-
-            $redis->setex(
-                "node_users:{$node->id}",
-                120,
-                json_encode($nodeUsers->values())
-            );
-        }
-
-        echo "Node users cache refreshed\n";
+        echo "Users cache refreshed\n";
     }
-
 }

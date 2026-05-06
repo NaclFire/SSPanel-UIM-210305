@@ -19,6 +19,7 @@ use Slim\Http\{
     Response
 };
 use Psr\Http\Message\ResponseInterface;
+use App\Services\RedisClient;
 
 /**
  *  User NodeController
@@ -108,6 +109,13 @@ class NodeController extends UserController
 
             // check node status
             // 0: new node; -1: offline; 1: online
+            $redis = new RedisClient();
+
+            $heartbeat = $redis->get("node:heartbeat:{$node->id}");
+
+            if ($heartbeat !== null) {
+                $node->node_heartbeat = $heartbeat;
+            }
             $node_heartbeat = $node->node_heartbeat + 300;
             $array_node['online'] = -1;
             if ($node_heartbeat == 300) {
