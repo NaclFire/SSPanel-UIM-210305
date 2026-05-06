@@ -110,7 +110,7 @@ class Job extends Command
         NodeOnlineLog::where('log_time', '<', time() - 86400 * 3)->delete();
         TrafficLog::where('log_time', '<', time() - 86400 * 6)->where('type', '=', 1)->delete();
 //        DetectLog::where('datetime', '<', time() - 86400 * 3)->delete();
-        Speedtest::where('datetime', '<', time() - 86400 * 3)->delete();
+//        Speedtest::where('datetime', '<', time() - 86400 * 3)->delete();
         EmailVerify::where('expire_in', '<', time() - 86400 * 3)->delete();
         system('rm ' . BASE_PATH . '/storage/*.png', $ret);
 
