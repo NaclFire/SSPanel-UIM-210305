@@ -786,32 +786,35 @@ class Job extends Command
     {
         $redis = new RedisClient();
 
+        // 只查询真正需要的用户
+        $allUsers = User::where('enable', 1)
+            ->where('class', '>', 0)
+            ->where('expire_in', '>', date('Y-m-d H:i:s'))
+            ->get();
+
         $nodes = Node::all();
 
         foreach ($nodes as $node) {
 
-            $users = User::where(function ($query) use ($node) {
+            $nodeUsers = $allUsers->filter(function ($user) use ($node) {
 
-                $query->where(function ($query1) use ($node) {
+                // admin 永远允许
+                if ($user->is_admin == 1) {
+                    return true;
+                }
 
-                    if ($node->node_group != 0) {
-                        $query1->where('class', '>=', $node->node_class)
-                            ->where('node_group', $node->node_group);
-                    } else {
-                        $query1->where('class', '>=', $node->node_class);
-                    }
+                if ($node->node_group != 0) {
+                    return $user->class >= $node->node_class
+                        && $user->node_group == $node->node_group;
+                }
 
-                })->orWhere('is_admin', 1);
-
-            })
-                ->where('enable', 1)
-                ->where('expire_in', '>', date('Y-m-d H:i:s'))
-                ->get();
+                return $user->class >= $node->node_class;
+            });
 
             $redis->setex(
                 "node_users:{$node->id}",
                 120,
-                json_encode($users)
+                json_encode($nodeUsers->values())
             );
         }
 
