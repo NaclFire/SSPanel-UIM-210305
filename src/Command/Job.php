@@ -337,15 +337,6 @@ class Job extends Command
             $shop = $bought->shop();
             if ($shop == null) {
                 $bought->delete();
-//                $user->sendMail(
-//                    $_ENV['appName'] . '-续费失败',
-//                    'news/warn.tpl',
-//                    [
-//                        'text' => '您好，系统为您自动续费商品时，发现该商品已被下架，为能继续正常使用，建议您登录用户面板购买新的商品。'
-//                    ],
-//                    [],
-//                    $_ENV['email_queue']
-//                );
                 $bought->is_notified = true;
                 $bought->save();
                 continue;
@@ -365,29 +356,9 @@ class Job extends Command
                 $bought_new->price = $shop->price;
                 $bought_new->coupon = '';
                 $bought_new->save();
-
-//                $user->sendMail(
-//                    $_ENV['appName'] . '-续费成功',
-//                    'news/warn.tpl',
-//                    [
-//                        'text' => '您好，系统已经为您自动续费，商品名：' . $shop->name . ',金额:' . $shop->price . ' 元。'
-//                    ],
-//                    [],
-//                    $_ENV['email_queue']
-//                );
-
                 $bought->is_notified = true;
                 $bought->save();
             } elseif ($bought->is_notified == false) {
-//                $user->sendMail(
-//                    $_ENV['appName'] . '-续费失败',
-//                    'news/warn.tpl',
-//                    [
-//                        'text' => '您好，系统为您自动续费商品名：' . $shop->name . ',金额:' . $shop->price . ' 元 时，发现您余额不足，请及时充值。充值后请稍等系统便会自动为您续费。'
-//                    ],
-//                    [],
-//                    $_ENV['email_queue']
-//                );
                 $bought->is_notified = true;
                 $bought->save();
             }
@@ -427,24 +398,6 @@ class Job extends Command
                         file_get_contents('https://sc.ftqq.com/' . $ScFtqq_SCKEY . '.send', false, $context);
                     }
 
-//                    foreach ($adminUser as $user) {
-//                        echo 'Send offline mail to user: ' . $user->id . PHP_EOL;
-//                        $user->sendMail(
-//                            $_ENV['appName'] . '-系统警告',
-//                            'news/warn.tpl',
-//                            [
-//                                'text' => '管理员您好，系统发现节点 ' . $node->name . ' 掉线了，请您及时处理。'
-//                            ],
-//                            [],
-//                            $_ENV['email_queue']
-//                        );
-//                        $notice_text = str_replace(
-//                            '%node_name%',
-//                            $node->name,
-//                            Config::getconfig('Telegram.string.NodeOffline')
-//                        );
-//                    }
-
                     if (Config::getconfig('Telegram.bool.NodeOffline')) {
                         $notice_text = str_replace(
                             '%node_name%',
@@ -478,23 +431,6 @@ class Job extends Command
                         $context = stream_context_create($opts);
                         file_get_contents('https://sc.ftqq.com/' . $ScFtqq_SCKEY . '.send', false, $context);
                     }
-//                    foreach ($adminUser as $user) {
-//                        echo 'Send offline mail to user: ' . $user->id . PHP_EOL;
-//                        $user->sendMail(
-//                            $_ENV['appName'] . '-系统提示',
-//                            'news/warn.tpl',
-//                            [
-//                                'text' => '管理员您好，系统发现节点 ' . $node->name . ' 恢复上线了。'
-//                            ],
-//                            [],
-//                            $_ENV['email_queue']
-//                        );
-//                        $notice_text = str_replace(
-//                            '%node_name%',
-//                            $node->name,
-//                            Config::getconfig('Telegram.string.NodeOnline')
-//                        );
-//                    }
 
                     if (Config::getconfig('Telegram.bool.NodeOnline')) {
                         $notice_text = str_replace(
@@ -513,7 +449,24 @@ class Job extends Command
         }
 
         echo '用户检测开始' . PHP_EOL;
-        $users = User::where('class', '!=', 0)->get();
+//        $users = User::where('class', '!=', 0)->get();
+        $users = User::where('class', '!=', 0)
+            ->get([
+                'id',
+                'uuid',
+                'email',
+                'class',
+                'passwd',
+                'node_group',
+                'is_admin',
+                'u',
+                'd',
+                'transfer_enable',
+                'class_expire',
+                'enable',
+                'node_speedlimit',
+                'node_connector'
+            ]);
         $redis = new RedisClient();
         $redis->setex(
             "users:all",
