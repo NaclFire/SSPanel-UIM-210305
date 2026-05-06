@@ -23,6 +23,7 @@ use App\Models\User;
 use App\Models\UserSubscribeLog;
 use App\Services\Config;
 use App\Services\Mail;
+use App\Services\RedisClient;
 use App\Utils\CloudflareDriver;
 use App\Utils\DatatablesHelper;
 use App\Utils\QQWry;
@@ -779,6 +780,42 @@ class Job extends Command
 //        $datatables->query(
 //            'DELETE FROM `relay` WHERE `source_node_id` NOT IN(' . $allNodeID . ') OR `dist_node_id` NOT IN(' . $allNodeID . ')'
 //        );
+    }
+
+    public function CacheNodeUsers()
+    {
+        $redis = new RedisClient();
+
+        $nodes = Node::all();
+
+        foreach ($nodes as $node) {
+
+            $users = User::where(function ($query) use ($node) {
+
+                $query->where(function ($query1) use ($node) {
+
+                    if ($node->node_group != 0) {
+                        $query1->where('class', '>=', $node->node_class)
+                            ->where('node_group', $node->node_group);
+                    } else {
+                        $query1->where('class', '>=', $node->node_class);
+                    }
+
+                })->orWhere('is_admin', 1);
+
+            })
+                ->where('enable', 1)
+                ->where('expire_in', '>', date('Y-m-d H:i:s'))
+                ->get();
+
+            $redis->setex(
+                "node_users:{$node->id}",
+                120,
+                json_encode($users)
+            );
+        }
+
+        echo "Node users cache refreshed\n";
     }
 
 }

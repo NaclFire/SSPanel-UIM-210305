@@ -3,6 +3,7 @@
 namespace App\Controllers\Mod_Mu;
 
 use App\Controllers\BaseController;
+use App\Services\Auth;
 use App\Models\{
     Ip,
     Node,
@@ -12,6 +13,7 @@ use App\Models\{
     NodeOnlineLog
 };
 use App\Utils\Tools;
+use App\Services\RedisClient;
 
 class UserController extends BaseController
 {
@@ -46,30 +48,36 @@ class UserController extends BaseController
         // 节点流量耗尽则返回 null
         if (($node->node_bandwidth_limit != 0) && $node->node_bandwidth_limit < $node->node_bandwidth) {
             $users = null;
-
             $res = [
                 'ret' => 1,
                 'data' => $users
             ];
             return $this->echoJson($response, $res);
         }
-        $users_raw = User::where(
-            static function ($query) use ($node) {
-                $query->where(
-                    static function ($query1) use ($node) {
-                        if ($node->node_group != 0) {
-                            $query1->where('class', '>=', $node->node_class)
-                                ->where('node_group', '=', $node->node_group);
-                        } else {
-                            $query1->where('class', '>=', $node->node_class);
-                        }
+        $redis = new RedisClient();
+        $key = "node_users:{$node->id}";
+        $users_raw = $redis->get($key);
+        if ($users_raw !== null) {
+            $users_raw = collect(json_decode($users_raw));
+        } else {
+            // Redis miss 才访问数据库（极少发生）
+            $users_raw = User::where(function ($query) use ($node) {
+                $query->where(function ($query1) use ($node) {
+                    if ($node->node_group != 0) {
+                        $query1->where('class', '>=', $node->node_class)
+                            ->where('node_group', $node->node_group);
+                    } else {
+                        $query1->where('class', '>=', $node->node_class);
                     }
-                )->orwhere('is_admin', 1);
-            }
-        )->where('enable', 1)->where('expire_in', '>', date('Y-m-d H:i:s'))->get();
 
+                })->orWhere('is_admin', 1);
+            })
+                ->where('enable', 1)
+                ->where('expire_in', '>', date('Y-m-d H:i:s'))
+                ->get();
+            $redis->setex($key, 120, json_encode($users_raw));
+        }
         $users = array();
-
         $key_list = array(
             'email', 'node_speedlimit', 'id', 'passwd', 'node_connector', 'uuid'
         );
