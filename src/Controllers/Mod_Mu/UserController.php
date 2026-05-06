@@ -202,6 +202,91 @@ class UserController extends BaseController
         ]);
     }
 
+    public function addTraffic($request, $response, $args)
+    {
+        $params = $request->getQueryParams();
+
+        $data = $request->getParam('data');
+        $this_time_total_bandwidth = 0;
+        $node_id = $params['node_id'];
+        if ($node_id == '0') {
+            $node = Node::where('node_ip', $_SERVER['REMOTE_ADDR'])->first();
+            $node_id = $node->id;
+        }
+        $node = Node::find($node_id);
+
+        if ($node == null) {
+            $res = [
+                'ret' => 1,
+                'data' => 'ok',
+            ];
+            return $this->echoJson($response, $res);
+        }
+        // 多ip节点，记录在线用户时，只记录在用ip。
+        $nodeIpList = explode(';', $node->node_ip);
+        if (count($nodeIpList) == 1) {
+            $this->logOnlineUser($node_id, $data);
+        } else {
+            // 查看node_ip是否是双栈
+            $nodeIpVersion = explode('#', $nodeIpList[0]);
+            // 双栈ip分割之后再处理
+            if (count($nodeIpVersion) == 2) {
+                if ($nodeIpVersion[0] == $_SERVER['REMOTE_ADDR']) {
+                    $this->logOnlineUser($node_id, $data);
+                } elseif ($nodeIpVersion[1] == $_SERVER['REMOTE_ADDR']) {
+                    $this->logOnlineUser($node_id, $data);
+                }
+            } else {
+                if ($nodeIpList[0] == $_SERVER['REMOTE_ADDR']) {
+                    $this->logOnlineUser($node_id, $data);
+                }
+            }
+        }
+
+        if (count($data) > 0) {
+            foreach ($data as $log) {
+                $user_id = $log['user_id'];
+                $user = User::find($user_id);
+                if ($user == null) {
+                    continue;
+                }
+                if ($user->class == 0) {
+                    continue;
+                }
+                $u = $log['u'];
+                $d = $log['d'];
+                $user->t = time();
+                $user->u += $u * $node->traffic_rate;
+                $user->d += $d * $node->traffic_rate;
+                $this_time_total_bandwidth += $u + $d;
+                if (!$user->save()) {
+                    continue;
+                }
+
+                // log
+                $traffic = new TrafficLog();
+                $traffic->user_id = $user_id;
+                $traffic->u = $u;
+                $traffic->d = $d;
+                $traffic->node_id = $node_id;
+                $traffic->rate = $node->traffic_rate;
+                $traffic->traffic = $u + $d;
+                $traffic->log_time = time();
+                $traffic->type = 0;
+                $traffic->save();
+            }
+        }
+
+        $node->node_bandwidth += $this_time_total_bandwidth;
+        $node->save();
+
+        $res = [
+            'ret' => 1,
+            'data' => 'ok',
+        ];
+        return $this->echoJson($response, $res);
+    }
+
     public function addAliveIp($request, $response, $args)
     {
         $params = $request->getQueryParams();
