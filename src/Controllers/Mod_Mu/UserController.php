@@ -202,26 +202,29 @@ class UserController extends BaseController
         ]);
     }
 
+    use App\Services\RedisClient;
+
     public function addTraffic($request, $response, $args)
     {
         $params = $request->getQueryParams();
-
         $data = $request->getParam('data');
-        $this_time_total_bandwidth = 0;
+
         $node_id = $params['node_id'];
+
         if ($node_id == '0') {
             $node = Node::where('node_ip', $_SERVER['REMOTE_ADDR'])->first();
-            $node_id = $node->id;
+            $node_id = $node->id ?? 0;
         }
+
         $node = Node::find($node_id);
 
         if ($node == null) {
-            $res = [
+            return $this->echoJson($response, [
                 'ret' => 1,
                 'data' => 'ok',
-            ];
-            return $this->echoJson($response, $res);
+            ]);
         }
+
         // 多ip节点，记录在线用户时，只记录在用ip。
         $nodeIpList = explode(';', $node->node_ip);
         if (count($nodeIpList) == 1) {
@@ -243,48 +246,47 @@ class UserController extends BaseController
             }
         }
 
-        if (count($data) > 0) {
-            foreach ($data as $log) {
-                $user_id = $log['user_id'];
-                $user = User::find($user_id);
-                if ($user == null) {
-                    continue;
-                }
-                if ($user->class == 0) {
-                    continue;
-                }
-                $u = $log['u'];
-                $d = $log['d'];
-                $user->t = time();
-                $user->u += $u * $node->traffic_rate;
-                $user->d += $d * $node->traffic_rate;
-                $this_time_total_bandwidth += $u + $d;
-                if (!$user->save()) {
-                    continue;
-                }
-
-                // log
-                $traffic = new TrafficLog();
-                $traffic->user_id = $user_id;
-                $traffic->u = $u;
-                $traffic->d = $d;
-                $traffic->node_id = $node_id;
-                $traffic->rate = $node->traffic_rate;
-                $traffic->traffic = $u + $d;
-                $traffic->log_time = time();
-                $traffic->type = 0;
-                $traffic->save();
-            }
+        if (empty($data)) {
+            return $this->echoJson($response, [
+                'ret' => 1,
+                'data' => 'ok',
+            ]);
         }
 
-        $node->node_bandwidth += $this_time_total_bandwidth;
-        $node->save();
+        $redis = new RedisClient();
 
-        $res = [
+        $redis->pipeline(function ($pipe) use ($data, $node) {
+
+            foreach ($data as $log) {
+
+                $user_id = $log['user_id'];
+
+                $u = intval($log['u'] * $node->traffic_rate);
+                $d = intval($log['d'] * $node->traffic_rate);
+
+                if ($u <= 0 && $d <= 0) {
+                    continue;
+                }
+
+                $key = "traffic:user:$user_id";
+
+                /* 用户流量累积 */
+                $pipe->hincrby($key, 'u', $u);
+                $pipe->hincrby($key, 'd', $d);
+                $pipe->expire($key, 3600);
+
+                /* 活跃用户集合 */
+                $pipe->sadd("traffic:users", $user_id);
+
+                /* 节点流量 */
+                $pipe->incrby("traffic:node:{$node->id}", $u + $d);
+            }
+        });
+
+        return $this->echoJson($response, [
             'ret' => 1,
             'data' => 'ok',
-        ];
-        return $this->echoJson($response, $res);
+        ]);
     }
 
     public function addAliveIp($request, $response, $args)

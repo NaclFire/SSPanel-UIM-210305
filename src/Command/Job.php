@@ -371,83 +371,6 @@ class Job extends Command
 
 //        $adminUser = User::where('is_admin', '=', '1')->get();
 
-        //节点掉线检测
-        if ($_ENV['enable_detect_offline'] == true) {
-            echo '节点掉线检测开始' . PHP_EOL;
-            $nodes = Node::all();
-            foreach ($nodes as $node) {
-                if ($node->isNodeOnline() === false && $node->online == true) {
-                    if ($_ENV['useScFtqq'] == true && $_ENV['enable_detect_offline_useScFtqq'] == true) {
-                        $ScFtqq_SCKEY = $_ENV['ScFtqq_SCKEY'];
-                        $text = '管理员您好，系统发现节点 ' . $node->name . ' 掉线了，请您及时处理。';
-                        $postdata = http_build_query(
-                            array(
-                                'text' => $_ENV['appName'] . '-节点掉线了',
-                                'desp' => $text
-                            )
-                        );
-                        $opts = array(
-                            'http' =>
-                                array(
-                                    'method' => 'POST',
-                                    'header' => 'Content-type: application/x-www-form-urlencoded',
-                                    'content' => $postdata
-                                )
-                        );
-                        $context = stream_context_create($opts);
-                        file_get_contents('https://sc.ftqq.com/' . $ScFtqq_SCKEY . '.send', false, $context);
-                    }
-
-                    if (Config::getconfig('Telegram.bool.NodeOffline')) {
-                        $notice_text = str_replace(
-                            '%node_name%',
-                            $node->name,
-                            Config::getconfig('Telegram.string.NodeOffline')
-                        );
-                        Telegram::Send($notice_text);
-                    }
-
-                    $node->online = false;
-                    $node->save();
-                } elseif ($node->isNodeOnline() === true && $node->online == false) {
-                    if ($_ENV['useScFtqq'] == true && $_ENV['enable_detect_offline_useScFtqq'] == true) {
-                        $ScFtqq_SCKEY = $_ENV['ScFtqq_SCKEY'];
-                        $text = '管理员您好，系统发现节点 ' . $node->name . ' 恢复上线了。';
-                        $postdata = http_build_query(
-                            array(
-                                'text' => $_ENV['appName'] . '-节点恢复上线了',
-                                'desp' => $text
-                            )
-                        );
-
-                        $opts = array(
-                            'http' =>
-                                array(
-                                    'method' => 'POST',
-                                    'header' => 'Content-type: application/x-www-form-urlencoded',
-                                    'content' => $postdata
-                                )
-                        );
-                        $context = stream_context_create($opts);
-                        file_get_contents('https://sc.ftqq.com/' . $ScFtqq_SCKEY . '.send', false, $context);
-                    }
-
-                    if (Config::getconfig('Telegram.bool.NodeOnline')) {
-                        $notice_text = str_replace(
-                            '%node_name%',
-                            $node->name,
-                            Config::getconfig('Telegram.string.NodeOnline')
-                        );
-                        Telegram::Send($notice_text);
-                    }
-
-                    $node->online = true;
-                    $node->save();
-                }
-            }
-            echo '节点掉线检测结束' . PHP_EOL;
-        }
-
         echo '用户检测开始' . PHP_EOL;
 //        $users = User::where('class', '!=', 0)->get();
         $users = User::where('class', '!=', 0)
@@ -578,6 +501,30 @@ class Job extends Command
             }
         }
         echo '节点ip检测结束' . PHP_EOL;
+        echo '流量统计开始' . PHP_EOL;
+        $user_ids = $redis->smembers('traffic:users');
+        foreach ($user_ids as $user_id) {
+
+            $key = "traffic:user:$user_id";
+
+            $traffic = $redis->hgetall($key);
+
+            if (!$traffic) continue;
+
+            $u = intval($traffic['u'] ?? 0);
+            $d = intval($traffic['d'] ?? 0);
+
+            User::where('id', $user_id)->increment('u', $u);
+            User::where('id', $user_id)->increment('d', $d);
+
+            User::where('id', $user_id)->update([
+                't' => time()
+            ]);
+
+            $redis->del($key);
+            $redis->srem('traffic:users', $user_id);
+        }
+        echo '流量统计结束'.PHP_EOL;
         //更新节点 IP，每分钟
 //        $nodes = Node::all();
 //        $allNodeID = [];
@@ -598,33 +545,5 @@ class Job extends Command
 //        $datatables->query(
 //            'DELETE FROM `relay` WHERE `source_node_id` NOT IN(' . $allNodeID . ') OR `dist_node_id` NOT IN(' . $allNodeID . ')'
 //        );
-    }
-
-    public function CacheNodeUsers()
-    {
-        $redis = new RedisClient();
-        $users = User::where('enable', 1)
-            ->where('class', '>', 0)
-            ->where('expire_in', '>', date('Y-m-d H:i:s'))
-            ->get([
-                'id',
-                'uuid',
-                'email',
-                'class',
-                'passwd',
-                'node_group',
-                'is_admin',
-                'u',
-                'd',
-                'transfer_enable'
-            ]);
-
-        $redis->setex(
-            "users:all",
-            120,
-            json_encode($users)
-        );
-
-        echo "Users cache refreshed\n";
     }
 }
