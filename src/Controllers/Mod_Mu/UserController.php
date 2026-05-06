@@ -3,17 +3,9 @@
 namespace App\Controllers\Mod_Mu;
 
 use App\Controllers\BaseController;
-use App\Services\Auth;
-use App\Models\{
-    Ip,
-    Node,
-    User,
-    DetectLog,
-    TrafficLog,
-    NodeOnlineLog
-};
-use App\Utils\Tools;
+use App\Models\{Ip, Node, NodeOnlineLog, User};
 use App\Services\RedisClient;
+use App\Utils\Tools;
 
 class UserController extends BaseController
 {
@@ -201,8 +193,6 @@ class UserController extends BaseController
             'data' => $users
         ]);
     }
-
-    use App\Services\RedisClient;
 
     public function addTraffic($request, $response, $args)
     {

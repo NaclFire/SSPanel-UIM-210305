@@ -83,10 +83,6 @@ class RedisClient
         return $this->client->srem($key, $value);
     }
 
-    /* ======================
-       ⭐ String
-    ====================== */
-
     public function incrby($key, $value)
     {
         return $this->client->incrby($key, $value);
@@ -96,10 +92,6 @@ class RedisClient
     {
         return $this->client->expire($key, $time);
     }
-
-    /* ======================
-       ⭐⭐⭐ Pipeline（核心）
-    ====================== */
 
     public function pipeline($callback)
     {
