@@ -74,12 +74,9 @@ class UserController extends BaseController
         $users_raw = $redis->get($cacheKey);
 
         if (empty($users_raw)) {
-
             // 防缓存击穿锁
             if (!$redis->get("users:lock")) {
-
                 $redis->setex("users:lock", 5, 1);
-
                 $users_raw = User::where('enable', 1)
                     ->where('class', '>', 0)
                     ->where('expire_in', '>', date('Y-m-d H:i:s'))
@@ -98,32 +95,20 @@ class UserController extends BaseController
                         'transfer_enable'
                     ])
                     ->toArray();
-
-                // ⭐ gzip 压缩（极大降低 Redis 压力）
                 $redis->setex(
                     $cacheKey,
                     120,
-                    gzcompress(json_encode($users_raw))
+                    json_encode($users_raw)
                 );
             }
 
-            usleep(200000); // 等缓存生成
+            usleep(500000); // 等缓存生成
             $users_raw = $redis->get($cacheKey);
         }
 
         if ($users_raw !== null) {
-
-            // 尝试解压
-            $data = @gzuncompress($users_raw);
-
-            if ($data !== false) {
-                // gzip缓存
-                $users = json_decode($data, true);
-            } else {
-                // 普通json缓存（兼容旧版本）
-                $users = json_decode($users_raw, true);
-            }
-
+            // 普通json缓存（兼容旧版本）
+            $users = json_decode($users_raw, true);
         } else {
             $users = [];
         }

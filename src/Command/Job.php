@@ -514,8 +514,13 @@ class Job extends Command
 
         echo '用户检测开始' . PHP_EOL;
         $users = User::where('class', '!=', 0)->get();
+        $redis = new RedisClient();
+        $redis->setex(
+            "users:all",
+            120,
+            json_encode($users->toArray())
+        );
         foreach ($users as $user) {
-//            echo '用户：' . $user->user_name . PHP_EOL;
             if (($user->transfer_enable <= $user->u + $user->d || $user->enable == 0 || (strtotime($user->expire_in) < time() && strtotime($user->expire_in) > 644447105))
                 && RadiusBan::where(
                     'userid',
@@ -527,151 +532,11 @@ class Job extends Command
                 Radius::Delete($user->email);
             }
 
-//            if (strtotime($user->expire_in) < time() && $user->expire_notified == false) {
-//                $user->transfer_enable = 0;
-//                $user->u = 0;
-//                $user->d = 0;
-//                $user->last_day_t = 0;
-//                $user->sendMail(
-//                    $_ENV['appName'] . '-您的用户账户已经过期了',
-//                    'news/warn.tpl',
-//                    [
-//                        'text' => '您好，系统发现您的账号已经过期了。'
-//                    ],
-//                    [],
-//                    $_ENV['email_queue']
-//                );
-//                $user->expire_notified = true;
-//                $user->save();
-//            } elseif (strtotime($user->expire_in) > time() && $user->expire_notified == true) {
-//                $user->expire_notified = false;
-//                $user->save();
-//            }
-
-
-//            //余量不足检测
-//            if ($_ENV['notify_limit_mode'] != false) {
-//                $user_traffic_left = $user->transfer_enable - $user->u - $user->d;
-//                $under_limit = false;
-//
-//                if ($user->transfer_enable != 0 && $user->class != 0) {
-//                    if (
-//                        $_ENV['notify_limit_mode'] == 'per' &&
-//                        $user_traffic_left / $user->transfer_enable * 100 < $_ENV['notify_limit_value']
-//                    ) {
-//                        $under_limit = true;
-//                        $unit_text = '%';
-//                    } elseif (
-//                        $_ENV['notify_limit_mode'] == 'mb' &&
-//                        Tools::flowToMB($user_traffic_left) < $_ENV['notify_limit_value']
-//                    ) {
-//                        $under_limit = true;
-//                        $unit_text = 'MB';
-//                    }
-//                }
-//
-//                if ($under_limit == true && $user->traffic_notified == false) {
-//                    $result = $user->sendMail(
-//                        $_ENV['appName'] . '-您的剩余流量过低',
-//                        'news/warn.tpl',
-//                        [
-//                            'text' => '您好，系统发现您剩余流量已经低于 ' . $_ENV['notify_limit_value'] . $unit_text . ' 。'
-//                        ],
-//                        [],
-//                        $_ENV['email_queue']
-//                    );
-//                    if ($result) {
-//                        $user->traffic_notified = true;
-//                        $user->save();
-//                    }
-//                } elseif ($under_limit == false && $user->traffic_notified == true) {
-//                    $user->traffic_notified = false;
-//                    $user->save();
-//                }
-//            }
-
-//            if (
-//                $_ENV['account_expire_delete_days'] >= 0 &&
-//                strtotime($user->expire_in) + $_ENV['account_expire_delete_days'] * 86400 < time() &&
-//                $user->money <= $_ENV['auto_clean_min_money']
-//            ) {
-//                $user->sendMail(
-//                    $_ENV['appName'] . '-您的用户账户已经被删除了',
-//                    'news/warn.tpl',
-//                    [
-//                        'text' => '您好，系统发现您的账户已经过期 ' . $_ENV['account_expire_delete_days'] . ' 天了，帐号已经被删除。'
-//                    ],
-//                    [],
-//                    $_ENV['email_queue']
-//                );
-//                $user->kill_user();
-//                continue;
-//            }
-
-//            if (
-//                $_ENV['auto_clean_uncheck_days'] > 0 &&
-//                max(
-//                    $user->last_check_in_time,
-//                    strtotime($user->reg_date)
-//                ) + ($_ENV['auto_clean_uncheck_days'] * 86400) < time() &&
-//                $user->class == 0 &&
-//                $user->money <= $_ENV['auto_clean_min_money']
-//            ) {
-//                $user->sendMail(
-//                    $_ENV['appName'] . '-您的用户账户已经被删除了',
-//                    'news/warn.tpl',
-//                    [
-//                        'text' => '您好，系统发现您的账号已经 ' . $_ENV['auto_clean_uncheck_days'] . ' 天没签到了，帐号已经被删除。'
-//                    ],
-//                    [],
-//                    $_ENV['email_queue']
-//                );
-//                $user->kill_user();
-//                continue;
-//            }
-
-//            if (
-//                $_ENV['auto_clean_unused_days'] > 0 &&
-//                max($user->t, strtotime($user->reg_date)) + ($_ENV['auto_clean_unused_days'] * 86400) < time() &&
-//                $user->class == 0 &&
-//                $user->money <= $_ENV['auto_clean_min_money']
-//            ) {
-//                $user->sendMail(
-//                    $_ENV['appName'] . '-您的用户账户已经被删除了',
-//                    'news/warn.tpl',
-//                    [
-//                        'text' => '您好，系统发现您的账号已经 ' . $_ENV['auto_clean_unused_days'] . ' 天没使用了，帐号已经被删除。'
-//                    ],
-//                    [],
-//                    $_ENV['email_queue']
-//                );
-//                $user->kill_user();
-//                continue;
-//            }
-
             if (
                 $user->class != 0 &&
                 strtotime($user->class_expire) < time() &&
                 strtotime($user->class_expire) > 1420041600
             ) {
-//                $text = '您好，系统发现您的账号等级已经过期了。';
-//                $reset_traffic = $_ENV['class_expire_reset_traffic'];
-//                if ($reset_traffic >= 0) {
-//                    $user->transfer_enable = Tools::toGB($reset_traffic);
-//                    $user->u = 0;
-//                    $user->d = 0;
-//                    $user->last_day_t = 0;
-//                    $text .= '流量已经被重置为' . $reset_traffic . 'GB';
-//                }
-//                $user->sendMail(
-//                    $_ENV['appName'] . '-您的账户等级已经过期了',
-//                    'news/warn.tpl',
-//                    [
-//                        'text' => $text
-//                    ],
-//                    [],
-//                    $_ENV['email_queue']
-//                );
                 $user->class = 0;
             }
 
