@@ -199,26 +199,21 @@ class Job extends Command
                 $user->last_day_t = 0;
                 $user->transfer_enable = $user->auto_reset_bandwidth * 1024 * 1024 * 1024;
                 $user->save();
-//                $user->sendMail(
-//                    $_ENV['appName'] . '-您的流量被重置了',
-//                    'news/warn.tpl',
-//                    [
-//                        'text' => '您好，根据管理员的设置，流量已经被重置为' . $user->auto_reset_bandwidth . 'GB'
-//                    ],
-//                    [],
-//                    $_ENV['email_queue']
-//                );
             }
         }
 
-        $qqwry = file_get_contents('https://qqwry.mirror.noc.one/QQWry.Dat?from=sspanel_uim');
-        if ($qqwry != '') {
-            rename(BASE_PATH . '/storage/qqwry.dat', BASE_PATH . '/storage/qqwry.dat.bak');
-            $fp = fopen(BASE_PATH . '/storage/qqwry.dat', 'wb');
-            if ($fp) {
-                fwrite($fp, $qqwry);
-                fclose($fp);
+        $url = 'https://github.com/metowolf/qqwry.dat/releases/latest/download/qqwry.dat';
+        $qqwry = @file_get_contents($url);
+        if ($qqwry !== false && strlen($qqwry) > 1024) {
+            $datFile = BASE_PATH . '/storage/qqwry.dat';
+            $bakFile = BASE_PATH . '/storage/qqwry.dat.bak';
+            if (file_exists($datFile)) {
+                rename($datFile, $bakFile);
             }
+            file_put_contents($datFile, $qqwry);
+            echo "qqwry.dat 更新成功";
+        } else {
+            echo "qqwry.dat 下载失败";
         }
 
         $iplocation = new QQWry();

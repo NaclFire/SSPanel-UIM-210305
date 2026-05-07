@@ -22,10 +22,6 @@ class UserController extends BaseController
     {
         $redis = new RedisClient();
 
-        /* ===============================
-         * 获取节点
-         * =============================== */
-
         $node_id = $request->getQueryParam('node_id', '0');
 
         if ($node_id == '0') {
@@ -39,7 +35,7 @@ class UserController extends BaseController
         }
 
         /* ===============================
-         * ⭐ 心跳改为 Redis（避免写 MySQL）
+         * 心跳改为 Redis（避免写 MySQL）
          * =============================== */
 
         $redis->setex("node:heartbeat:{$node->id}", 120, time());
@@ -59,7 +55,7 @@ class UserController extends BaseController
         }
 
         /* ===============================
-         * ⭐ 获取用户缓存
+         * 获取用户缓存
          * =============================== */
 
         $cacheKey = "users:all";
@@ -99,14 +95,13 @@ class UserController extends BaseController
         }
 
         if ($users_raw !== null) {
-            // 普通json缓存（兼容旧版本）
             $users = json_decode($users_raw, true);
         } else {
             $users = [];
         }
 
         /* ===============================
-         * ⭐ 节点权限筛选（高性能 foreach）
+         * 节点权限筛选（高性能 foreach）
          * =============================== */
 
         $filtered_users = [];
@@ -133,10 +128,11 @@ class UserController extends BaseController
                     $filtered_users[] = $user;
                 }
             }
+
         }
 
         /* ===============================
-         * ⭐ 生成节点用户列表
+         * 生成节点用户列表
          * =============================== */
 
         $users = [];
@@ -152,8 +148,6 @@ class UserController extends BaseController
 
         foreach ($filtered_users as $user) {
 
-            /* ---- 流量耗尽判断 ---- */
-
             if ($user['transfer_enable'] <= $user['u'] + $user['d']) {
 
                 if ($_ENV['keep_connect'] === true) {
@@ -163,11 +157,8 @@ class UserController extends BaseController
                 }
             }
 
-            /* ---- 密码处理 ---- */
-
             if ($node->sort === 1) {
 
-                // AnyTLS
                 $user['passwd'] = $user['uuid'];
 
             } else {
@@ -181,7 +172,9 @@ class UserController extends BaseController
                 }
             }
 
-            $users[] = Tools::keyFilter($user, $key_list);
+            $user = array_intersect_key($user, array_flip($key_list));
+
+            $users[] = $user;
         }
 
         /* ===============================
