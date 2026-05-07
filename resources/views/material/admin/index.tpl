@@ -159,8 +159,8 @@
                                                                 },
                                                                 {
                                                                     y: {($sts->getOnlineUser(60))/$sts->getTotalUser()*100},
-                                                                    legendText: "一分钟内在线的用户 {number_format(($sts->getOnlineUser(60))/$sts->getTotalUser()*100,2)}% {($sts->getOnlineUser(60))}人",
-                                                                    indexLabel: "一分钟内在线的用户 {number_format(($sts->getOnlineUser(60))/$sts->getTotalUser()*100,2)}% {($sts->getOnlineUser(60))}人"
+                                                                    legendText: "五分钟内在线的用户 {number_format(($sts->getOnlineUser(300))/$sts->getTotalUser()*100,2)}% {($sts->getOnlineUser(300))}人",
+                                                                    indexLabel: "无分钟内在线的用户 {number_format(($sts->getOnlineUser(300))/$sts->getTotalUser()*100,2)}% {($sts->getOnlineUser(300))}人"
                                                                 }
                                                             ]
                                                         }
