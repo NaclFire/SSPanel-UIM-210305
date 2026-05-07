@@ -447,6 +447,10 @@ class Job extends Command
 //        $nodes = Node::where('node_ip', 'like', '%;%')->get();
         $nodes = Node::all();
         foreach ($nodes as $node) {
+            $heartbeat = $redis->get("node:heartbeat:{$node->id}");
+            if ($heartbeat !== null) {
+                $node->node_heartbeat = $heartbeat;
+            }
             if (str_contains($node->node_ip, ';')) {
                 $nodeIps = explode(';', $node->node_ip);
                 echo '开始检测：' . $node->name . PHP_EOL;
@@ -473,10 +477,6 @@ class Job extends Command
                                 echo '域名：' . explode(';', $node->server)[0] . '，已解析ip：' . $availableIp . PHP_EOL;
                             }
                             $node->last_check_time = $milliseconds;
-                            $heartbeat = $redis->get("node:heartbeat:{$node->id}");
-                            if ($heartbeat !== null) {
-                                $node->node_heartbeat = $heartbeat;
-                            }
                             $node->save();
                             break;
                         } else {
