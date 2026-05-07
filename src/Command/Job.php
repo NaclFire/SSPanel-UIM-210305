@@ -450,6 +450,7 @@ class Job extends Command
             $heartbeat = $redis->get("node:heartbeat:{$node->id}");
             if ($heartbeat !== null) {
                 $node->node_heartbeat = $heartbeat;
+                $node->save();
             }
             if (str_contains($node->node_ip, ';')) {
                 $nodeIps = explode(';', $node->node_ip);
