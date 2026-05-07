@@ -473,6 +473,10 @@ class Job extends Command
                                 echo '域名：' . explode(';', $node->server)[0] . '，已解析ip：' . $availableIp . PHP_EOL;
                             }
                             $node->last_check_time = $milliseconds;
+                            $heartbeat = $redis->get("node:heartbeat:{$node->id}");
+                            if ($heartbeat !== null) {
+                                $node->node_heartbeat = $heartbeat;
+                            }
                             $node->save();
                             break;
                         } else {
