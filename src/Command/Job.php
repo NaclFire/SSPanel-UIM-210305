@@ -496,7 +496,33 @@ class Job extends Command
             }
         }
         echo '节点ip检测结束' . PHP_EOL;
+
+        //更新节点 IP，每分钟
+//        $nodes = Node::all();
+//        $allNodeID = [];
+//        foreach ($nodes as $node) {
+//            $allNodeID[] = $node->id;
+//            $server = $node->getOutServer();
+//            if (!Tools::is_ip($server) && $node->changeNodeIp($server)) {
+//                $node->save();
+//            }
+//            if (in_array($node->sort, array(0, 10, 12))) {
+//                Tools::updateRelayRuleIp($node);
+//            }
+//        }
+
+        // 删除无效的中转
+//        $allNodeID = implode(', ', $allNodeID);
+//        $datatables = new DatatablesHelper();
+//        $datatables->query(
+//            'DELETE FROM `relay` WHERE `source_node_id` NOT IN(' . $allNodeID . ') OR `dist_node_id` NOT IN(' . $allNodeID . ')'
+//        );
+    }
+
+    public function AddTrafficLog()
+    {
         echo '流量统计开始' . PHP_EOL;
+        $redis = new RedisClient();
         $user_ids = $redis->smembers('traffic:users');
         foreach ($user_ids as $user_id) {
 
@@ -519,26 +545,6 @@ class Job extends Command
             $redis->del($key);
             $redis->srem('traffic:users', $user_id);
         }
-        echo '流量统计结束'.PHP_EOL;
-        //更新节点 IP，每分钟
-//        $nodes = Node::all();
-//        $allNodeID = [];
-//        foreach ($nodes as $node) {
-//            $allNodeID[] = $node->id;
-//            $server = $node->getOutServer();
-//            if (!Tools::is_ip($server) && $node->changeNodeIp($server)) {
-//                $node->save();
-//            }
-//            if (in_array($node->sort, array(0, 10, 12))) {
-//                Tools::updateRelayRuleIp($node);
-//            }
-//        }
-
-        // 删除无效的中转
-//        $allNodeID = implode(', ', $allNodeID);
-//        $datatables = new DatatablesHelper();
-//        $datatables->query(
-//            'DELETE FROM `relay` WHERE `source_node_id` NOT IN(' . $allNodeID . ') OR `dist_node_id` NOT IN(' . $allNodeID . ')'
-//        );
+        echo '流量统计结束' . PHP_EOL;
     }
 }
