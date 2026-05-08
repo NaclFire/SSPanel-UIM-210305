@@ -30,9 +30,9 @@
                                     </p>
                                     <p class="form-control-guide"><i class="material-icons">info</i>v2ray节点流控flow：在协议配置后增加：|flow=flow-vlaue
                                     </p>
-                                    <p class="form-control-guide"><i class="material-icons">info</i>TUIC节点格式：tuic.example.com:443;grpc=true|servicename=edge-tuic
+                                    <p class="form-control-guide"><i class="material-icons">info</i>TUIC节点格式：tuic.example.com:443;grpc=true|servicename=edge
                                     </p>
-                                    <p class="form-control-guide"><i class="material-icons">info</i>AnyTLS节点格式：anytls.example.com:443;grpc=1|servicename=data
+                                    <p class="form-control-guide"><i class="material-icons">info</i>AnyTLS节点格式：anytls.example.com;443;grpc=true|servicename=data
                                     </p>
                                 </div>
                                 <div class="form-group form-group-label">
