@@ -560,7 +560,7 @@ class Job extends Command
             }
             // 写入节点流量
             Node::where('id', $node_id)->update([
-                'node_traffic' => DB::raw("node_traffic + $traffic")
+                'node_bandwidth' => DB::raw("node_bandwidth + $traffic")
             ]);
             // 清理redis
             $redis->del($key);
