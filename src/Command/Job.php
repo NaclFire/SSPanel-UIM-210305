@@ -555,6 +555,7 @@ class Job extends Command
             $key = "traffic:node:$node_id";
             echo '$node_id = ' . $node_id . PHP_EOL;
             $traffic = intval($redis->get($key));
+            echo '$traffic = ' . $traffic . PHP_EOL;
             if ($traffic <= 0) {
                 $redis->del($key);
                 $redis->srem('traffic:nodes', $node_id);
