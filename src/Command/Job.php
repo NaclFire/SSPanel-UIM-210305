@@ -31,7 +31,7 @@ use App\Utils\Radius;
 use App\Utils\Telegram;
 use App\Utils\Tools;
 use Exception;
-
+use Illuminate\Database\Capsule\Manager as DB;
 class Job extends Command
 {
     public $description = ''
@@ -528,28 +528,44 @@ class Job extends Command
     {
         echo '流量统计开始' . PHP_EOL;
         $redis = new RedisClient();
+        echo '用户流量入库开始' . PHP_EOL;
         $user_ids = $redis->smembers('traffic:users');
         foreach ($user_ids as $user_id) {
-
             $key = "traffic:user:$user_id";
-
             $traffic = $redis->hgetall($key);
-
             if (!$traffic) continue;
-
             $u = intval($traffic['u'] ?? 0);
             $d = intval($traffic['d'] ?? 0);
-
-            User::where('id', $user_id)->increment('u', $u);
-            User::where('id', $user_id)->increment('d', $d);
-
-            User::where('id', $user_id)->update([
-                't' => time()
-            ]);
-
+            if ($u > 0 || $d > 0) {
+                User::where('id', $user_id)->update([
+                    'u' => DB::raw("u + $u"),
+                    'd' => DB::raw("d + $d"),
+                    't' => time()
+                ]);
+            }
             $redis->del($key);
             $redis->srem('traffic:users', $user_id);
         }
+        echo '用户流量入库结束' . PHP_EOL;
+        echo '节点流量入库开始' . PHP_EOL;
+        // 查找所有节点流量key
+        $nodeKeys = $redis->keys('traffic:node:*');
+        foreach ($nodeKeys as $key) {
+            // traffic:node:3
+            $node_id = str_replace('traffic:node:', '', $key);
+            $traffic = intval($redis->get($key));
+            if ($traffic <= 0) {
+                $redis->del($key);
+                continue;
+            }
+            // 写入节点流量
+            Node::where('id', $node_id)->update([
+                'node_traffic' => DB::raw("node_traffic + $traffic")
+            ]);
+            // 清理redis
+            $redis->del($key);
+        }
+        echo '节点流量入库结束' . PHP_EOL;
         echo '流量统计结束' . PHP_EOL;
     }
 }
