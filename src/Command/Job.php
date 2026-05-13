@@ -32,6 +32,7 @@ use App\Utils\Telegram;
 use App\Utils\Tools;
 use Exception;
 use Illuminate\Database\Capsule\Manager as DB;
+
 class Job extends Command
 {
     public $description = ''
@@ -552,7 +553,9 @@ class Job extends Command
         $nodeKeys = $redis->smembers('traffic:node:*');
         foreach ($nodeKeys as $key) {
             // traffic:node:3
+            echo '$key = ' . $key . PHP_EOL;
             $node_id = str_replace('traffic:node:', '', $key);
+            echo '$node_id = ' . $node_id . PHP_EOL;
             $traffic = intval($redis->get($key));
             if ($traffic <= 0) {
                 $redis->del($key);
