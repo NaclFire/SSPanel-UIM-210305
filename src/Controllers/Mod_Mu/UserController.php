@@ -263,6 +263,9 @@ class UserController extends BaseController
 
                 /* 节点流量 */
                 $pipe->incrby("traffic:node:{$node->id}", $u + $d);
+
+                /* 记录活跃节点 */
+                $pipe->sadd("traffic:nodes", $node->id);
             }
         });
 

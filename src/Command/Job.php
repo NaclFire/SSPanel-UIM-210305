@@ -550,23 +550,21 @@ class Job extends Command
         echo '用户流量入库结束' . PHP_EOL;
         echo '节点流量入库开始' . PHP_EOL;
         // 查找所有节点流量key
-        $nodeKeys = $redis->smembers('traffic:node:*');
-        foreach ($nodeKeys as $key) {
-            // traffic:node:3
-            echo '$key = ' . $key . PHP_EOL;
-            $node_id = str_replace('traffic:node:', '', $key);
+        $node_ids = $redis->smembers('traffic:nodes');
+        foreach ($node_ids as $node_id) {
+            $key = "traffic:node:$node_id";
             echo '$node_id = ' . $node_id . PHP_EOL;
             $traffic = intval($redis->get($key));
             if ($traffic <= 0) {
                 $redis->del($key);
+                $redis->srem('traffic:nodes', $node_id);
                 continue;
             }
-            // 写入节点流量
             Node::where('id', $node_id)->update([
                 'node_bandwidth' => DB::raw("node_bandwidth + $traffic")
             ]);
-            // 清理redis
             $redis->del($key);
+            $redis->srem('traffic:nodes', $node_id);
         }
         echo '节点流量入库结束' . PHP_EOL;
         echo '流量统计结束' . PHP_EOL;
