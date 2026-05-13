@@ -549,7 +549,7 @@ class Job extends Command
         echo '用户流量入库结束' . PHP_EOL;
         echo '节点流量入库开始' . PHP_EOL;
         // 查找所有节点流量key
-        $nodeKeys = $redis->keys('traffic:node:*');
+        $nodeKeys = $redis->smembers('traffic:node:*');
         foreach ($nodeKeys as $key) {
             // traffic:node:3
             $node_id = str_replace('traffic:node:', '', $key);
