@@ -251,15 +251,21 @@ class UserController extends BaseController
                     continue;
                 }
 
-                $key = "traffic:user:$user_id";
+                // 改成 用户+节点
+                $key = "traffic:user:{$user_id}:{$node->id}";
 
                 /* 用户流量累积 */
                 $pipe->hincrby($key, 'u', $u);
                 $pipe->hincrby($key, 'd', $d);
+
+                // 保存节点信息
+                $pipe->hset($key, 'node_id', $node->id);
+                $pipe->hset($key, 'rate', $node->traffic_rate);
+
                 $pipe->expire($key, 3600);
 
                 /* 活跃用户集合 */
-                $pipe->sadd("traffic:users", $user_id);
+                $pipe->sadd("traffic:users", "{$user_id}:{$node->id}");
 
                 /* 节点流量 */
                 $pipe->incrby("traffic:node:{$node->id}", $u + $d);

@@ -530,22 +530,37 @@ class Job extends Command
         echo '流量统计开始' . PHP_EOL;
         $redis = new RedisClient();
         echo '用户流量入库开始' . PHP_EOL;
-        $user_ids = $redis->smembers('traffic:users');
-        foreach ($user_ids as $user_id) {
-            $key = "traffic:user:$user_id";
+        $user_keys = $redis->smembers('traffic:users');
+        foreach ($user_keys as $item) {
+            list($user_id, $node_id) = explode(':', $item);
+            $key = "traffic:user:{$user_id}:{$node_id}";
             $traffic = $redis->hgetall($key);
-            if (!$traffic) continue;
+            if (!$traffic) {
+                continue;
+            }
             $u = intval($traffic['u'] ?? 0);
             $d = intval($traffic['d'] ?? 0);
+            $rate = floatval($traffic['rate'] ?? 1);
             if ($u > 0 || $d > 0) {
                 User::where('id', $user_id)->update([
                     'u' => DB::raw("u + $u"),
                     'd' => DB::raw("d + $d"),
                     't' => time()
                 ]);
+                // 写入日志
+                $log = new TrafficLog();
+                $log->user_id = $user_id;
+                $log->u = $u;
+                $log->d = $d;
+                $log->node_id = $node_id;
+                $log->rate = $rate;
+                $log->traffic = $u + $d;
+                $log->log_time = time();
+                $log->type = 0;
+                $log->save();
             }
             $redis->del($key);
-            $redis->srem('traffic:users', $user_id);
+            $redis->srem('traffic:users', $item);
         }
         echo '用户流量入库结束' . PHP_EOL;
         echo '节点流量入库开始' . PHP_EOL;
