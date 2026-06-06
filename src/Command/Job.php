@@ -589,59 +589,35 @@ class Job extends Command
     }
     public function updateQQwry()
     {
-        $url = 'https://github.com/metowolf/qqwry.dat/releases/latest/download/qqwry.dat';
+        $tmpFile = sys_get_temp_dir() . '/qqwry.dat';
 
-        $ch = curl_init();
+        $cmd = sprintf(
+            'curl -L --connect-timeout 15 --max-time 60 -o %s %s 2>&1',
+            escapeshellarg($tmpFile),
+            escapeshellarg('https://github.com/metowolf/qqwry.dat/releases/latest/download/qqwry.dat')
+        );
 
-        curl_setopt_array($ch, [
-            CURLOPT_URL => $url,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_FOLLOWLOCATION => true, // 跟随 GitHub 302 跳转
-            CURLOPT_CONNECTTIMEOUT => 15,
-            CURLOPT_TIMEOUT => 60,
+        exec($cmd, $output, $code);
 
-            // 兼容老旧 OpenSSL 环境
-            CURLOPT_SSL_VERIFYPEER => false,
-            CURLOPT_SSL_VERIFYHOST => false,
-
-            CURLOPT_USERAGENT => 'Mozilla/5.0 QQWry-Updater',
-        ]);
-
-        $qqwry = curl_exec($ch);
-
-        if ($qqwry === false) {
-            echo 'curl错误: ' . curl_error($ch);
-            curl_close($ch);
+        if ($code !== 0) {
+            echo "下载失败:\n" . implode("\n", $output);
             return;
         }
 
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-
-        curl_close($ch);
-
-        if ($httpCode != 200) {
-            echo "下载失败，HTTP状态码: {$httpCode}";
-            return;
-        }
-
-        if (strlen($qqwry) <= 1024) {
-            echo "下载失败，文件内容异常";
+        if (!file_exists($tmpFile) || filesize($tmpFile) < 1024) {
+            echo "下载文件异常";
             return;
         }
 
         $datFile = BASE_PATH . '/storage/qqwry.dat';
         $bakFile = BASE_PATH . '/storage/qqwry.dat.bak';
 
-        try {
-            if (file_exists($datFile)) {
-                @rename($datFile, $bakFile);
-            }
-
-            file_put_contents($datFile, $qqwry);
-
-            echo 'qqwry.dat 更新成功';
-        } catch (\Throwable $e) {
-            echo '保存文件失败: ' . $e->getMessage();
+        if (file_exists($datFile)) {
+            @rename($datFile, $bakFile);
         }
+
+        rename($tmpFile, $datFile);
+
+        echo "qqwry.dat 更新成功";
     }
 }
