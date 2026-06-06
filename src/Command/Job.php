@@ -589,20 +589,27 @@ class Job extends Command
     }
     public function updateQQwry()
     {
-        $url = 'https://github.com/metowolf/qqwry.dat/releases/latest/download/qqwry.dat';
-        $qqwry = file_get_contents($url);
-        var_dump($qqwry);
-        var_dump(error_get_last());
-        if ($qqwry !== false && strlen($qqwry) > 1024) {
-            $datFile = BASE_PATH . '/storage/qqwry.dat';
-            $bakFile = BASE_PATH . '/storage/qqwry.dat.bak';
-            if (file_exists($datFile)) {
-                rename($datFile, $bakFile);
-            }
-            file_put_contents($datFile, $qqwry);
-            echo "qqwry.dat 更新成功";
-        } else {
-            echo "qqwry.dat 下载失败";
-        }
+        $ch = curl_init('https://github.com/metowolf/qqwry.dat/releases/latest/download/qqwry.dat');
+
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_FOLLOWLOCATION => true,
+        ]);
+
+        $data = curl_exec($ch);
+
+        var_dump(curl_error($ch));
+        var_dump(strlen($data));
+//        if ($qqwry !== false && strlen($qqwry) > 1024) {
+//            $datFile = BASE_PATH . '/storage/qqwry.dat';
+//            $bakFile = BASE_PATH . '/storage/qqwry.dat.bak';
+//            if (file_exists($datFile)) {
+//                rename($datFile, $bakFile);
+//            }
+//            file_put_contents($datFile, $qqwry);
+//            echo "qqwry.dat 更新成功";
+//        } else {
+//            echo "qqwry.dat 下载失败";
+//        }
     }
 }
