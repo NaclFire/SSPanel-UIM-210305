@@ -204,7 +204,9 @@ class Job extends Command
         }
 
         $url = 'https://github.com/metowolf/qqwry.dat/releases/latest/download/qqwry.dat';
-        $qqwry = @file_get_contents($url);
+        $qqwry = file_get_contents($url);
+        var_dump($qqwry);
+        var_dump(error_get_last());
         if ($qqwry !== false && strlen($qqwry) > 1024) {
             $datFile = BASE_PATH . '/storage/qqwry.dat';
             $bakFile = BASE_PATH . '/storage/qqwry.dat.bak';
@@ -584,5 +586,23 @@ class Job extends Command
         }
         echo '节点流量入库结束' . PHP_EOL;
         echo '流量统计结束' . PHP_EOL;
+    }
+    public function updateQQwry()
+    {
+        $url = 'https://github.com/metowolf/qqwry.dat/releases/latest/download/qqwry.dat';
+        $qqwry = file_get_contents($url);
+        var_dump($qqwry);
+        var_dump(error_get_last());
+        if ($qqwry !== false && strlen($qqwry) > 1024) {
+            $datFile = BASE_PATH . '/storage/qqwry.dat';
+            $bakFile = BASE_PATH . '/storage/qqwry.dat.bak';
+            if (file_exists($datFile)) {
+                rename($datFile, $bakFile);
+            }
+            file_put_contents($datFile, $qqwry);
+            echo "qqwry.dat 更新成功";
+        } else {
+            echo "qqwry.dat 下载失败";
+        }
     }
 }
