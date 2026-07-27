@@ -204,6 +204,8 @@ class NodeController extends AdminController
                         'msg' => '节点IP为多IP时，节点地址需要填写域名！'
                     ]
                 );
+            } else {
+                $node->node_ip = $server_list[0];
             }
         } else {
             if (count($nodeIps) > 1) {
