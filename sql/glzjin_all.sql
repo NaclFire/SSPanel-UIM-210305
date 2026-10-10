@@ -523,7 +523,8 @@ CREATE TABLE `user` (
   PRIMARY KEY (`id`),
   KEY `user_name` (`user_name`),
   KEY `uid` (`id`),
-  KEY `email` (`email`)
+  KEY `email` (`email`),
+  KEY `idx_user_ref_by` (`ref_by`)
 ) ENGINE=InnoDB AUTO_INCREMENT=27948 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ----------------------------
@@ -570,7 +571,10 @@ CREATE TABLE `user_traffic_log` (
   `log_time` int(11) NOT NULL,
   `type` int(2) DEFAULT '0' COMMENT '记录类型：0每分钟流量，1每天流量',
   `is_duplicate` int(2) NOT NULL DEFAULT '0' COMMENT '是否是重复上报数据',
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  KEY `idx_traffic_type_id` (`type`,`id`),
+  KEY `idx_traffic_type_log_time` (`type`,`log_time`),
+  KEY `idx_traffic_user_type_id` (`user_id`,`type`,`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1352077731 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 SET FOREIGN_KEY_CHECKS = 1;

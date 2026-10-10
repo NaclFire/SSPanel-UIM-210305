@@ -15,7 +15,9 @@ use App\Services\{
     Analytics,
     Gateway\ChenPay
 };
+use App\Services\Config;
 use Ozdemir\Datatables\Datatables;
+use Illuminate\Database\Capsule\Manager as Capsule;
 
 /**
  *  Admin Controller
@@ -222,70 +224,145 @@ class AdminController extends UserController
 
     public function ajax_trafficMinuteLog($request, $response, $args)
     {
-        $isAdmin = $this->user->isAdmin();
-        $searchUser = $request->getParam("user");
-        $searchNode = $request->getParam("node");
-        $searchStartTime = $request->getParam("startTime");
-        $searchEndTime = $request->getParam("endTime");
-        // 基础查询
-        $query = 'Select log.id, log.user_id, user.user_name, node.name as node_name, log.traffic as origin_traffic, log.log_time from user_traffic_log as log, user, ss_node as node WHERE log.user_id = user.id AND log.node_id = node.id AND log.type = 0';
+        $draw = max(0, (int) $request->getParam('draw', 0));
+        $start = max(0, (int) $request->getParam('start', 0));
+        $length = (int) $request->getParam('length', 10);
+        $length = $length < 1 ? 10 : min($length, 100);
 
-        if (!$isAdmin) {
-            $salesmanId = $this->user->id;
-            $query .= ' AND user.ref_by = ' . $salesmanId;
+        $capsule = new Capsule();
+        $capsule->addConnection(Config::getDbConfig(), 'default');
+        $db = $capsule->getConnection('default');
+        $baseQuery = $db->table('user_traffic_log as log')
+            ->join('user', 'log.user_id', '=', 'user.id')
+            ->join('ss_node as node', 'log.node_id', '=', 'node.id')
+            ->where('log.type', '=', 0);
+
+        if (!$this->user->isAdmin()) {
+            $baseQuery->where('user.ref_by', '=', (int) $this->user->id);
         }
 
-        // 动态添加查询条件
-        if (!empty($searchUser)) {
-            $query .= ' AND log.user_id = ' . $searchUser;
+        $recordsTotal = (clone $baseQuery)->count();
+        $filteredQuery = clone $baseQuery;
+        $searchUser = trim((string) $request->getParam('user', ''));
+        if ($searchUser !== '') {
+            $filteredQuery->where('log.user_id', '=', ctype_digit($searchUser) ? (int) $searchUser : -1);
+        }
+        $searchNode = trim((string) $request->getParam('node', ''));
+        if ($searchNode !== '') {
+            $filteredQuery->where('node.name', 'like', '%' . $searchNode . '%');
+        }
+        $startTime = trim((string) $request->getParam('startTime', ''));
+        if ($startTime !== '' && strtotime($startTime) !== false) {
+            $filteredQuery->where('log.log_time', '>=', strtotime($startTime));
+        }
+        $endTime = trim((string) $request->getParam('endTime', ''));
+        if ($endTime !== '' && strtotime($endTime) !== false) {
+            $filteredQuery->where('log.log_time', '<=', strtotime($endTime));
         }
 
-        if (!empty($searchNode)) {
-            $query .= " AND node.name LIKE '%" . $searchNode . "%'";
-        }
+        $recordsFiltered = $searchUser === '' && $searchNode === '' && $startTime === '' && $endTime === ''
+            ? $recordsTotal : (clone $filteredQuery)->count();
+        $columns = ['log.id', 'log.user_id', 'user.user_name', 'node.name', 'log.traffic', 'log.log_time'];
+        $orders = (array) $request->getParam('order', []);
+        $order = isset($orders[0]) && is_array($orders[0]) ? $orders[0] : [];
+        $orderIndex = isset($order['column']) ? (int) $order['column'] : 0;
+        $orderColumn = isset($columns[$orderIndex]) ? $columns[$orderIndex] : 'log.id';
+        $orderDirection = isset($order['dir']) && strtolower($order['dir']) === 'asc' ? 'asc' : 'desc';
+        $rows = $filteredQuery
+            ->select('log.id', 'log.user_id', 'user.user_name', 'node.name as node_name', 'log.traffic as origin_traffic', 'log.log_time')
+            ->orderBy($orderColumn, $orderDirection)
+            ->orderBy('log.id', 'desc')
+            ->offset($start)
+            ->limit($length)
+            ->get();
 
-        if (!empty($searchStartTime)) {
-            $query .= ' AND log.log_time >= ' . strtotime($searchStartTime);
+        $data = [];
+        foreach ($rows as $row) {
+            $data[] = [
+                'id' => $row->id,
+                'user_id' => $row->user_id,
+                'user_name' => $row->user_name,
+                'node_name' => $row->node_name,
+                'origin_traffic' => $row->origin_traffic,
+                'log_time' => date('Y-m-d H:i:s', $row->log_time),
+            ];
         }
-
-        if (!empty($searchEndTime)) {
-            $query .= ' AND log.log_time <= ' . strtotime($searchEndTime);
-        }
-        error_log('SQL: ' . $query);
-        // 使用更新后的查询构建数据表
-        $datatables = new Datatables(new DatatablesHelper());
-        $datatables->query($query);
-        $datatables->edit('log_time', static function ($data) {
-            return date('Y-m-d H:i:s', $data['log_time']);
-        });
-        $datatables->edit('origin_traffic', static function ($data) {
-            return $data['origin_traffic'];
-        });
         $body = $response->getBody();
-        $body->write($datatables->generate());
+        $body->write(json_encode([
+            'draw' => $draw,
+            'recordsTotal' => $recordsTotal,
+            'recordsFiltered' => $recordsFiltered,
+            'data' => $data,
+        ]));
     }
 
     public function ajax_trafficLog($request, $response, $args)
     {
         $isAdmin = $this->user->isAdmin();
-        $datatables = new Datatables(new DatatablesHelper());
-        if ($isAdmin) {
-            $datatables->query('Select log.id,log.user_id,user.user_name,log.traffic as origin_traffic,log.log_time from user_traffic_log as log,user WHERE log.user_id = user.id AND log.type = 1');
-        } else {
-            $salesmanId = $this->user->id;
-            $datatables->query('Select log.id,log.user_id,user.user_name,log.traffic as origin_traffic,log.log_time from user_traffic_log as log,user WHERE log.user_id = user.id AND log.type = 1 AND user.ref_by = ' . $salesmanId);
+        $draw = max(0, (int) $request->getParam('draw', 0));
+        $start = max(0, (int) $request->getParam('start', 0));
+        $length = (int) $request->getParam('length', 10);
+        // DataTables uses -1 for "all rows"; do not allow that to load the full log table.
+        $length = $length < 1 ? 10 : min($length, 100);
+
+        $capsule = new Capsule();
+        $capsule->addConnection(Config::getDbConfig(), 'default');
+        $db = $capsule->getConnection('default');
+        $baseQuery = $db->table('user_traffic_log as log')
+            ->join('user', 'log.user_id', '=', 'user.id')
+            ->where('log.type', '=', 1);
+
+        if (!$isAdmin) {
+            $baseQuery->where('user.ref_by', '=', (int) $this->user->id);
         }
 
-        $datatables->edit('log_time', static function ($data) {
-            return date('Y-m-d H:i:s', $data['log_time']);
-        });
+        $recordsTotal = (clone $baseQuery)->count();
+        $columns = [
+            'log.id', 'log.user_id', 'user.user_name', 'log.traffic', 'log.log_time'
+        ];
+        $searchParam = $request->getParam('search', []);
+        $search = trim((string) (is_array($searchParam) ? ($searchParam['value'] ?? '') : ''));
+        $filteredQuery = clone $baseQuery;
+        if ($search !== '') {
+            $filteredQuery->where(function ($query) use ($columns, $search) {
+                foreach ($columns as $column) {
+                    $query->orWhere($column, 'like', '%' . $search . '%');
+                }
+            });
+        }
 
-        $datatables->edit('origin_traffic', static function ($data) {
-            return $data['origin_traffic'];
-        });
+        $recordsFiltered = $search === '' ? $recordsTotal : (clone $filteredQuery)->count();
+        $orders = (array) $request->getParam('order', []);
+        $order = isset($orders[0]) ? $orders[0] : [];
+        $orderIndex = isset($order['column']) ? (int) $order['column'] : 0;
+        $orderColumn = isset($columns[$orderIndex]) ? $columns[$orderIndex] : 'log.id';
+        $orderDirection = isset($order['dir']) && strtolower($order['dir']) === 'asc' ? 'asc' : 'desc';
+        $rows = $filteredQuery
+            ->select('log.id', 'log.user_id', 'user.user_name', 'log.traffic as origin_traffic', 'log.log_time')
+            ->orderBy($orderColumn, $orderDirection)
+            ->orderBy('log.id', 'desc')
+            ->offset($start)
+            ->limit($length)
+            ->get();
+
+        $data = [];
+        foreach ($rows as $row) {
+            $data[] = [
+                'id' => $row->id,
+                'user_id' => $row->user_id,
+                'user_name' => $row->user_name,
+                'origin_traffic' => $row->origin_traffic,
+                'log_time' => date('Y-m-d H:i:s', $row->log_time),
+            ];
+        }
 
         $body = $response->getBody();
-        $body->write($datatables->generate());
+        $body->write(json_encode([
+            'draw' => $draw,
+            'recordsTotal' => $recordsTotal,
+            'recordsFiltered' => $recordsFiltered,
+            'data' => $data,
+        ]));
     }
 
     public function ajax_payback($request, $response, $args)
