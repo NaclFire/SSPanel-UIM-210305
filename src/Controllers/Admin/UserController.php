@@ -602,14 +602,16 @@ class UserController extends AdminController
                     ->orWhere('obfs_param', 'LIKE', "%$search%")
                     ->orWhere('reg_date', 'LIKE binary', "%$search%")
                     ->orWhere('class_expire', 'LIKE binary', "%$search%")
-                    ->orWhere('expire_in', 'LIKE binary', "%$search%");
+                    ->orWhere('expire_in', 'LIKE binary', "%$search%")
+                    // 搜索命中用户名、邮箱或 ID 的用户时，同时查询 ref_by 为其 ID 的记录
+                    ->orWhereIn('ref_by', function ($refQuery) use ($search) {
+                        $refQuery->select('id')
+                            ->from('user')
+                            ->where('user_name', 'LIKE', "%$search%")
+                            ->orWhere('email', 'LIKE', "%$search%")
+                            ->orWhere('id', 'LIKE', "%$search%");
+                    });
             });
-
-            // 如果搜索匹配了某个用户，则查询 ref_by 为该用户 ID 的记录
-            $refUser = User::query()->where('user_name', 'LIKE', "%$search%")->first();
-            if ($refUser) {
-                $query->orWhere('ref_by', '=', $refUser->id);
-            }
         }
         $query_count = clone $query;
         $users = $query->orderByRaw($order_field . ' ' . $order)
