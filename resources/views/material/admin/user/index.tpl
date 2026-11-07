@@ -218,6 +218,7 @@
 
 <script>
     var operaUserId;
+    var userLinkRequest = null;
 
     function copylink_modal_show() {
         $("#copylink_modal").modal();
@@ -229,7 +230,9 @@
 
     function operate_modal_show(id) {
         operaUserId = id;
-        getUserLink()
+        // 清除上一个用户残留的订阅地址，并重新获取
+        $("#v2ray_link, #clash_link, #copylink").removeAttr('data-clipboard-text');
+        userLinkRequest = getUserLink();
         var editUser = "/admin/user/" + operaUserId + "/edit";
         $("#edit").attr("href", editUser);
         $("#operate_modal").modal();
@@ -269,80 +272,94 @@
     }
 
     function getUserLink() {
-        $.ajax({
+        var userId = operaUserId;
+        return $.ajax({
             type: 'post',
             url: '/admin/user/link',
             dataType: 'json',
             data: {
-                id: operaUserId,
-            },
-            success: data => {
-                if (data.ret) {
-                    $("#v2ray_link").attr("data-clipboard-text", data.link + "?sub=3")
-                    $("#clash_link").attr("data-clipboard-text", data.link + "?clash=1")
-                    $("#copylink").attr("data-clipboard-text", data.link)
-                }
+                id: userId,
+            }
+        }).then(data => {
+            // 用户已切换或返回异常时，不写入订阅地址
+            if (userId !== operaUserId || !data || !data.ret || !data.link) {
+                return '';
+            }
+            $("#v2ray_link").attr("data-clipboard-text", data.link + "?sub=3")
+            $("#clash_link").attr("data-clipboard-text", data.link + "?clash=1")
+            $("#copylink").attr("data-clipboard-text", data.link)
+            return data.link;
+        }, () => '');
+    }
+
+    // 写入剪贴板，优先使用异步 API，不支持时回退到 execCommand
+    function writeClipboard(text) {
+        if (navigator.clipboard && window.isSecureContext) {
+            return navigator.clipboard.writeText(text);
+        }
+        return new Promise((resolve, reject) => {
+            var textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed';
+            textarea.style.top = '-9999px';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.focus();
+            textarea.select();
+            try {
+                document.execCommand('copy') ? resolve() : reject(new Error('浏览器不支持自动复制'));
+            } catch (error) {
+                reject(error);
+            } finally {
+                document.body.removeChild(textarea);
             }
         });
     }
 
-    $("#copylink").click(function () {
-        var link = $(this).attr('data-clipboard-text')
-        if (link) {
-            navigator.clipboard.writeText(link).then(function () {
-                // 复制成功
-                $("#result").modal();
-                $$.getElementById('msg').innerHTML = '已复制，请您继续接下来的操作';
-            }).catch(function (error) {
-                // 复制失败
+    // 复制订阅地址：地址尚未取到时先提示等待，取到后再执行复制
+    function copySubscriptionLink(target) {
+        var link = $(target).attr('data-clipboard-text');
+
+        if (!link) {
+            $("#result").modal();
+            $$.getElementById('msg').innerHTML = '正在获取订阅地址，请稍候...';
+            $(target).addClass('disabled');
+            var request = userLinkRequest || getUserLink();
+            request.then(() => {
+                $(target).removeClass('disabled');
+                if ($(target).attr('data-clipboard-text')) {
+                    copySubscriptionLink(target);
+                } else {
+                    $("#result").modal();
+                    $$.getElementById('msg').innerHTML = '复制失败：请关闭后重试';
+                }
+            }).catch(error => {
+                $(target).removeClass('disabled');
                 $("#result").modal();
                 $$.getElementById('msg').innerHTML = '复制失败：' + error;
             });
-        } else {
-            // 复制失败
-            $("#result").modal();
-            $$.getElementById('msg').innerHTML = '复制失败：请再复制一次';
+            return;
         }
 
+        writeClipboard(link).then(function () {
+            // 复制成功
+            $("#result").modal();
+            $$.getElementById('msg').innerHTML = '已复制，请您继续接下来的操作';
+        }).catch(function (error) {
+            // 复制失败
+            $("#result").modal();
+            $$.getElementById('msg').innerHTML = '复制失败：' + error;
+        });
+    }
 
+    $("#copylink").click(function () {
+        copySubscriptionLink(this);
     })
     $("#v2ray_link").click(function () {
-        var link = $(this).attr('data-clipboard-text')
-        if (link) {
-            navigator.clipboard.writeText(link).then(function () {
-                // 复制成功
-                $("#result").modal();
-                $$.getElementById('msg').innerHTML = '已复制，请您继续接下来的操作';
-            }).catch(function (error) {
-                // 复制失败
-                $("#result").modal();
-                $$.getElementById('msg').innerHTML = '复制失败：' + error;
-            });
-        } else {
-            // 复制失败
-            $("#result").modal();
-            $$.getElementById('msg').innerHTML = '复制失败：请再复制一次';
-        }
-
-
+        copySubscriptionLink(this);
     })
     $("#clash_link").click(function () {
-        var link = $(this).attr('data-clipboard-text')
-        if (link) {
-            navigator.clipboard.writeText(link).then(function () {
-                // 复制成功
-                $("#result").modal();
-                $$.getElementById('msg').innerHTML = '已复制，请您继续接下来的操作';
-            }).catch(function (error) {
-                // 复制失败
-                $("#result").modal();
-                $$.getElementById('msg').innerHTML = '复制失败：' + error;
-            });
-        } else {
-            // 复制失败
-            $("#result").modal();
-            $$.getElementById('msg').innerHTML = '复制失败：请再复制一次';
-        }
+        copySubscriptionLink(this);
     })
     // 监听复选框状态变化
     if (document.getElementById('is_admin')) {
